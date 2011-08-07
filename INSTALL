@@ -1,0 +1,119 @@
+                  ....  x#. ###x.                 
+    .   x#x.  ##..###x. .x     x#.                
+  x###x.xxx.                    ##                
+ #x                             xx                
+ #x                 xx.          #                
+                   ##  #x        #.               
+  #               xx    .x#.     #                
+  #              xx   xx  .x#x   x.               
+   .    #xx     x#   x#.xxx  .#x.x#               
+  ##  .#. ##.  x#   x#   .##.   xx#               
+  ##.x  .#..#xx#   .#       xxx   .               
+   #.  .#.x#..x    #          ##.                 
+      xx    ##   .#             #x.               
+     #x      .##.x.               ##              
+    #x         x#.                 #              
+   x#                              #              
+   x#                                    
+    x.                             x              
+    #x                   ...xx#x.##.              
+    ##      .xx#x.x## .###x..xx.                  
+      ...#   ..x
+
+======================
+KaTaLyzer installation
+======================
+1. BACKEND
+   1.1 Requirements
+   1.2 Installation
+   1.3 Quick start
+2. FRONTEND
+   2.1 Requirements
+   2.2 Installation
+   2.3 Quick start
+   
+----------
+1. BACKEND
+----------
+
+1.1 Requirements
+----------------
+MYSQL, PCAP, make, g++
+apt-get install libmysql++-dev libpcap-dev make g++
+
+1.2 Installation
+----------------
+1. unpack downloaded archive
+
+2. set executable on katalyzer_inst.sh in unpacked directory
+chmod +x katalyzer_inst.sh
+
+3. run installer from unpacked directory
+./katalyzer_inst.sh 
+
+4. copy and rename install/katalyzer_start to /etc/init.d/katalyzer (may require root)
+cp install/katalyzer_start /etc/init.d/katalyzer
+
+5. set executable on katalyzer in /etc/init.d/ directory (may require root)
+chmod +x /etc/init.d/katalyzer
+
+6. do not forget to edit configuration file in order to provide katalyzer with access into MySQL database, network interface which you want to measure traffic on and add/remove particular protocols from measurement. You can get more information from comments in config file.
+
+vim /etc/katalyzer/my_config.conf
+
+DB_HOST=localhost
+DB_NAME=network1
+DB_USER=user
+DB_PASS=password
+
+7. Create the KaTaLyzer database
+
+mysql -u<username> -p<password>
+mysql> create database network1 character set utf8;
+mysql> quit;
+
+1.3 Quick start
+---------------
+To start measurement you can simply use startup script with parameter 'start'
+/etc/init.d/katalyzer start
+
+Or you can simply issue command ./katalyzer If you specify parameter -h (help) you can obtain list of parameters which can be used to start katalyzer with particular functions.
+
+
+-----------
+2. FRONTEND
+-----------
+
+2.1 Requirements
+----------------
+Install apache2, mysql, php5, imagemagick, dnsutils, whois in debian etch:
+
+apt-get install apache2 php5 php5-cli php5-geoip mysql-server phpmyadmin imagemagick dnsutils whois
+
+Install geoip database:
+wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+gunzip GeoLiteCity.dat.gz
+mkdir -v /usr/share/GeoIP
+mv -v GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+
+
+2.2 Installation
+----------------
+1. unpack downloaded archive
+tar -xvzf katalyzer-0.20.tar.gz
+
+2. create the folder where KaTaLyzer will be and copy it there
+mkdir /var/www/katalyzer
+cp -r katalyzer/frontend/* /var/www/katalyzer
+chown -R www-data:www-data /var/www/katalyzer
+
+
+3. link configuration file (replace my_config.conf with your file name)
+ln -s /etc/katalyzer/my_config.conf /var/www/katalyzer/configs/my_config.conf
+
+2.3 Quick start
+---------------
+Web browser: http://your_ip.or.domain_address/katalyzer
+
+If you have any question do not hesitate to contact me at tokosk16@yahoo.com
+	 
