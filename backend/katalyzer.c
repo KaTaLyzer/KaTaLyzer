@@ -186,12 +186,11 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		strcpy(protokol,"IP");
 		m_protokoly(&z_protokoly,protokol);
         }
-/*
+
 	if(protocol_ip == 1 && strcmp(net_proto, "IPv6") == 0){
 		strcpy(protokol,"IPv6");
 		m_protokoly(&z_protokoly,protokol);
 	}
-*/
 
 /// ARP
 	if(protocol_arp == 1 && strcmp(net_proto, "ARP") == 0) {
@@ -575,7 +574,7 @@ void eth2_frame(const u_char *pkt_data,int type)
 	net_protokol(type,net_proto);
 	
 	if(type==2048) ip_protokol(pkt_data, 0);	// if we received IP or ARP protocol, analysis continues
-	//if(type==34525) ipv6_protokol(pkt_data); IPv6 to be implemented
+	if(type==34525) ipv6_protokol(pkt_data, 0); //IPv6 to be implemented
 	if(type==2054) arp_protokol(pkt_data);
 	
 }
@@ -636,6 +635,74 @@ void ip_protokol(const u_char *pkt_data, int len)
 	if(protocol==6) tcp_protokol(pkt_data,len);		//we continue analysis in case there is TCP, UDP or ICMP protocol inside IP packet
 //	if(protocol==1) icmp_protokol(pkt_data,len);
 	if(protocol==17) udp_protokol(pkt_data,len);
+}
+
+void ipv6_protokol(const u_char *pkt_data, int len)
+{
+  int protocol;
+  char end=0;
+  struct ip6_hbh *ip6hop;
+  struct ip6_rthdr *ip6r;
+  struct ip6_frag *ip6f;
+  struct ip6_dest *ip6d;
+  
+  iphv6=(struct ip6_hdr*) (pkt_data + (sizeof(struct ether_header)) + len);
+  protocol=iphv6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+  
+  len=sizeof(struct ip6_hdr);
+  
+  //prejdeme celu hlavi?ku ipv6
+  for(;;){
+    switch(protocol){
+      case IPPROTO_HOPOPTS:
+	ip6hop=(struct ip6_hbh*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6hop->ip6h_nxt;
+	len+=sizeof(struct ip6_hbh);
+	break;
+      case IPPROTO_ROUTING:
+	ip6r=(struct ip6_rthdr*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6r->ip6r_nxt;
+	len+=sizeof(struct ip6_rthdr);
+	break;
+      case IPPROTO_FRAGMENT:
+	ip6f=(struct ip6_frag*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6f->ip6f_nxt;
+	len+=sizeof(struct ip6_frag);
+	break;
+      case IPPROTO_ESP:
+	break;
+      case IPPROTO_AH:
+	break;
+      case IPPROTO_DSTOPTS:
+	ip6d=(struct ip6_dest*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6d->ip6d_nxt;
+	len+=sizeof(struct ip6_dest);
+	break;
+      case IPPROTO_TCP:
+	trans_protokol(protocol,TCP_UDP);
+	tcp_protokol(pkt_data, len);		//we continue analysis in case there is TCP, UDP or ICMP protocol inside IP packet
+	end=1;
+	break;
+      case IPPROTO_UDP:
+	trans_protokol(protocol,TCP_UDP);
+	udp_protokol(pkt_data, len);
+	end=1;
+	break;
+      default:
+	end=1;
+	break;
+    }
+    //end ipv6 header
+    if(end)
+      break;
+  }
+  
+  // treba vyriesit ukladanie do DB
+//   IP_adr_S=iphv6->ip6_src; 
+//   IP_adr_D=iphv6->ip6_dst;
+  
+  
+  
 }
 
 void trans_protokol(int number, char *protokols) { //according to number from IP header we assign name of the protocol to the number; adding new protocol takes just a few seconds (ICMP RFC 792)

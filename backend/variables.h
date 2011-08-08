@@ -14,6 +14,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
+#include <netinet/ip6.h>
 
 //#define CDP_P
 //#define SNMP_P
@@ -160,6 +161,7 @@ extern         int i_UDP;
 
 extern struct ether_header *ethh; //ethernetova header
 extern struct iphdr *iph;       //ip header
+extern struct ip6_hdr *iphv6;	//ip_6 header
 extern struct tcphdr *tcph;     //tcp header
 extern struct udphdr *udph;     //udp header
 extern struct arphdr *arph;	//arp header

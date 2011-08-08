@@ -22,6 +22,7 @@
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <netinet/ether.h>
+#include <netinet/ip6.h>
 
 #include "variables.h"
 #include "sip.h"
@@ -32,6 +33,7 @@
 void eth2_frame(const u_char *pkt_data,int type);
 void arp_protokol(const u_char *pkt_data);
 void ip_protokol(const u_char *pkt_data, int len);
+void ipv6_protokol(const u_char *pkt_data, int len);
 void tcp_protokol(const u_char *pkt_data,int len);
 //void icmp_protokol(const u_char *pkt_data,int h_len);
 void udp_protokol(const u_char *pkt_data,int len);
