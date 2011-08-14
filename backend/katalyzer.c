@@ -111,6 +111,8 @@ int main(int argc, char **argv) {
 	
 	pcap_close(fp); 	//closing the interface
 
+	if (debug) printf("*** End\n");
+		
 	return (OK);
 }
 
@@ -349,7 +351,10 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 			PROTOKOLY *p_prot;
 			for(p_prot=z_protokoly.p_protokoly;p_prot!=NULL;p_prot=p_prot->p_next){
 				sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
-				sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
+				if(strcmp(p_prot->protokol,"IPv6"))
+				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
+				else
+				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` char(16) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` char(16) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(16) unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(16) unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 
 				if(mysql_query(conn, prikaz)){
 					fprintf(stderr,"Failed to create %s tables in MYSQL database %s: %s\n",p_prot->protokol ,db_name, mysql_error(conn));
@@ -641,6 +646,7 @@ void ipv6_protokol(const u_char *pkt_data, int len)
 {
   int protocol;
   char end=0;
+  char *ipv6_pom;
   struct ip6_hbh *ip6hop;
   struct ip6_rthdr *ip6r;
   struct ip6_frag *ip6f;
@@ -698,9 +704,26 @@ void ipv6_protokol(const u_char *pkt_data, int len)
   }
   
   // treba vyriesit ukladanie do DB
-//   IP_adr_S=iphv6->ip6_src; 
-//   IP_adr_D=iphv6->ip6_dst;
+  if(IPV6_adr_D =(char*) malloc(sizeof(char)*16) == NULL){
+    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+    return;
+  }
+  if(IPV6_adr_S =(char*) malloc(sizeof(char)*16) == NULL){
+    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+    return;
+  }
   
+  ipv6_pom = iphv6->ip6_src; 
+  
+  for(int i = 0;i<16;i++){
+    IPV6_adr_S[i] = ipv6_pom[i];
+  }
+  
+  ipv6_pom = iphv6->ip6_dst;
+  
+  for(int i = 0;i<16;i++){
+    IPV6_adr_D[i] = ipv6_pom[i];
+  }
   
   
 }
@@ -893,7 +916,12 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	ZAZNAMY *help_zaznamy;  //pomocna struktura
 	PROTOKOLY *help_protokol, *p_protokol;
 	int find, find_p;
+	char ipv6_p = 0;
 
+	// check s it a ip6 ip adress
+	if(!strcmp(s,"IPv6"))
+	  ipv6_p = 1;
+		
 	if(p_zac->empty) { //if struct is empty, we create it
 		p_zac->empty=0;
 		if((p_zac->p_protokoly=(PROTOKOLY*) malloc(sizeof(PROTOKOLY))) == NULL){	// create structure PROTOKOLY
@@ -908,8 +936,18 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 		}
 		p_protokol->zoznam->mac_s=MAC_adr_S;				// set the MAC adres and IP adress
 		p_protokol->zoznam->mac_d=MAC_adr_D;
-		p_protokol->zoznam->ip_s=ntohl(IP_adr_S);			// we use ntohl, because of frontend
-		p_protokol->zoznam->ip_d=ntohl(IP_adr_D);
+		p_protokol->zoznam->ip_d=0;
+		p_protokol->zoznam->ip_s=0;
+		p_protokol->zoznam->ipv6_d=NULL;
+		p_protokol->zoznam->ipv6_s=NULL;
+		if(ipv6_p){
+		  p_protokol->zoznam->ipv6_d = IPV6_adr_D;
+		  p_protokol->zoznam->ip_s = IPV6_adr_S;
+		}
+		else{
+		  p_protokol->zoznam->ip_s=ntohl(IP_adr_S);			// we use ntohl, because of frontend
+		  p_protokol->zoznam->ip_d=ntohl(IP_adr_D);
+		}
 		p_protokol->zoznam->pocet_B = pocet_B;				// set the number of bytes
 		p_protokol->zoznam->pocet_ramcov=1;
 		p_protokol->zoznam->p_next=NULL;
@@ -928,7 +966,9 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 				for(help_zaznamy=help_protokol->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) { // prechadza strukturu zoznam
 					find=0; //set we don't find the IP adress and MAC adress
 					if((help_zaznamy->mac_s==MAC_adr_S) && (help_zaznamy->mac_d==MAC_adr_D)) { // we looking the IP adress and MAC adress in the structure
-						if((help_zaznamy->ip_s==ntohl(IP_adr_S)) && (help_zaznamy->ip_d==ntohl(IP_adr_D))) {	//we find the IP adress and MAC adress
+						if((!ipv6_p && ((help_zaznamy->ip_s==ntohl(IP_adr_S)) && (help_zaznamy->ip_d==ntohl(IP_adr_D))))
+						  || (ipv6_p && ((!strcmp(help_zaznamy->ipv6_d,IPV6_adr_D)) && (!strcmp(help_zaznamy->ipv6_s,IPV6_adr_S))))
+						) {	//we find the IP adress and MAC adress
 							help_zaznamy->pocet_B += pocet_B;
 							help_zaznamy->pocet_ramcov++;
 							find=1;	//set we find the IP adress and MAC adress
@@ -945,8 +985,18 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 					help_zaznamy=help_zaznamy->p_next;
 					help_zaznamy->mac_s=MAC_adr_S;
 					help_zaznamy->mac_d=MAC_adr_D;
-					help_zaznamy->ip_s=ntohl(IP_adr_S);  // we use ntohl, because of frontend
-					help_zaznamy->ip_d=ntohl(IP_adr_D);
+					help_zaznamy->ip_d=0;
+					help_zaznamy->ip_s=0;
+					help_zaznamy->ipv6_d=NULL;
+					help_zaznamy->ipv6_s=NULL;
+					if(ipv6_p){
+					  help_zaznamy->ipv6_d=IPV6_adr_D;
+					  help_zaznamy->ipv6_s=IPV6_adr_S;
+					}
+					 else{
+					  help_zaznamy->ip_s=ntohl(IP_adr_S);  // we use ntohl, because of frontend
+					  help_zaznamy->ip_d=ntohl(IP_adr_D);
+					}
 					help_zaznamy->pocet_B = pocet_B;
 					help_zaznamy->pocet_ramcov=1;
 					help_zaznamy->spracovany[0]=0;
@@ -972,6 +1022,14 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 			}
 			help_protokol->zoznam->mac_s=MAC_adr_S;
 			help_protokol->zoznam->mac_d=MAC_adr_D;
+			help_protokol->zoznam->ip_d=0;
+			help_protokol->zoznam->ip_s=0;
+			help_protokol->zoznam->ipv6_d=NULL;
+			help_protokol->zoznam->ipv6_s=NULL;
+			if(ipv6_p){
+			  help_protokol->zoznam->ipv6_d=IPV6_adr_D;
+			  help_protokol->zoznam->ipv6_s=IPV6_adr_S;
+			}
 			help_protokol->zoznam->ip_s=ntohl(IP_adr_S);   // we use ntohl, because of frontend 
 			help_protokol->zoznam->ip_d=ntohl(IP_adr_D);
 			help_protokol->zoznam->pocet_B = pocet_B;
@@ -1002,6 +1060,16 @@ void free_protokoly(ZACIATOK_P *p_zac) {
 					help_zaznamy=p_pomz;
 				}
 				p_pomp=help_protokol->p_next;
+				if(!strcmp(help_protokol->protokol,"IPV6")){
+				  if(!help_protokol->zoznam->ipv6_d){
+				    free(help_protokol->zoznam->ipv6_d);
+				    help_protokol->zoznam->ipv6_d=NULL;
+				  }
+				  if(!help_protokol->zoznam->ipv6_s){
+				    free(help_protokol->zoznam->ipv6_s);
+				    help_protokol->zoznam->ipv6_d=NULL;
+				  }
+				}
 				free(help_protokol);
 				help_protokol=p_pomp;
 			}

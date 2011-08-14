@@ -6,6 +6,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
         char *prikaz_pom; // pomocna dynamicka premena
         char temp_str[10000];
         char temp[15];  // premenna pre ulozenie konvertovanej IP adresy z formatu int spat do stringu - pre zapis do DB sa bude nadalej pouzivat a.b.c.d format
+        char isipv6[4]; // pouzijeme pri ipv6
 	int ip=0,mac=0,ip_sd=0,mac_sd=0;
 	MYSQL_RES *result;
 	MYSQL_ROW row;
@@ -14,8 +15,13 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 
 //TIME	
 	if(!s->empty) {
+	  
+		if(!strcmp(s->protokol,"IPv6"))
+		  strcpy(isipv6,"_v6");
+		else
+		  strcpy(isipv6,"");
 		//MAC			
-		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_MAC;",s->protokol);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_MAC;",s->protokol, isipv6);
                	if(mysql_query(conn,temp_str)) {
                        	fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
                	}
@@ -26,7 +32,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		mac++;
 
 		//IP
-		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_IP;",s->protokol);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_IP;",s->protokol, isipv6);
                	if(mysql_query(conn,temp_str)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
 		}	
@@ -37,7 +43,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		ip++;
 
 		//MAC_SD
-		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_MAC_SD;",s->protokol);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_MAC_SD;",s->protokol, isipv6);
                 if(mysql_query(conn,temp_str)) {
                         fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
                 }
@@ -48,7 +54,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		mac_sd++;
 
 		//IP_SD
-		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_IP_SD;",s->protokol);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_IP_SD;",s->protokol, isipv6);
                 if(mysql_query(conn,temp_str)) {
                       	fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
                 }
@@ -58,7 +64,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		mysql_free_result(result);
 		ip_sd++;
 
-		sprintf(temp_str,"INSERT INTO %s_1m_time (time,IP_id,MAC_id,IP_SD_id,MAC_SD_id) VALUES ('%d','%d','%d','%d','%d');", s->protokol, processing_time, ip, mac, ip_sd, mac_sd);
+		sprintf(temp_str,"INSERT INTO %s%s_1m_time (time,IP_id,MAC_id,IP_SD_id,MAC_SD_id) VALUES ('%d','%d','%d','%d','%d');", s->protokol, isipv6, processing_time, ip, mac, ip_sd, mac_sd);
 		//if(debug) fprintf(stderr,"%s\n",temp_str);
 		if(mysql_query(conn, temp_str)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
