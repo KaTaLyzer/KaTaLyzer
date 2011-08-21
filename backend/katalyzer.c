@@ -354,10 +354,10 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 				if(strcmp(p_prot->protokol,"IPv6"))
 				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 				else
-				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` char(16) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` char(16) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(16) unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(16) unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
+				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` TINYINT(16) unsigned NOT NULL default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` TINYINT(16) unsigned NOT NULL default '0',`IP_2` TINYINT(16) unsigned NOT NULL default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 
 				if(mysql_query(conn, prikaz)){
-					fprintf(stderr,"Failed to create %s tables in MYSQL database %s: %s\n",p_prot->protokol ,db_name, mysql_error(conn));
+					fprintf(stderr,"Failed to create %s tables in MYSQL database %s: %s\nPrikaz: %s\n",p_prot->protokol ,db_name, mysql_error(conn), prikaz);
 					exit (ERR_MYSQL_TBL_CREATE);
 				}
 				int ii;
@@ -644,9 +644,9 @@ void ip_protokol(const u_char *pkt_data, int len)
 
 void ipv6_protokol(const u_char *pkt_data, int len)
 {
-  int protocol;
+  int protocol, i;
   char end=0;
-  char *ipv6_pom;
+  unsigned int *ipv6_pom;
   struct ip6_hbh *ip6hop;
   struct ip6_rthdr *ip6r;
   struct ip6_frag *ip6f;
@@ -704,25 +704,25 @@ void ipv6_protokol(const u_char *pkt_data, int len)
   }
   
   // treba vyriesit ukladanie do DB
-  if(IPV6_adr_D =(char*) malloc(sizeof(char)*16) == NULL){
+  if((IPV6_adr_D =(int*) malloc(sizeof(int)*4)) == NULL){
     fprintf(stderr,"Error malloc: %s\n", strerror(errno));
     return;
   }
-  if(IPV6_adr_S =(char*) malloc(sizeof(char)*16) == NULL){
+  if((IPV6_adr_S =(int*) malloc(sizeof(int)*4)) == NULL){
     fprintf(stderr,"Error malloc: %s\n", strerror(errno));
     return;
   }
   
-  ipv6_pom = iphv6->ip6_src; 
+  ipv6_pom =(unsigned int*) &iphv6->ip6_src; 
   
-  for(int i = 0;i<16;i++){
-    IPV6_adr_S[i] = ipv6_pom[i];
+  for(i = 0;i<4;i++){
+    IPV6_adr_S[i] = ntohl(ipv6_pom[i]);
   }
   
-  ipv6_pom = iphv6->ip6_dst;
+  ipv6_pom =(unsigned int*) &iphv6->ip6_dst;
   
-  for(int i = 0;i<16;i++){
-    IPV6_adr_D[i] = ipv6_pom[i];
+  for(i = 0;i<4; i++){
+    IPV6_adr_D[i] = ntohl(ipv6_pom[i]);
   }
   
   
@@ -942,7 +942,7 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 		p_protokol->zoznam->ipv6_s=NULL;
 		if(ipv6_p){
 		  p_protokol->zoznam->ipv6_d = IPV6_adr_D;
-		  p_protokol->zoznam->ip_s = IPV6_adr_S;
+		  p_protokol->zoznam->ipv6_s = IPV6_adr_S;
 		}
 		else{
 		  p_protokol->zoznam->ip_s=ntohl(IP_adr_S);			// we use ntohl, because of frontend
@@ -967,7 +967,7 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 					find=0; //set we don't find the IP adress and MAC adress
 					if((help_zaznamy->mac_s==MAC_adr_S) && (help_zaznamy->mac_d==MAC_adr_D)) { // we looking the IP adress and MAC adress in the structure
 						if((!ipv6_p && ((help_zaznamy->ip_s==ntohl(IP_adr_S)) && (help_zaznamy->ip_d==ntohl(IP_adr_D))))
-						  || (ipv6_p && ((!strcmp(help_zaznamy->ipv6_d,IPV6_adr_D)) && (!strcmp(help_zaznamy->ipv6_s,IPV6_adr_S))))
+						  || (ipv6_p && (((help_zaznamy->ipv6_d == IPV6_adr_D)) && ((help_zaznamy->ipv6_s == IPV6_adr_S))))
 						) {	//we find the IP adress and MAC adress
 							help_zaznamy->pocet_B += pocet_B;
 							help_zaznamy->pocet_ramcov++;
@@ -1098,3 +1098,8 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	//mysql_close(conn);
 	free_protokoly(p_zac);
 }
+
+
+
+
+

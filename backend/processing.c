@@ -5,8 +5,9 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
         char *prikaz; // dynamicka premena
         char *prikaz_pom; // pomocna dynamicka premena
         char temp_str[10000];
+	char is_ipv6 = 0;
         char temp[15];  // premenna pre ulozenie konvertovanej IP adresy z formatu int spat do stringu - pre zapis do DB sa bude nadalej pouzivat a.b.c.d format
-        char isipv6[4]; // pouzijeme pri ipv6
+        char s_protokol[10]; // pouzijeme pri ipv6
 	int ip=0,mac=0,ip_sd=0,mac_sd=0;
 	MYSQL_RES *result;
 	MYSQL_ROW row;
@@ -16,12 +17,16 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 //TIME	
 	if(!s->empty) {
 	  
-		if(!strcmp(s->protokol,"IPv6"))
-		  strcpy(isipv6,"_v6");
-		else
-		  strcpy(isipv6,"");
+		if(!strcmp(s->protokol,"IPv6")){
+		  strcpy(s_protokol,"IPv6_v6");
+		  is_ipv6=1;
+		}
+		else{
+		  sprintf(s_protokol,"%s",s->protokol);
+		  is_ipv6=0;
+		}
 		//MAC			
-		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_MAC;",s->protokol, isipv6);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_MAC;",s_protokol);
                	if(mysql_query(conn,temp_str)) {
                        	fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
                	}
@@ -32,7 +37,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		mac++;
 
 		//IP
-		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_IP;",s->protokol, isipv6);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_IP;", s_protokol);
                	if(mysql_query(conn,temp_str)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
 		}	
@@ -43,7 +48,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		ip++;
 
 		//MAC_SD
-		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_MAC_SD;",s->protokol, isipv6);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_MAC_SD;",s_protokol);
                 if(mysql_query(conn,temp_str)) {
                         fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
                 }
@@ -54,7 +59,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		mac_sd++;
 
 		//IP_SD
-		sprintf(temp_str,"SELECT MAX(id) FROM %s%s_1m_IP_SD;",s->protokol, isipv6);
+		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_IP_SD;",s_protokol);
                 if(mysql_query(conn,temp_str)) {
                       	fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
                 }
@@ -64,7 +69,7 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		mysql_free_result(result);
 		ip_sd++;
 
-		sprintf(temp_str,"INSERT INTO %s%s_1m_time (time,IP_id,MAC_id,IP_SD_id,MAC_SD_id) VALUES ('%d','%d','%d','%d','%d');", s->protokol, isipv6, processing_time, ip, mac, ip_sd, mac_sd);
+		sprintf(temp_str,"INSERT INTO %s_1m_time (time,IP_id,MAC_id,IP_SD_id,MAC_SD_id) VALUES ('%d','%d','%d','%d','%d');", s_protokol, processing_time, ip, mac, ip_sd, mac_sd);
 		//if(debug) fprintf(stderr,"%s\n",temp_str);
 		if(mysql_query(conn, temp_str)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
@@ -76,8 +81,17 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 //IP	
 //	struct in_addr *ips, *ipd;
 	if(!s->empty) {
+	  
+		if(!strcmp(s->protokol,"IPv6")){
+		  strcpy(s_protokol,"IPv6_v6");
+		  is_ipv6=1;
+		}
+		else{
+		  sprintf(s_protokol,"%s",s->protokol);
+		  is_ipv6=0;
+		}
 		prikaz=(char*) malloc(sizeof(char)*100); // alokujeme si pamät pre retazec, pre istotu si alokuje trosku viac pamäti ako je treba
-		sprintf(prikaz,"INSERT INTO %s_1m_IP (IP, bytes_S, packets_S, bytes_D, packets_D) VALUES ",s->protokol);
+		sprintf(prikaz,"INSERT INTO %s_1m_IP (IP, bytes_S, packets_S, bytes_D, packets_D) VALUES ",s_protokol);
 		for(help_zaznamy=s->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) {
 //				ips=(struct in_addr*) &help_zaznamy->ip_s;
 //				fprintf(stderr,"IPs: %s   hod=%X\n",inet_ntoa(*ips), help_zaznamy->ip_s);
@@ -89,6 +103,19 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 				destin_B=0;
 				destin_ramcov=0;
 				for(help_zaznamy2=help_zaznamy->p_next;help_zaznamy2!=NULL;help_zaznamy2=help_zaznamy2->p_next) {
+				  if(is_ipv6){
+				   	if(help_zaznamy->ipv6_s == help_zaznamy2->ipv6_s) {
+						source_B+=help_zaznamy2->pocet_B;
+						source_ramcov+=help_zaznamy2->pocet_ramcov;
+						help_zaznamy2->spracovany[2]=1;
+					}
+					if(help_zaznamy->ipv6_s == help_zaznamy2->ipv6_d) {
+						destin_B+=help_zaznamy2->pocet_B;
+						destin_ramcov+=help_zaznamy2->pocet_ramcov;
+						help_zaznamy2->spracovany[3]=1;
+					} 
+				  }
+				  else{
 					if(help_zaznamy->ip_s==help_zaznamy2->ip_s) {
 						source_B+=help_zaznamy2->pocet_B;
 						source_ramcov+=help_zaznamy2->pocet_ramcov;
@@ -99,14 +126,20 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 						destin_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[3]=1;
 					}
+				  }
 				}
-				sprintf(temp_str,"('%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_s, source_B, source_ramcov, destin_B, destin_ramcov);
+				if(is_ipv6)
+				  sprintf(temp_str,"('%x%x%x%x','%lu','%lu','%lu','%lu'),", help_zaznamy->ipv6_s[0], help_zaznamy->ipv6_s[1], help_zaznamy->ipv6_s[2], help_zaznamy->ipv6_s[3], source_B, source_ramcov, destin_B, destin_ramcov);
+				else
+				  sprintf(temp_str,"('%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_s, source_B, source_ramcov, destin_B, destin_ramcov);
 				if(!(prikaz_pom=(char*) malloc(sizeof(char)*strlen(prikaz)+sizeof(char)*(strlen(temp_str)+1)))){
 					fprintf(stderr,"Error realloc: %s\n", strerror(errno));
 					exit(1);
 				}
 				strcpy(prikaz_pom,prikaz);
-				free(prikaz);
+				if(prikaz)
+				  free(prikaz);
+				prikaz=NULL;
 				prikaz=prikaz_pom;
 				strcat(prikaz,temp_str);
 				//fprintf(stderr,"%s\n",temp_str);
@@ -119,6 +152,20 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 				destin_B=help_zaznamy->pocet_B;
 				destin_ramcov=help_zaznamy->pocet_ramcov;
 				for(help_zaznamy2=help_zaznamy->p_next;help_zaznamy2!=NULL;help_zaznamy2=help_zaznamy2->p_next) {
+				  if(is_ipv6){
+				  	if(help_zaznamy->ipv6_d == help_zaznamy2->ipv6_s) {
+						source_B+=help_zaznamy2->pocet_B;
+						source_ramcov+=help_zaznamy2->pocet_ramcov;
+						help_zaznamy2->spracovany[2]=1;
+					}
+					if(help_zaznamy->ipv6_d == help_zaznamy2->ipv6_d) {
+						destin_B+=help_zaznamy2->pocet_B;
+						destin_ramcov+=help_zaznamy2->pocet_ramcov;
+						help_zaznamy2->spracovany[3]=1;
+					
+					}  
+				  }
+				  else{
 					if(help_zaznamy->ip_d==help_zaznamy2->ip_s) {
 						source_B+=help_zaznamy2->pocet_B;
 						source_ramcov+=help_zaznamy2->pocet_ramcov;
@@ -128,15 +175,22 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 						destin_B+=help_zaznamy2->pocet_B;
 						destin_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[3]=1;
+					
 					}
+				  }
 				}
-				sprintf(temp_str,"('%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_d, source_B, source_ramcov, destin_B, destin_ramcov);
+				if(is_ipv6)
+				  sprintf(temp_str,"('%x%x%x%x','%lu','%lu','%lu','%lu'),", help_zaznamy->ipv6_d[0], help_zaznamy->ipv6_d[1], help_zaznamy->ipv6_d[2], help_zaznamy->ipv6_d[3], source_B, source_ramcov, destin_B, destin_ramcov);
+				else
+				  sprintf(temp_str,"('%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_d, source_B, source_ramcov, destin_B, destin_ramcov);
 				if(!(prikaz_pom=(char*) malloc(sizeof(char)*strlen(prikaz)+sizeof(char)*(strlen(temp_str)+1)))){ // alokujeme si novú väcsiu cast pamäti podla potreby
 					fprintf(stderr,"Error realloc: %s\n", strerror(errno));
 					exit(1);
 				}
 				strcpy(prikaz_pom,prikaz); // skopirujeme si obsah zo starej pamäti do novej
-				free(prikaz); // uvolnime staru pamät
+				if(prikaz)
+				  free(prikaz); // uvolnime staru pamät
+				prikaz=NULL;
 				prikaz=prikaz_pom;
 				strcat(prikaz,temp_str);
 				//fprintf(stderr,"%s\n",temp_str);
@@ -149,11 +203,12 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 			if(debug) fprintf(stderr,"%s\n",prikaz);
 		}
-		free(prikaz);
+		if(prikaz)
+		  free(prikaz);
 
 //IP_SD		
 		prikaz=(char*) malloc(sizeof(char)*100);
-		sprintf(prikaz,"INSERT INTO %s_1m_IP_SD (IP_1, IP_2, bytes_12, packets_12, bytes_21, packets_21) VALUES ",s->protokol);
+		sprintf(prikaz,"INSERT INTO %s_1m_IP_SD (IP_1, IP_2, bytes_12, packets_12, bytes_21, packets_21) VALUES ",s_protokol);
 		for(help_zaznamy=s->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) {
 			if((help_zaznamy->spracovany[2]<2) && (help_zaznamy->spracovany[3]<2)) {
 				source_B=help_zaznamy->pocet_B;
@@ -161,6 +216,21 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 				destin_B=0;
 				destin_ramcov=0;
 				for(help_zaznamy2=help_zaznamy->p_next;help_zaznamy2!=NULL;help_zaznamy2=help_zaznamy2->p_next) {
+				  if(is_ipv6){
+				   	if((help_zaznamy->ipv6_s == help_zaznamy2->ipv6_s) && (help_zaznamy->ipv6_d == help_zaznamy2->ipv6_d)) {
+						source_B+=help_zaznamy2->pocet_B;
+						source_ramcov+=help_zaznamy2->pocet_ramcov;
+						help_zaznamy2->spracovany[2]=2;
+						help_zaznamy2->spracovany[3]=2;
+					}
+					else if((help_zaznamy->ipv6_s == help_zaznamy2->ipv6_d) && (help_zaznamy->ipv6_d == help_zaznamy2->ipv6_s)) {
+						destin_B+=help_zaznamy2->pocet_B;
+						destin_ramcov+=help_zaznamy2->pocet_ramcov;
+						help_zaznamy2->spracovany[2]=2;
+						help_zaznamy2->spracovany[3]=2;
+					} 
+				  }
+				  else{
 					if(help_zaznamy->ip_s==help_zaznamy2->ip_s && help_zaznamy->ip_d==help_zaznamy2->ip_d) {
 						source_B+=help_zaznamy2->pocet_B;
 						source_ramcov+=help_zaznamy2->pocet_ramcov;
@@ -173,14 +243,20 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 						help_zaznamy2->spracovany[2]=2;
 						help_zaznamy2->spracovany[3]=2;
 					}
+				  }
 				}
-				sprintf(temp_str,"('%u','%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_s, help_zaznamy->ip_d, source_B, source_ramcov, destin_B, destin_ramcov);
+				if(is_ipv6)
+				  sprintf(temp_str,"('%x%x%x%x','%x%x%x%x','%lu','%lu','%lu','%lu'),", help_zaznamy->ipv6_s[0], help_zaznamy->ipv6_s[1], help_zaznamy->ipv6_s[2], help_zaznamy->ipv6_s[3], help_zaznamy->ipv6_d[0], help_zaznamy->ipv6_d[1], help_zaznamy->ipv6_d[2], help_zaznamy->ipv6_d[3], source_B, source_ramcov, destin_B, destin_ramcov);
+				else
+				  sprintf(temp_str,"('%u','%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_s, help_zaznamy->ip_d, source_B, source_ramcov, destin_B, destin_ramcov);
 				if(!(prikaz_pom=(char*) malloc(sizeof(char)*strlen(prikaz)+sizeof(char)*(strlen(temp_str)+1)))){
 					fprintf(stderr,"Error realloc: %s\n", strerror(errno));
 					exit(1);
 				}
 				strcpy(prikaz_pom,prikaz);
-				free(prikaz);
+				if(prikaz)
+				  free(prikaz);
+				prikaz=NULL;
 				prikaz=prikaz_pom;
 				strcat(prikaz,temp_str);
 				//fprintf(stderr,"%s\n",temp_str);
@@ -193,11 +269,13 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		if(mysql_query(conn, prikaz)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 		}
-		free(prikaz);
+		if(prikaz)
+		  free(prikaz);
+		prikaz=NULL;
 		
 //MAC		
 		prikaz=(char*) malloc(sizeof(char)*100);
-		sprintf(prikaz,"INSERT INTO %s_1m_MAC (MAC, bytes_S, packets_S, bytes_D, packets_D) VALUES ",s->protokol);
+		sprintf(prikaz,"INSERT INTO %s_1m_MAC (MAC, bytes_S, packets_S, bytes_D, packets_D) VALUES ",s_protokol);
 		for(help_zaznamy=s->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) {
 			if(help_zaznamy->spracovany[0]==0) {
 				source_B=help_zaznamy->pocet_B;
@@ -222,7 +300,9 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 					exit(1);
 				}
 				strcpy(prikaz_pom,prikaz);
-				free(prikaz);
+				if(prikaz)
+				  free(prikaz);
+				prikaz=NULL;
 				prikaz=prikaz_pom;
 				strcat(prikaz,temp_str);
 				//fprintf(stderr,"%s\n",temp_str);
@@ -252,7 +332,9 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 					exit(1);
 				}
 				strcpy(prikaz_pom,prikaz);
-				free(prikaz);
+				if(prikaz)
+				  free(prikaz);
+				prikaz=NULL;
 				prikaz=prikaz_pom;
 				strcat(prikaz,temp_str);
 				//fprintf(stderr,"%s\n",temp_str);
@@ -264,11 +346,13 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		if(mysql_query(conn, prikaz)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 		}
-		free(prikaz);
+		if(prikaz)
+		  free(prikaz);
+		prikaz=NULL;
 
 //MAC_SD
 		prikaz=(char*) malloc(sizeof(char)*100);
-		sprintf(prikaz,"INSERT INTO %s_1m_MAC_SD (MAC_1, MAC_2, bytes_12, packets_12, bytes_21, packets_21) VALUES ",s->protokol);
+		sprintf(prikaz,"INSERT INTO %s_1m_MAC_SD (MAC_1, MAC_2, bytes_12, packets_12, bytes_21, packets_21) VALUES ",s_protokol);
 		for(help_zaznamy=s->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) {
 			if((help_zaznamy->spracovany[0]<2) && (help_zaznamy->spracovany[1]<2)) {
 				source_B=help_zaznamy->pocet_B;
@@ -295,7 +379,9 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 					exit(1);
 				}
 				strcpy(prikaz_pom,prikaz);
-				free(prikaz);
+				if(prikaz)
+				  free(prikaz);
+				prikaz=NULL;
 				prikaz=prikaz_pom;
 				strcat(prikaz,temp_str);
 				//fprintf(stderr,"%s\n",temp_str);
@@ -308,7 +394,9 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		if(mysql_query(conn, prikaz)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 		}
-		free(prikaz);
+		if(prikaz)
+		  free(prikaz);
+		prikaz=NULL;
 
 	}
 
