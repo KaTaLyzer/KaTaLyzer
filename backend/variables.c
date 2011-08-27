@@ -4,6 +4,7 @@ int wait = 1;
 char *interface_from_argument;
 //char *interface_from_argument[25]="";
 int b_interface_from_argument = 0;
+char ipv6 = 0;
 
 //debug variables
 int debug = 0;

@@ -27,6 +27,7 @@ extern int wait;
 extern char *interface_from_argument;
 //extern char interface_from_argument[25]; 
 extern int b_interface_from_argument;
+extern char ipv6;
 
 // debug variables
 extern int debug;
@@ -58,6 +59,7 @@ typedef struct zaznamy{
 //global structure for name of the protocol
 typedef struct protokoly {
 	int empty;
+	char is_ipv6;
 	char protokol[9];		// name of the protocol
 	ZAZNAMY *zoznam;		// pointer to stucture ZAZNAMY
 	struct protokoly *p_next;	// pointer to next structure
