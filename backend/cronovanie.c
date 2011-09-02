@@ -1,4 +1,6 @@
 #include "cronovanie.h"
+#include "errdef.h"
+#include <errno.h>
 
 //version 3.4.2010 - 10:56
 //#define DEBUG_CRONX
@@ -8,6 +10,7 @@
 //struktura na ukladanie nazvov protokolov
 typedef struct pro {
     char nazov[9];
+    char is_ipv6;
     struct pro *dalsi;
 } PRO;
 
@@ -17,9 +20,12 @@ typedef struct sd_t {
     uint64_t mac_d;
     uint32_t ip_s;
     uint32_t ip_d;
+    unsigned int *ipv6_s;
+    unsigned int *ipv6_d;
     unsigned long int pocet_B12, pocet_B21;
     unsigned long int pocet_ramcov12, pocet_ramcov21;
     int spracovany;
+    char is_ipv6;
     struct sd_t *dalsi;
 } SD_T;
 
@@ -73,7 +79,7 @@ inline void *cronovanie(void *cast) {
 #endif
 
     MYSQL *conn;
-    MYSQL_RES *result, *result2;
+    MYSQL_RES *result = NULL, *result2 = NULL;
     MYSQL_ROW row, row2;
     conn = mysql_init(NULL);
     if (mysql_real_connect(conn, db_host, db_user, db_pass, NULL, 0, NULL, CLIENT_MULTI_STATEMENTS) == NULL) {
@@ -108,7 +114,16 @@ inline void *cronovanie(void *cast) {
         while ((row=mysql_fetch_row(result))!=NULL) {
             if (strstr(row[0],mstr)) {
                 if (pocitadlo==1) {
+		  if(strstr(row[0],"_v6")){
+                    sprintf(table->nazov,"%s_v6",strtok(row[0],"_"));
+		    table->is_ipv6=1;
+		  }
+		  else{
                     sprintf(table->nazov,"%s",strtok(row[0],"_"));
+		    table->is_ipv6=0;
+		  }
+		    
+		    
 #ifdef DEBUG_CRON
                     fprintf(stderr,"'%s' ",table->nazov);
 #endif
@@ -118,7 +133,14 @@ inline void *cronovanie(void *cast) {
                     pom = (PRO*)malloc(sizeof(PRO));
                     table->dalsi=pom;
                     table = table->dalsi;
-                    sprintf(table->nazov,"%s",strtok(row[0],"_"));
+		    if(strstr(row[0],"_v6")){
+		      sprintf(table->nazov,"%s_v6",strtok(row[0],"_"));
+		      table->is_ipv6=1;
+		    }
+		    else{
+		      sprintf(table->nazov,"%s",strtok(row[0],"_"));
+		      table->is_ipv6=0;
+		    }
 #ifdef DEBUG_CRON
                     fprintf(stderr,"'%s' ",table->nazov);
 #endif
@@ -145,7 +167,10 @@ inline void *cronovanie(void *cast) {
         if (strstr(table->nazov,"SIP")!=NULL) ;
         else if (strstr(table->nazov,"CDP")!=NULL) ;
         else {
+	  if(!table->is_ipv6)
             sprintf(kreatura,"CREATE TABLE IF NOT EXISTS %s_%s_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` bigint(20) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` bigint(20) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` bigint(20) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` bigint(20) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",table->nazov,mhd,table->nazov,mhd,table->nazov,mhd,table->nazov,mhd,table->nazov,mhd);
+	  else
+            sprintf(kreatura,"CREATE TABLE IF NOT EXISTS %s_%s_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(32),`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` bigint(20) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` bigint(20) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(32),`IP_2` char(32),`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` bigint(20) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_%s_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` bigint(20) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` bigint(20) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",table->nazov,mhd,table->nazov,mhd,table->nazov,mhd,table->nazov,mhd,table->nazov,mhd);
             strcat(prikaz,kreatura);
             pocitadlo++;
         }
@@ -180,6 +205,7 @@ inline void *cronovanie(void *cast) {
         if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
             if (row[0]!=NULL) test_time[0] = atoi(row[0]);
             mysql_free_result(result);
+	    result = NULL;
         } else {
             fprintf(stderr,"Kontrola MAX(time) z nl zlyhala. Ukoncit?\n");
             test_time[0]=0;
@@ -192,6 +218,7 @@ inline void *cronovanie(void *cast) {
         if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
             if (row[0]!=NULL) test_time[1] = atoi(row[0]);
             mysql_free_result(result);
+	    result = NULL;
         } else {
             fprintf(stderr,"Kontrola MAX(time) z mhd zlyhala. Ukoncit?\n");
             test_time[1]=0;
@@ -211,6 +238,7 @@ inline void *cronovanie(void *cast) {
                 if (row[0]!=NULL) MAC_id[2] = atoi(row[0]);
                 MAC_id[2]++;
                 mysql_free_result(result);
+		result = NULL;
             } else fprintf(stderr,"a");
 
             //IP
@@ -222,6 +250,7 @@ inline void *cronovanie(void *cast) {
                 if (row[0]!=NULL) IP_id[2] = atoi(row[0]);
                 IP_id[2]++;
                 mysql_free_result(result);
+		result = NULL;
             } else fprintf(stderr,"b");
 
             //MAC_SD
@@ -233,6 +262,7 @@ inline void *cronovanie(void *cast) {
                 if (row[0]!=NULL) MAC_SD_id[2] = atoi(row[0]);
                 MAC_SD_id[2]++;
                 mysql_free_result(result);
+		result = NULL;
             } else fprintf(stderr,"c");
 
             //IP_SD
@@ -244,6 +274,7 @@ inline void *cronovanie(void *cast) {
                 if (row[0]!=NULL)  IP_SD_id[2] = atoi(row[0]);
                 IP_SD_id[2]++;
                 mysql_free_result(result);
+		result = NULL;
             } else fprintf(stderr,"d");
 
 //SPRACOVANIE CASOV
@@ -264,6 +295,7 @@ inline void *cronovanie(void *cast) {
                     if (((result2 = mysql_store_result(conn))!=NULL)&&((row2=mysql_fetch_row(result2))!=NULL)) {
                         if (row2[0]!=NULL) mhd_time[0] = atoi(row2[0]);
                         mysql_free_result(result2);
+			result2 = NULL;
                     } else fprintf(stderr,"e",table->nazov);
                 }
                 //ak v mhd nic nie je, zoberie prvy cas z nl tabulky
@@ -275,6 +307,7 @@ inline void *cronovanie(void *cast) {
                     if (((result2 = mysql_store_result(conn))!=NULL)&&((row2=mysql_fetch_row(result2))!=NULL)) {
                         if (row2[0]!=NULL) mhd_time[0] = atoi(row2[0]);
                         mysql_free_result(result2);
+			result2 = NULL;
                     } else fprintf(stderr,"f");
                 }
                 mhd_time[1]=mhd_time[0]+konst;
@@ -285,6 +318,7 @@ inline void *cronovanie(void *cast) {
                 if (((result2 = mysql_store_result(conn))!=NULL)&&((row2=mysql_fetch_row(result2))!=NULL)) {
                     if (row2[0]!=NULL) mhd_time[1] = atoi(row2[0]);
                     mysql_free_result(result2);
+		    result2 = NULL;
                 } else fprintf(stderr,"g %s",table->nazov);
             }
 
@@ -309,6 +343,7 @@ inline void *cronovanie(void *cast) {
                 IP_SD_id[0]--;
                 MAC_SD_id[0]--;
                 mysql_free_result(result);
+		result = NULL;
             } else fprintf(stderr,"h");
 
             /*DO*/
@@ -326,6 +361,7 @@ inline void *cronovanie(void *cast) {
                 IP_SD_id[1]--;
                 MAC_SD_id[1]--;
                 mysql_free_result(result);
+		result = NULL;
             } else {
                 //MAC
                 sprintf(prikaz,"SELECT MAX(id) FROM %s_%s_MAC;",table->nazov,nl);
@@ -335,6 +371,7 @@ inline void *cronovanie(void *cast) {
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
                     if (row[0]!=NULL) MAC_id[1] = atoi(row[0]);
                     mysql_free_result(result);
+		    result = NULL;
                 } else fprintf(stderr,"i");
 
                 //IP
@@ -345,6 +382,7 @@ inline void *cronovanie(void *cast) {
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
                     if (row[0]!=NULL) IP_id[1] = atoi(row[0]);
                     mysql_free_result(result);
+		    result = NULL;
                 } else fprintf(stderr,"j");
 
                 //MAC_SD
@@ -355,6 +393,7 @@ inline void *cronovanie(void *cast) {
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
                     if (row[0]!=NULL) MAC_SD_id[1] = atoi(row[0]);
                     mysql_free_result(result);
+		    result = NULL;
                 } else fprintf(stderr,"k");
 
                 //IP_SD
@@ -365,6 +404,7 @@ inline void *cronovanie(void *cast) {
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
                     if (row[0]!=NULL)  IP_SD_id[1] = atoi(row[0]);
                     mysql_free_result(result);
+		    result = NULL;
                 } else fprintf(stderr,"l");
             }
 // ???
@@ -382,6 +422,7 @@ inline void *cronovanie(void *cast) {
                 IP_SD_id[2]++;
                 MAC_SD_id[2]++;
                 mysql_free_result(result);
+		result = NULL;
             } else fprintf(stderr,"m");
 
 
@@ -431,28 +472,84 @@ inline void *cronovanie(void *cast) {
             while ((result = mysql_store_result(conn))!=NULL) {
                 while ((row=mysql_fetch_row(result))!=NULL) {
                     if (pocitadlo==1) {
-                        sd_ta->ip_s=atoi(row[0]);
-                        sd_ta->ip_d=atoi(row[1]);
-                        sd_ta->pocet_B12=atoi(row[2]);
-                        sd_ta->pocet_ramcov12=atoi(row[3]);
-                        sd_ta->pocet_B21=atoi(row[4]);
-                        sd_ta->pocet_ramcov21=atoi(row[5]);
-                        sd_ta->spracovany=0;
-                        sd_ta->dalsi=NULL;
-                    } else {
-                        SD_T *sd_pom;
-                        sd_pom = (SD_T*)malloc(sizeof(SD_T));
-                        sd_ta->dalsi=sd_pom;
-                        sd_ta = sd_ta->dalsi;
-                        sd_ta->ip_s=atoi(row[0]);
-                        sd_ta->ip_d=atoi(row[1]);
-                        sd_ta->pocet_B12=atoi(row[2]);
-                        sd_ta->pocet_ramcov12=atoi(row[3]);
-                        sd_ta->pocet_B21=atoi(row[4]);
-                        sd_ta->pocet_ramcov21=atoi(row[5]);
-                        sd_ta->spracovany=0;
-                        sd_ta->dalsi=NULL;
-                    }
+		      if(table->is_ipv6){
+			unsigned int *p_help;
+			int i;
+			
+			sd_ta->is_ipv6=table->is_ipv6;
+			
+			if((sd_ta->ipv6_d=(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+			  fprintf(stderr,"Error malloc in cronovanie: %s\n", strerror(errno));
+			  return;
+			}
+			if((sd_ta->ipv6_s=(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+			  fprintf(stderr,"Error malloc in cronovanie: %s\n", strerror(errno));
+			  return;
+			}
+			
+			p_help=(int*) &row[0];
+			for(i = 0 ;i < IPV6SIZE; i++){
+			  sd_ta->ipv6_s[i] = p_help[i];
+			}
+			
+			p_help=(int*) &row[1];
+			for(i = 0 ;i < IPV6SIZE; i++){
+			  sd_ta->ipv6_d[i] = p_help[i];
+			}
+		      }
+		      else{
+			sd_ta->is_ipv6=table->is_ipv6;
+			sd_ta->ip_s=atoi(row[0]);
+			sd_ta->ip_d=atoi(row[1]);
+		      }
+		      sd_ta->pocet_B12=atoi(row[2]);
+		      sd_ta->pocet_ramcov12=atoi(row[3]);
+		      sd_ta->pocet_B21=atoi(row[4]);
+		      sd_ta->pocet_ramcov21=atoi(row[5]);
+		      sd_ta->spracovany=0;
+		      sd_ta->dalsi=NULL;
+		    } else {
+		      SD_T *sd_pom;
+		      sd_pom = (SD_T*)malloc(sizeof(SD_T));
+		      sd_ta->dalsi=sd_pom;
+		      sd_ta = sd_ta->dalsi;
+		      if(table->is_ipv6){
+			unsigned int *p_help;
+			int i;
+			
+			sd_ta->is_ipv6=table->is_ipv6;
+			
+			if((sd_ta->ipv6_d=(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+			  fprintf(stderr,"Error malloc in cronovanie: %s\n", strerror(errno));
+			  return;
+			}
+			if((sd_ta->ipv6_s=(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+			  fprintf(stderr,"Error malloc in cronovanie: %s\n", strerror(errno));
+			  return;
+			}
+			
+			p_help=(int*) &row[0];
+			for(i = 0 ;i < IPV6SIZE; i++){
+			  sd_ta->ipv6_s[i] = p_help[i];
+			}
+			
+			p_help=(int*) &row[1];
+			for(i = 0 ;i < IPV6SIZE; i++){
+			  sd_ta->ipv6_d[i] = p_help[i];
+			}
+		      }		
+		      else{
+			sd_ta->is_ipv6=table->is_ipv6;
+			sd_ta->ip_s=atoi(row[0]);
+			sd_ta->ip_d=atoi(row[1]);
+		      }
+		      sd_ta->pocet_B12=atoi(row[2]);
+		      sd_ta->pocet_ramcov12=atoi(row[3]);
+		      sd_ta->pocet_B21=atoi(row[4]);
+		      sd_ta->pocet_ramcov21=atoi(row[5]);
+		      sd_ta->spracovany=0;
+		      sd_ta->dalsi=NULL;
+		    }
                     pocitadlo++;
                 }
             }
@@ -477,7 +574,10 @@ inline void *cronovanie(void *cast) {
                             sd_ta2->spracovany=1;
                         }
                     }
-                    sprintf(kreatura,"('%u','%u','%lu','%lu','%lu','%lu'),", sd_ta->ip_s, sd_ta->ip_d, sd_ta->pocet_B12, sd_ta->pocet_ramcov12, sd_ta->pocet_B21, sd_ta->pocet_ramcov21);
+                    if(sd_ta->is_ipv6)
+		      sprintf(kreatura,"('%08x%08x%08x%08u','%08x%08x%08x%08u','%lu','%lu','%lu','%lu'),", sd_ta->ipv6_s[0], sd_ta->ipv6_s[1], sd_ta->ipv6_s[2], sd_ta->ipv6_s[3], sd_ta->ipv6_d[0], sd_ta->ipv6_d[1], sd_ta->ipv6_d[2], sd_ta->ipv6_d[3], sd_ta->pocet_B12, sd_ta->pocet_ramcov12, sd_ta->pocet_B21, sd_ta->pocet_ramcov21);
+		    else
+		      sprintf(kreatura,"('%u','%u','%lu','%lu','%lu','%lu'),", sd_ta->ip_s, sd_ta->ip_d, sd_ta->pocet_B12, sd_ta->pocet_ramcov12, sd_ta->pocet_B21, sd_ta->pocet_ramcov21);
                     strcat(prikaz,kreatura);
                     sd_ta->spracovany=1;
                 }
@@ -490,6 +590,10 @@ inline void *cronovanie(void *cast) {
             for (sd_ta=sd_prvy;sd_ta!=NULL;) {
                 sd_prvy=sd_ta;
                 sd_ta=sd_ta->dalsi;
+		if(sd_prvy->is_ipv6){
+		  free(sd_prvy->ipv6_d);
+		  free(sd_prvy->ipv6_s);
+		}
                 free(sd_prvy);
             }
 
@@ -575,6 +679,8 @@ inline void *cronovanie(void *cast) {
         free(prvy);
     }
 
-    mysql_free_result(result);
+    if(result)
+      mysql_free_result(result);
+    result=NULL;
     mysql_close(conn);
 }

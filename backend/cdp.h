@@ -48,3 +48,4 @@ void cdp_protokol(const u_char *pkt_data, struct cdp_struct *cdp_st);
 void cdp_processing(struct cdp_struct *cdp_st, MYSQL *conn);
 
 #endif
+// kate: indent-mode cstyle; space-indent on; indent-width 0; 

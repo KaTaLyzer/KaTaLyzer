@@ -22,12 +22,13 @@
 #define DLZKA 128
 #define NUMBER_OF_TCP_PORTS 20
 #define NUMBER_OF_UDP_PORTS 20
+#define IPV6SIZE 4
 
 extern int wait;
 extern char *interface_from_argument;
 //extern char interface_from_argument[25]; 
 extern int b_interface_from_argument;
-extern char ipv6;
+extern char is_ipv6ext;
 
 // debug variables
 extern int debug;
@@ -74,10 +75,13 @@ typedef struct zaciatok_p{
 //global structure for pair array
 typedef struct pair_array{
 	int empty;
+	char is_ipv6;
 	uint64_t mac_s;
 	uint64_t mac_d;
 	uint32_t ip_s;
 	uint32_t ip_d;
+	unsigned int *ipv6_s;
+	unsigned int *ipv6_d;
 	struct pair_array *p_next;
 }PAIR_ARRAY;
 

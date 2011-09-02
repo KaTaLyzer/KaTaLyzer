@@ -143,6 +143,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	MAC_adr_D=0;
 	IP_adr_S=0;
 	IP_adr_D=0;
+	is_ipv6ext=0;
 
 	unix_time = time(&actual_time); // unix_time - variable for inserting time info into DB
 		
@@ -279,8 +280,16 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		z_pair_array=(PAIR_ARRAY*) malloc(sizeof(PAIR_ARRAY));
 		z_pair_array->mac_d=MAC_adr_D;
 		z_pair_array->mac_s=MAC_adr_S;
-		z_pair_array->ip_d=ntohl(IP_adr_D);
-		z_pair_array->ip_s=ntohl(IP_adr_S);
+		if(is_ipv6ext){
+		  z_pair_array->is_ipv6=is_ipv6ext;
+		  z_pair_array->ipv6_d=IPV6_adr_D;
+		  z_pair_array->ipv6_s=IPV6_adr_S;
+		}
+		else{
+		  z_pair_array->is_ipv6=is_ipv6ext;
+		  z_pair_array->ip_d=ntohl(IP_adr_D);
+		  z_pair_array->ip_s=ntohl(IP_adr_S);
+		}
 		z_pair_array->p_next=NULL;
 	}
 	else {
@@ -289,7 +298,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		for(pom_array=z_pair_array;pom_array!=NULL;pom_array=pom_array->p_next) {
 			find=0;
 			if((pom_array->mac_s==MAC_adr_S) && (pom_array->mac_d==MAC_adr_D)) {
-				if((pom_array->ip_s==ntohl(IP_adr_S)) && (pom_array->ip_d==ntohl(IP_adr_D))) {
+				if(( !is_ipv6ext && (pom_array->is_ipv6 == is_ipv6ext) && (pom_array->ip_s==ntohl(IP_adr_S)) && (pom_array->ip_d==ntohl(IP_adr_D))) || ( is_ipv6ext && (pom_array->is_ipv6 == is_ipv6ext) && (compare_IPv6(pom_array->ipv6_s, IPV6_adr_S) && compare_IPv6(pom_array->ipv6_d, IPV6_adr_D)))) {
 					find=1;
 					break;
 				}
@@ -301,8 +310,16 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 			pom_array=pom_array->p_next;
 			pom_array->mac_d=MAC_adr_D;
 			pom_array->mac_s=MAC_adr_S;
-			pom_array->ip_d=ntohl(IP_adr_D);
-			pom_array->ip_s=ntohl(IP_adr_S);
+			if(is_ipv6ext){
+			  pom_array->is_ipv6=is_ipv6ext;
+			  pom_array->ipv6_d=IPV6_adr_D;
+			  pom_array->ipv6_s=IPV6_adr_S;
+			}
+			else{
+			  pom_array->is_ipv6=is_ipv6ext;
+			  pom_array->ip_d=ntohl(IP_adr_D);
+			  pom_array->ip_s=ntohl(IP_adr_S);
+			}
 			pom_array->p_next=NULL;
 		}
 	}
@@ -351,7 +368,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 			PROTOKOLY *p_prot;
 			for(p_prot=z_protokoly.p_protokoly;p_prot!=NULL;p_prot=p_prot->p_next){
 				sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
-				if(!ipv6)
+				if(!p_prot->is_ipv6)
 				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 				else
 				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(32),`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(32), `IP_2` char(32),`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
@@ -369,6 +386,14 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		if(z_pair_array!=NULL) {
 			sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 			sprintf(prikaz,"CREATE TABLE IF NOT EXISTS IPlist (`IP` int unsigned default '0', `MAC` bigint unsigned default '0',  PRIMARY KEY(`IP`)) ENGINE=MyISAM;");
+			if(mysql_query(conn, prikaz)){
+				fprintf(stderr,"Failed to create IPlist tables in MYSQL database %s: %s\n",db_name, mysql_error(conn));
+				exit (ERR_MYSQL_TBL_CREATE);
+			}
+			mysql_next_result(conn);
+			
+			sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
+			sprintf(prikaz,"CREATE TABLE IF NOT EXISTS IPv6list (`IP` char(32), `MAC` bigint unsigned default '0',  PRIMARY KEY(`IP`)) ENGINE=MyISAM;");
 
 			if(mysql_query(conn, prikaz)){
 				fprintf(stderr,"Failed to create IPlist tables in MYSQL database %s: %s\n",db_name, mysql_error(conn));
@@ -384,14 +409,26 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		if(z_pair_array!=NULL) {
 			PAIR_ARRAY *pom_array;
 			for(pom_array=z_pair_array;pom_array!=NULL;pom_array=pom_array->p_next) {
-				sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ip_s, pom_array->mac_s, pom_array->mac_s);
-				if (mysql_query(conn, prikaz)) {
-					fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
-				}
-				sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ip_d, pom_array->mac_d, pom_array->mac_d);
-				if (mysql_query(conn, prikaz)) {
-					fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
-				}
+			  if(!pom_array->is_ipv6){
+			    sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ip_s, pom_array->mac_s, pom_array->mac_s);
+			    if (mysql_query(conn, prikaz)) {
+			      fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
+			    }
+			    sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ip_d, pom_array->mac_d, pom_array->mac_d);
+			    if (mysql_query(conn, prikaz)) {
+			      fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
+			    }
+			  }
+			  else{
+			    sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ipv6_s[0], pom_array->ipv6_s[1], pom_array->ipv6_s[2], pom_array->ipv6_s[3], pom_array->mac_s, pom_array->mac_s);
+			    if (mysql_query(conn, prikaz)) {
+			      fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
+			    }
+			    sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ipv6_d[0], pom_array->ipv6_d[1], pom_array->ipv6_d[2], pom_array->ipv6_d[3], pom_array->mac_d, pom_array->mac_d);
+			    if (mysql_query(conn, prikaz)) {
+			      fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
+			    }
+			  }
 			}
 		}
 
@@ -536,6 +573,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 				}
 			}			
 		}
+		
 	}
 		
 	if(flag == 1 && actual_time - beggining_time >= 10) { // 10 seconds is considered enough time interval as we measure with minimum resolution of 60seconds and it is very probable that there will be another frame comming in that 10 seconds - it will set 'flag' again so we can insert data into DB again after'casovac_zapisu' 
@@ -628,7 +666,7 @@ void ip_protokol(const u_char *pkt_data, int len)
 {
 	int protocol;
 	
-	ipv6 = 0;
+	is_ipv6ext = 0;
 
 	iph=(struct iphdr*) (pkt_data + (sizeof(struct ether_header)) + len);	//store IP header structure
 	protocol=iph->protocol;			//protocol inside IP packet
@@ -656,7 +694,7 @@ void ipv6_protokol(const u_char *pkt_data, int len)
   struct ip6_frag *ip6f;
   struct ip6_dest *ip6d;
   
-  ipv6 = 1;
+  is_ipv6ext = 1;
   
   iphv6=(struct ip6_hdr*) (pkt_data + (sizeof(struct ether_header)) + len);
   protocol=iphv6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
@@ -710,11 +748,11 @@ void ipv6_protokol(const u_char *pkt_data, int len)
   }
   
   // treba vyriesit ukladanie do DB
-  if((IPV6_adr_D =(int*) malloc(sizeof(int)*4)) == NULL){
+  if((IPV6_adr_D =(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
     fprintf(stderr,"Error malloc: %s\n", strerror(errno));
     return;
   }
-  if((IPV6_adr_S =(int*) malloc(sizeof(int)*4)) == NULL){
+  if((IPV6_adr_S =(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
     fprintf(stderr,"Error malloc: %s\n", strerror(errno));
     return;
   }
@@ -922,12 +960,8 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	ZAZNAMY *help_zaznamy;  //pomocna struktura
 	PROTOKOLY *help_protokol, *p_protokol;
 	int find, find_p;
-	char ipv6_p = 0;
+	char pokus;
 
-	// check s it a ip6 ip adress
-	if(!strcmp(s,"IPv6"))
-	  ipv6_p = 1;
-		
 	if(p_zac->empty) { //if struct is empty, we create it
 		p_zac->empty=0;
 		if((p_zac->p_protokoly=(PROTOKOLY*) malloc(sizeof(PROTOKOLY))) == NULL){	// create structure PROTOKOLY
@@ -940,14 +974,14 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 			fprintf(stderr,"Error malloc: %s\n", strerror(errno));
 			return;
 		}
-		p_protokol->is_ipv6=ipv6;
+		p_protokol->is_ipv6=is_ipv6ext;  // check s it a ip6 ip adress
 		p_protokol->zoznam->mac_s=MAC_adr_S;				// set the MAC adres and IP adress
 		p_protokol->zoznam->mac_d=MAC_adr_D;
 		p_protokol->zoznam->ip_d=0;
 		p_protokol->zoznam->ip_s=0;
 		p_protokol->zoznam->ipv6_d=NULL;
 		p_protokol->zoznam->ipv6_s=NULL;
-		if(ipv6_p){
+		if(is_ipv6ext){
 		  p_protokol->zoznam->ipv6_d = IPV6_adr_D;
 		  p_protokol->zoznam->ipv6_s = IPV6_adr_S;
 		}
@@ -968,14 +1002,15 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	else {
 		for(help_protokol=p_zac->p_protokoly;help_protokol!=NULL;help_protokol=help_protokol->p_next) { //we looking for the protocol
 			find_p=0;	//we don't find the protocol
-			if(!strcmp(help_protokol->protokol,s)) {
+			if((!strcmp(help_protokol->protokol,s)) && (help_protokol->is_ipv6 == is_ipv6ext)) {
 				find_p=1;	//we find the protocol
 				for(help_zaznamy=help_protokol->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) { // prechadza strukturu zoznam
 					find=0; //set we don't find the IP adress and MAC adress
 					if((help_zaznamy->mac_s==MAC_adr_S) && (help_zaznamy->mac_d==MAC_adr_D)) { // we looking the IP adress and MAC adress in the structure
-						if((!ipv6_p && ((help_zaznamy->ip_s==ntohl(IP_adr_S)) && (help_zaznamy->ip_d==ntohl(IP_adr_D))))
-						  || (ipv6_p && (((help_zaznamy->ipv6_d == IPV6_adr_D)) && ((help_zaznamy->ipv6_s == IPV6_adr_S))))
+						if((!is_ipv6ext && ((help_zaznamy->ip_s==ntohl(IP_adr_S)) && (help_zaznamy->ip_d==ntohl(IP_adr_D))))
+						  || (is_ipv6ext && ((compare_IPv6(help_zaznamy->ipv6_d, IPV6_adr_D)) && (compare_IPv6(help_zaznamy->ipv6_s, IPV6_adr_S))))
 						) {	//we find the IP adress and MAC adress
+						pokus=is_ipv6ext;
 							help_zaznamy->pocet_B += pocet_B;
 							help_zaznamy->pocet_ramcov++;
 							find=1;	//set we find the IP adress and MAC adress
@@ -996,7 +1031,7 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 					help_zaznamy->ip_s=0;
 					help_zaznamy->ipv6_d=NULL;
 					help_zaznamy->ipv6_s=NULL;
-					if(ipv6_p){
+					if(is_ipv6ext){
 					  help_zaznamy->ipv6_d=IPV6_adr_D;
 					  help_zaznamy->ipv6_s=IPV6_adr_S;
 					}
@@ -1027,14 +1062,14 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 				fprintf(stderr,"Error malloc: %s\n", strerror(errno));
 				return;
 			}
-			help_protokol->is_ipv6 = ipv6;
+			help_protokol->is_ipv6 = is_ipv6ext;
 			help_protokol->zoznam->mac_s=MAC_adr_S;
 			help_protokol->zoznam->mac_d=MAC_adr_D;
 			help_protokol->zoznam->ip_d=0;
 			help_protokol->zoznam->ip_s=0;
 			help_protokol->zoznam->ipv6_d=NULL;
 			help_protokol->zoznam->ipv6_s=NULL;
-			if(ipv6_p){
+			if(is_ipv6ext){
 			  help_protokol->zoznam->ipv6_d=IPV6_adr_D;
 			  help_protokol->zoznam->ipv6_s=IPV6_adr_S;
 			}
@@ -1103,9 +1138,22 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 		}
 	}
 	fprintf(stderr,"Zapis do DB...\t[DONE]\n");
-	//mysql_close(conn);
+	mysql_close(conn);
 	free_protokoly(p_zac);
 }
+
+char compare_IPv6(unsigned int* IP1, unsigned int* IP2)
+{
+
+  int i;
+  for(i=0;i<IPV6SIZE;i++){
+    if(IP1[i] != IP2[i])
+      return 0;
+  }
+  return 1;
+  
+}
+
 
 
 

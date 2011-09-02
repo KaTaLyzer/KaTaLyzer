@@ -20,16 +20,12 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 	  
 	  is_ipv6 = s->is_ipv6;
 	  
-	  /*
-		if(!strcmp(s->protokol,"IPv6")){
-		  strcpy(s_protokol,"IPv6_v6");
-		  is_ipv6=1;
+		if(is_ipv6){
+		  sprintf(s_protokol,"%s_v6", s->protokol);
 		}
 		else{
 		  sprintf(s_protokol,"%s",s->protokol);
-		  is_ipv6=0;
 		}
-		*/
 		//MAC			
 		sprintf(temp_str,"SELECT MAX(id) FROM %s_1m_MAC;",s_protokol);
                	if(mysql_query(conn,temp_str)) {
@@ -88,16 +84,12 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 	if(!s->empty) {
 	  
 	  is_ipv6 = s->is_ipv6;
-	  /*
-		if(!strcmp(s->protokol,"IPv6")){
-		  strcpy(s_protokol,"IPv6_v6");
-		  is_ipv6=1;
+		if(is_ipv6){
+		  sprintf(s_protokol,"%s_v6", s->protokol);
 		}
 		else{
 		  sprintf(s_protokol,"%s",s->protokol);
-		  is_ipv6=0;
 		}
-		*/
 		prikaz=(char*) malloc(sizeof(char)*100); // alokujeme si pamät pre retazec, pre istotu si alokuje trosku viac pamäti ako je treba
 		sprintf(prikaz,"INSERT INTO %s_1m_IP (IP, bytes_S, packets_S, bytes_D, packets_D) VALUES ",s_protokol);
 		for(help_zaznamy=s->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) {
@@ -112,12 +104,12 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 				destin_ramcov=0;
 				for(help_zaznamy2=help_zaznamy->p_next;help_zaznamy2!=NULL;help_zaznamy2=help_zaznamy2->p_next) {
 				  if(is_ipv6){
-				   	if(help_zaznamy->ipv6_s == help_zaznamy2->ipv6_s) {
+				   	if(compare_IPv6(help_zaznamy->ipv6_s, help_zaznamy2->ipv6_s)) {
 						source_B+=help_zaznamy2->pocet_B;
 						source_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[2]=1;
 					}
-					if(help_zaznamy->ipv6_s == help_zaznamy2->ipv6_d) {
+					if(compare_IPv6(help_zaznamy->ipv6_s, help_zaznamy2->ipv6_d)) {
 						destin_B+=help_zaznamy2->pocet_B;
 						destin_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[3]=1;
@@ -161,12 +153,12 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 				destin_ramcov=help_zaznamy->pocet_ramcov;
 				for(help_zaznamy2=help_zaznamy->p_next;help_zaznamy2!=NULL;help_zaznamy2=help_zaznamy2->p_next) {
 				  if(is_ipv6){
-				  	if(help_zaznamy->ipv6_d == help_zaznamy2->ipv6_s) {
+				  	if(compare_IPv6(help_zaznamy->ipv6_d, help_zaznamy2->ipv6_s)) {
 						source_B+=help_zaznamy2->pocet_B;
 						source_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[2]=1;
 					}
-					if(help_zaznamy->ipv6_d == help_zaznamy2->ipv6_d) {
+					if(compare_IPv6(help_zaznamy->ipv6_d, help_zaznamy2->ipv6_d)) {
 						destin_B+=help_zaznamy2->pocet_B;
 						destin_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[3]=1;
@@ -225,13 +217,13 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 				destin_ramcov=0;
 				for(help_zaznamy2=help_zaznamy->p_next;help_zaznamy2!=NULL;help_zaznamy2=help_zaznamy2->p_next) {
 				  if(is_ipv6){
-				   	if((help_zaznamy->ipv6_s == help_zaznamy2->ipv6_s) && (help_zaznamy->ipv6_d == help_zaznamy2->ipv6_d)) {
+				   	if((compare_IPv6(help_zaznamy->ipv6_s, help_zaznamy2->ipv6_s)) && (compare_IPv6(help_zaznamy->ipv6_d, help_zaznamy2->ipv6_d))) {
 						source_B+=help_zaznamy2->pocet_B;
 						source_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[2]=2;
 						help_zaznamy2->spracovany[3]=2;
 					}
-					else if((help_zaznamy->ipv6_s == help_zaznamy2->ipv6_d) && (help_zaznamy->ipv6_d == help_zaznamy2->ipv6_s)) {
+					else if((compare_IPv6(help_zaznamy->ipv6_s, help_zaznamy2->ipv6_d)) && (compare_IPv6(help_zaznamy->ipv6_d, help_zaznamy2->ipv6_s))) {
 						destin_B+=help_zaznamy2->pocet_B;
 						destin_ramcov+=help_zaznamy2->pocet_ramcov;
 						help_zaznamy2->spracovany[2]=2;
