@@ -1,5 +1,8 @@
 #include "variables.h"
 
+char isoffline = 0;
+char isfirsttime= 0;
+
 int wait = 1;
 char *interface_from_argument;
 //char *interface_from_argument[25]="";
@@ -17,6 +20,9 @@ char *s_tmp_str;
 //configuration variables
 int i_is_configured = 0;
 int b_is_iface;
+
+//thread
+KTHREAD *p_thread = NULL;
 
 //global definitions for update to mysql database
 int unix_time;

@@ -19,7 +19,6 @@
 #include "cdp.h"
 #include "snmpp.h"
 #include "sip.h"
-#include <pthread.h>
 
 struct cdp_struct *cdp_st;
 
@@ -27,6 +26,7 @@ struct cdp_struct *cdp_st;
 typedef struct {
 	MYSQL *d;
 	ZACIATOK_P *p;
+	KTHREAD *t;
 } PRETAH;
 
 int main(int argc, char **argv) {
@@ -34,8 +34,10 @@ int main(int argc, char **argv) {
 	int o;
         int snaplen=65535;
 	int i_is_config = 0;
+	char offilename[255];
+	KTHREAD *kt1, *kt2;
 
-	while((o=getopt(argc,argv,":hwc:d")) != -1 ) {  // usage of getopt() is that if you expect argument than you specify colon ':' after the option (i.e. here we expect interface name after -i)
+	while((o=getopt(argc,argv,":hwc:df:")) != -1 ) {  // usage of getopt() is that if you expect argument than you specify colon ':' after the option (i.e. here we expect interface name after -i)
 		switch(o)
 		{ 
 			case 'h':
@@ -51,6 +53,12 @@ int main(int argc, char **argv) {
 			case 'd':
 				debug = 1;
 				break;
+			case 'f':
+			  fprintf(stderr,"WARNING: DANGEROUS FUNCTION. PRESS CTRL+C TO EXIT OR ANY KEY TO CONTINUE.\n");
+			//  getchar();
+			  isoffline = 1;
+			  strcpy(offilename,optarg);
+			  break;
 			default:
 				help();
 				exit(OK);
@@ -79,19 +87,34 @@ int main(int argc, char **argv) {
 		printf("*** protocol CDP\n");
 #endif
 	}
-	
-	if((fp=pcap_open_live(interface,snaplen,1,0,errbuf))==NULL) //open and capture traffic from specified interface; interface is used in promiscuous mode, so you need to be 'root'  to open it
+	if(isoffline){
+	  FILE *offile;
+	  offile = fopen(offilename,"r");
+	  if(offile == NULL){
+	   fprintf(stderr,"Error: opening offline file\n");
+	   return -1;
+	  }
+	  
+	  if((fp=pcap_fopen_offline(offile,errbuf))==NULL){ //open and capture traffic from offline file
+	    fprintf(stderr,"Error: pcap offline failure\n");
+	    return -1;
+	  }
+	}
+	else{
+	  if((fp=pcap_open_live(interface,snaplen,1,0,errbuf))==NULL) //open and capture traffic from specified interface; interface is used in promiscuous mode, so you need to be 'root'  to open it
        	// snaplen is maximum length of the frame which is catched, the rest is dumped 
-	{
-		fprintf(stderr,"Error capturing traffic on %s network interface: %s",interface, errbuf);
-               	exit(ERR_OPEN_IF);
+	  {
+	    fprintf(stderr,"Error capturing traffic on %s network interface: %s",interface, errbuf);
+	    exit(ERR_OPEN_IF);
+	  }
 	}
 
 	// we wait after opening network adapter - we do not need to wait for error message if we are not able to open the adapter
         
 	if( wait == 1 ) waiting(); // here we wait until new minute beggins
 
-	time( &beggining_time );  // beggining_time is time of start of the program. it is incremented by casovac_zapisu timer after each "casovac_zapisu" seconds
+	if(!isoffline)
+	  time( &beggining_time );  // beggining_time is time of start of the program. it is incremented by casovac_zapisu timer after each "casovac_zapisu" seconds
 
 #ifdef CDP_P
 	cdp_st=(struct cdp_struct*) malloc(sizeof(struct cdp_struct));
@@ -110,6 +133,15 @@ int main(int argc, char **argv) {
 	pcap_loop(fp,0,dispatcher_handler,NULL);
 	
 	pcap_close(fp); 	//closing the interface
+	
+//cakame na beziace vlakna a potom uvolnime strukturu	
+	for(kt1=p_thread;kt1!=NULL;){
+	  pthread_join(kt1->zapdb, NULL);
+	  kt2=kt1->p_next;
+	  if(kt1)
+	    free(kt1);
+	  kt1=kt2;
+	}
 
 	if (debug) printf("*** End\n");
 		
@@ -119,11 +151,12 @@ int main(int argc, char **argv) {
 void help()
 {
 	printf("\nKaTaLyzer\n");
-	printf("Usage: ./katalyzer [-h] [-w] [-c config_file] [-d] \n");
+	printf("Usage: ./katalyzer [-h] [-w] [-c config_file] [-d] [-f file]\n");
 	printf("-h print this help -h\n");
         printf("-w disable waiting for new minute after start of analyzator(e.g. in case we debug this program)\n");
 	printf("-c sets path to configuration file (e.g. /tmp/my_config.conf); do not use space " " in the path\n");
         printf("-d sets debug mode on\n");
+	printf("-f sets offline mode and path to offline capture file. WARNING: DANGEROUS");
 }
 
 //toto spusta funkcia pcap_loop - tu sa robi analyza prevadzky
@@ -144,8 +177,19 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	IP_adr_S=0;
 	IP_adr_D=0;
 	is_ipv6ext=0;
-
-	unix_time = time(&actual_time); // unix_time - variable for inserting time info into DB
+	
+	if(isoffline){
+	  if(!isfirsttime){
+	    beggining_time=header->ts.tv_sec;
+	    beggining_time/=10;
+	    beggining_time*=10;
+	    isfirsttime = 1;
+	  }
+	  unix_time = header->ts.tv_sec;
+	  actual_time = header->ts.tv_sec;
+	}
+	else
+	  unix_time = time(&actual_time); // unix_time - variable for inserting time info into DB
 		
 	pocet_B = header->len; 	// pocet_B - number of Bytes captured in frame - needed for counting amount of traffic 
 
@@ -432,11 +476,12 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 			}
 		}
 
+#ifdef _SIP
 		// SIP table creating
 		if(protocol_sip==1) SIP_vytvor_db(conn);
 		// SIP data into DB
 		if(protocol_sip==1) SIP_zapis_do_db(conn); 
-
+#endif
 
 
 #ifdef CDP_P
@@ -529,9 +574,13 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		z_protokoly.p_protokoly=NULL;
 		
 		PRETAH pretah1;
+		KTHREAD *kt;
+		kt = create_thread(&p_thread);
+		kt->run=1;
 		pretah1.p=&z_protokoly2;
 		pretah1.d=conn;
-		pthread_t zapdb;
+		pretah1.t=kt;
+		pthread_t zapdb = kt->zapdb;
 		pthread_create(&zapdb,NULL,zapis_do_DB_protokoly,(void *)&pretah1);
 
 		flag = 1; // after processing the frame we just processed we set 'flag' to true which indicates that data in this time interval were already processed and in this second we are not going to insert any more data into DB - we will do it after passing 'casovac_zapisu' seconds
@@ -1127,8 +1176,10 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	PRETAH *pretah1 = (PRETAH *) pretah2;
 	ZACIATOK_P *p_zac;
 	MYSQL *conn;
+	KTHREAD *kt;
 	p_zac=pretah1->p;
 	conn=pretah1->d;
+	kt=pretah1->t;
 	PROTOKOLY *p_protokol;
 
 	if(!p_zac->empty){
@@ -1138,6 +1189,7 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 		}
 	}
 	fprintf(stderr,"Zapis do DB...\t[DONE]\n");
+	kt->run=0;
 	mysql_close(conn);
 	free_protokoly(p_zac);
 }
@@ -1152,6 +1204,75 @@ char compare_IPv6(unsigned int* IP1, unsigned int* IP2)
   }
   return 1;
   
+}
+
+KTHREAD *create_thread(KTHREAD **thread)
+{
+  KTHREAD *pom_thread1, *start_thread, *pom_thread2, *pom_thread3;
+  
+  start_thread=*thread;
+  // ak struktura neexistuje tak ju vytvorime
+  if(!start_thread){
+    start_thread = (KTHREAD*) malloc(sizeof(KTHREAD));
+    start_thread->p_next=NULL;
+    start_thread->p_previous=NULL;
+    start_thread->run=0;
+    *thread=start_thread;
+    return start_thread;
+  }
+  else{
+    //prechadzame celu strukturu
+    for(pom_thread1=start_thread;pom_thread1->p_next!=NULL;){
+      // kontorujeme ci dane vlakno stale bezi, ak nie tak ho vyhodime z danej struktury 
+      if(pom_thread1->run){
+	pom_thread1 = pom_thread1->p_next;
+      }
+      else{
+	if(pom_thread1->p_previous==NULL){
+	  start_thread=pom_thread1->p_next;
+	  if(pom_thread1)
+	    free(pom_thread1);
+	  pom_thread1=NULL;
+	}
+	else{
+	  pom_thread2 = pom_thread1->p_next;
+	  pom_thread2->p_previous = pom_thread1->p_previous;
+	  if(pom_thread1)
+	    free(pom_thread1);
+	  pom_thread1=NULL;
+	  pom_thread1=pom_thread2;
+	}
+      }
+    }
+    
+//vytvorime nove vlakno    
+    pom_thread3 = (KTHREAD*) malloc(sizeof(KTHREAD));
+    pom_thread3->p_next=NULL;
+    pom_thread3->p_previous=pom_thread1;
+    pom_thread3->run=0;
+    pom_thread1->p_next=pom_thread3;
+//skonrolujeme ci bezi este predposledne vlakno strukture, ktore sme este neskontrolovali    
+    if(!pom_thread1->run){
+      if(pom_thread1->p_previous==NULL){
+	start_thread=pom_thread1->p_next;
+	start_thread->p_previous=NULL;
+	*thread=start_thread;
+	if(pom_thread1)
+	  free(pom_thread1);
+	pom_thread1=NULL;
+      }
+      else{
+	pom_thread2 = pom_thread1->p_next;
+	pom_thread2->p_previous = pom_thread1->p_previous;
+	if(pom_thread1)
+	  free(pom_thread1);
+	pom_thread1=NULL;
+	pom_thread1=pom_thread2;
+      }
+    }
+  }
+  
+  return pom_thread3;
 }
 
 

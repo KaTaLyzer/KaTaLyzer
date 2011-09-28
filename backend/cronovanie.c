@@ -203,7 +203,7 @@ inline void *cronovanie(void *cast) {
             fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
         }
         if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-            if (row[0]!=NULL) test_time[0] = atoi(row[0]);
+            if (row[0]!=NULL) test_time[0] = atoll(row[0]);
             mysql_free_result(result);
 	    result = NULL;
         } else {
@@ -216,7 +216,7 @@ inline void *cronovanie(void *cast) {
             fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
         }
         if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-            if (row[0]!=NULL) test_time[1] = atoi(row[0]);
+            if (row[0]!=NULL) test_time[1] = atoll(row[0]);
             mysql_free_result(result);
 	    result = NULL;
         } else {
@@ -235,7 +235,7 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL) MAC_id[2] = atoi(row[0]);
+                if (row[0]!=NULL) MAC_id[2] = atoll(row[0]);
                 MAC_id[2]++;
                 mysql_free_result(result);
 		result = NULL;
@@ -247,7 +247,7 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL) IP_id[2] = atoi(row[0]);
+                if (row[0]!=NULL) IP_id[2] = atoll(row[0]);
                 IP_id[2]++;
                 mysql_free_result(result);
 		result = NULL;
@@ -259,7 +259,7 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL) MAC_SD_id[2] = atoi(row[0]);
+                if (row[0]!=NULL) MAC_SD_id[2] = atoll(row[0]);
                 MAC_SD_id[2]++;
                 mysql_free_result(result);
 		result = NULL;
@@ -271,7 +271,7 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL)  IP_SD_id[2] = atoi(row[0]);
+                if (row[0]!=NULL)  IP_SD_id[2] = atoll(row[0]);
                 IP_SD_id[2]++;
                 mysql_free_result(result);
 		result = NULL;
@@ -286,14 +286,14 @@ inline void *cronovanie(void *cast) {
             //ak uz je daka mhd tabulka, zvysi hodnotu casu o konst a vyberie najblizsi 'od' cas
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
                 if (row[0]!=NULL) {
-                    mhd_time[0] = atoi(row[0]);
+                    mhd_time[0] = atoll(row[0]);
                     mhd_time[0]+=konst;
                     sprintf(prikaz,"SELECT time FROM %s_%s_time WHERE time>%d;",table->nazov,nl,mhd_time[0]);
                     if (mysql_query(conn,prikaz)) {
                         fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                     }
                     if (((result2 = mysql_store_result(conn))!=NULL)&&((row2=mysql_fetch_row(result2))!=NULL)) {
-                        if (row2[0]!=NULL) mhd_time[0] = atoi(row2[0]);
+                        if (row2[0]!=NULL) mhd_time[0] = atoll(row2[0]);
                         mysql_free_result(result2);
 			result2 = NULL;
                     } else fprintf(stderr,"e",table->nazov);
@@ -305,7 +305,7 @@ inline void *cronovanie(void *cast) {
                         fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                     }
                     if (((result2 = mysql_store_result(conn))!=NULL)&&((row2=mysql_fetch_row(result2))!=NULL)) {
-                        if (row2[0]!=NULL) mhd_time[0] = atoi(row2[0]);
+                        if (row2[0]!=NULL) mhd_time[0] = atoll(row2[0]);
                         mysql_free_result(result2);
 			result2 = NULL;
                     } else fprintf(stderr,"f");
@@ -316,7 +316,7 @@ inline void *cronovanie(void *cast) {
                     fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                 }
                 if (((result2 = mysql_store_result(conn))!=NULL)&&((row2=mysql_fetch_row(result2))!=NULL)) {
-                    if (row2[0]!=NULL) mhd_time[1] = atoi(row2[0]);
+                    if (row2[0]!=NULL) mhd_time[1] = atoll(row2[0]);
                     mysql_free_result(result2);
 		    result2 = NULL;
                 } else fprintf(stderr,"g %s",table->nazov);
@@ -334,10 +334,10 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL) IP_id[0] = atoi(row[0]);
-                if (row[1]!=NULL) MAC_id[0] = atoi(row[1]);
-                if (row[2]!=NULL) IP_SD_id[0] = atoi(row[2]);
-                if (row[3]!=NULL) MAC_SD_id[0] = atoi(row[3]);
+                if (row[0]!=NULL) IP_id[0] = atoll(row[0]);
+                if (row[1]!=NULL) MAC_id[0] = atoll(row[1]);
+                if (row[2]!=NULL) IP_SD_id[0] = atoll(row[2]);
+                if (row[3]!=NULL) MAC_SD_id[0] = atoll(row[3]);
                 IP_id[0]--;
                 MAC_id[0]--;
                 IP_SD_id[0]--;
@@ -352,10 +352,10 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL) IP_id[1] = atoi(row[0]);
-                if (row[1]!=NULL) MAC_id[1] = atoi(row[1]);
-                if (row[2]!=NULL) IP_SD_id[1] = atoi(row[2]);
-                if (row[3]!=NULL) MAC_SD_id[1] = atoi(row[3]);
+                if (row[0]!=NULL) IP_id[1] = atoll(row[0]);
+                if (row[1]!=NULL) MAC_id[1] = atoll(row[1]);
+                if (row[2]!=NULL) IP_SD_id[1] = atoll(row[2]);
+                if (row[3]!=NULL) MAC_SD_id[1] = atoll(row[3]);
                 IP_id[1]--;
                 MAC_id[1]--;
                 IP_SD_id[1]--;
@@ -369,7 +369,7 @@ inline void *cronovanie(void *cast) {
                     fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                 }
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                    if (row[0]!=NULL) MAC_id[1] = atoi(row[0]);
+                    if (row[0]!=NULL) MAC_id[1] = atoll(row[0]);
                     mysql_free_result(result);
 		    result = NULL;
                 } else fprintf(stderr,"i");
@@ -380,7 +380,7 @@ inline void *cronovanie(void *cast) {
                     fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                 }
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                    if (row[0]!=NULL) IP_id[1] = atoi(row[0]);
+                    if (row[0]!=NULL) IP_id[1] = atoll(row[0]);
                     mysql_free_result(result);
 		    result = NULL;
                 } else fprintf(stderr,"j");
@@ -391,7 +391,7 @@ inline void *cronovanie(void *cast) {
                     fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                 }
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                    if (row[0]!=NULL) MAC_SD_id[1] = atoi(row[0]);
+                    if (row[0]!=NULL) MAC_SD_id[1] = atoll(row[0]);
                     mysql_free_result(result);
 		    result = NULL;
                 } else fprintf(stderr,"k");
@@ -402,7 +402,7 @@ inline void *cronovanie(void *cast) {
                     fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
                 }
                 if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                    if (row[0]!=NULL)  IP_SD_id[1] = atoi(row[0]);
+                    if (row[0]!=NULL)  IP_SD_id[1] = atoll(row[0]);
                     mysql_free_result(result);
 		    result = NULL;
                 } else fprintf(stderr,"l");
@@ -413,10 +413,10 @@ inline void *cronovanie(void *cast) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
             if (((result = mysql_store_result(conn))!=NULL)&&((row=mysql_fetch_row(result))!=NULL)) {
-                if (row[0]!=NULL) IP_id[2] = atoi(row[0]);
-                if (row[1]!=NULL) MAC_id[2] = atoi(row[1]);
-                if (row[2]!=NULL) IP_SD_id[2] = atoi(row[2]);
-                if (row[3]!=NULL) MAC_SD_id[2] = atoi(row[3]);
+                if (row[0]!=NULL) IP_id[2] = atoll(row[0]);
+                if (row[1]!=NULL) MAC_id[2] = atoll(row[1]);
+                if (row[2]!=NULL) IP_SD_id[2] = atoll(row[2]);
+                if (row[3]!=NULL) MAC_SD_id[2] = atoll(row[3]);
                 IP_id[2]++;
                 MAC_id[2]++;
                 IP_SD_id[2]++;
@@ -499,13 +499,13 @@ inline void *cronovanie(void *cast) {
 		      }
 		      else{
 			sd_ta->is_ipv6=table->is_ipv6;
-			sd_ta->ip_s=atoi(row[0]);
-			sd_ta->ip_d=atoi(row[1]);
+			sd_ta->ip_s=atoll(row[0]);
+			sd_ta->ip_d=atoll(row[1]);
 		      }
-		      sd_ta->pocet_B12=atoi(row[2]);
-		      sd_ta->pocet_ramcov12=atoi(row[3]);
-		      sd_ta->pocet_B21=atoi(row[4]);
-		      sd_ta->pocet_ramcov21=atoi(row[5]);
+		      sd_ta->pocet_B12=atoll(row[2]);
+		      sd_ta->pocet_ramcov12=atoll(row[3]);
+		      sd_ta->pocet_B21=atoll(row[4]);
+		      sd_ta->pocet_ramcov21=atoll(row[5]);
 		      sd_ta->spracovany=0;
 		      sd_ta->dalsi=NULL;
 		    } else {
@@ -540,13 +540,13 @@ inline void *cronovanie(void *cast) {
 		      }		
 		      else{
 			sd_ta->is_ipv6=table->is_ipv6;
-			sd_ta->ip_s=atoi(row[0]);
-			sd_ta->ip_d=atoi(row[1]);
+			sd_ta->ip_s=atoll(row[0]);
+			sd_ta->ip_d=atoll(row[1]);
 		      }
-		      sd_ta->pocet_B12=atoi(row[2]);
-		      sd_ta->pocet_ramcov12=atoi(row[3]);
-		      sd_ta->pocet_B21=atoi(row[4]);
-		      sd_ta->pocet_ramcov21=atoi(row[5]);
+		      sd_ta->pocet_B12=atoll(row[2]);
+		      sd_ta->pocet_ramcov12=atoll(row[3]);
+		      sd_ta->pocet_B21=atoll(row[4]);
+		      sd_ta->pocet_ramcov21=atoll(row[5]);
 		      sd_ta->spracovany=0;
 		      sd_ta->dalsi=NULL;
 		    }
@@ -610,10 +610,10 @@ inline void *cronovanie(void *cast) {
                     if (pocitadlo==1) {
                         sd_ta->mac_s=atol(row[0]);
                         sd_ta->mac_d=atol(row[1]);
-                        sd_ta->pocet_B12=atoi(row[2]);
-                        sd_ta->pocet_ramcov12=atoi(row[3]);
-                        sd_ta->pocet_B21=atoi(row[4]);
-                        sd_ta->pocet_ramcov21=atoi(row[5]);
+                        sd_ta->pocet_B12=atoll(row[2]);
+                        sd_ta->pocet_ramcov12=atoll(row[3]);
+                        sd_ta->pocet_B21=atoll(row[4]);
+                        sd_ta->pocet_ramcov21=atoll(row[5]);
                         sd_ta->spracovany=0;
                         sd_ta->dalsi=NULL;
                     } else {
@@ -623,10 +623,10 @@ inline void *cronovanie(void *cast) {
                         sd_ta = sd_ta->dalsi;
                         sd_ta->mac_s=atol(row[0]);
                         sd_ta->mac_d=atol(row[1]);
-                        sd_ta->pocet_B12=atoi(row[2]);
-                        sd_ta->pocet_ramcov12=atoi(row[3]);
-                        sd_ta->pocet_B21=atoi(row[4]);
-                        sd_ta->pocet_ramcov21=atoi(row[5]);
+                        sd_ta->pocet_B12=atoll(row[2]);
+                        sd_ta->pocet_ramcov12=atoll(row[3]);
+                        sd_ta->pocet_B21=atoll(row[4]);
+                        sd_ta->pocet_ramcov21=atoll(row[5]);
                         sd_ta->spracovany=0;
                         sd_ta->dalsi=NULL;
                     }

@@ -24,6 +24,9 @@
 #define NUMBER_OF_UDP_PORTS 20
 #define IPV6SIZE 4
 
+extern char isoffline;
+extern char isfirsttime;
+
 extern int wait;
 extern char *interface_from_argument;
 //extern char interface_from_argument[25]; 
@@ -42,6 +45,15 @@ extern int totalog;
 extern int i_is_configured;
 extern int b_is_iface;
 
+//pointer to thread
+typedef struct kthread{
+  struct kthread *p_next;
+  struct kthread *p_previous;
+  char run;
+  pthread_t zapdb;
+}KTHREAD;
+
+extern KTHREAD *p_thread;
 
 //global structure for IP adress and MAC addres
 typedef struct zaznamy{
