@@ -23,6 +23,12 @@
 #define NUMBER_OF_TCP_PORTS 20
 #define NUMBER_OF_UDP_PORTS 20
 #define IPV6SIZE 4
+//#define _DEBUG_WRITE
+
+#ifdef _DEBUG_WRITE
+#define NAME_FILE "dt.txt"
+#define NAME_FILE2 "sub.txt"
+#endif
 
 extern char isoffline;
 extern char isfirsttime;

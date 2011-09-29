@@ -13,6 +13,10 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 	MYSQL_ROW row;
 	unsigned long int source_B, destin_B, source_ramcov, destin_ramcov;
 	ZAZNAMY *help_zaznamy, *help_zaznamy2, *p_pomz, *p_pomz2;
+	
+#ifdef _DEBUG_WRITE
+	FILE *fw;
+#endif
 
 //TIME	
 	if(!s->empty) {
@@ -72,6 +76,11 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 
 		sprintf(temp_str,"INSERT INTO %s_1m_time (time,IP_id,MAC_id,IP_SD_id,MAC_SD_id) VALUES ('%d','%d','%d','%d','%d');", s_protokol, processing_time, ip, mac, ip_sd, mac_sd);
 		//if(debug) fprintf(stderr,"%s\n",temp_str);
+#ifdef _DEBUG_WRITE
+	fw=fopen(NAME_FILE,"a+");
+	fprintf(fw,"%s\n",temp_str);
+	fclose(fw);
+#endif
 		if(mysql_query(conn, temp_str)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",temp_str,db_name, mysql_error(conn));
 		}	
@@ -199,6 +208,11 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		}
 		prikaz[strlen(prikaz)-1]=';';
 //		fprintf(stderr,"Velkost: %d \n", strlen(prikaz));
+#ifdef _DEBUG_WRITE
+	fw=fopen(NAME_FILE,"a+");
+	fprintf(fw,"%s\n",prikaz);
+	fclose(fw);
+#endif
 		if(mysql_query(conn, prikaz)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 			if(debug) fprintf(stderr,"%s\n",prikaz);
@@ -343,6 +357,11 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		}
 		prikaz[strlen(prikaz)-1]=';';
 //		fprintf(stderr,"Velkost: %d \n", strlen(prikaz));
+#ifdef _DEBUG_WRITE
+	fw=fopen(NAME_FILE,"a+");
+	fprintf(fw,"%s\n",prikaz);
+	fclose(fw);
+#endif
 		if(mysql_query(conn, prikaz)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 		}
@@ -391,6 +410,11 @@ void processingl(PROTOKOLY *s, MYSQL *conn) {
 		}
 		prikaz[strlen(prikaz)-1]=';';
 //		fprintf(stderr,"Velkost: %d \n", strlen(prikaz));
+#ifdef _DEBUG_WRITE
+	fw=fopen(NAME_FILE,"a+");
+	fprintf(fw,"%s\n",prikaz);
+	fclose(fw);
+#endif
 		if(mysql_query(conn, prikaz)) {
 			fprintf(stderr,"Failed to insert //%s// into MYSQL database %s: %s\n",prikaz,db_name, mysql_error(conn));
 		}

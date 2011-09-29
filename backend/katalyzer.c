@@ -1010,6 +1010,13 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	PROTOKOLY *help_protokol, *p_protokol;
 	int find, find_p;
 	char pokus;
+	
+#ifdef _DEBUG_WRITE
+	FILE *fw;
+	fw=fopen(NAME_FILE2,"a+");
+	fprintf(fw,"%s \n",s);
+	fclose(fw);
+#endif
 
 	if(p_zac->empty) { //if struct is empty, we create it
 		p_zac->empty=0;
