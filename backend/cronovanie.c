@@ -499,8 +499,8 @@ inline void *cronovanie(void *cast) {
 		      }
 		      else{
 			sd_ta->is_ipv6=table->is_ipv6;
-			sd_ta->ip_s=strtol(row[0],NULL,10);
-			sd_ta->ip_d=strtol(row[1],NULL,10);
+			sd_ta->ip_s=atoll(row[0]);
+			sd_ta->ip_d=atoll(row[1]);
 		      }
 		      sd_ta->pocet_B12=atoll(row[2]);
 		      sd_ta->pocet_ramcov12=atoll(row[3]);
@@ -540,8 +540,8 @@ inline void *cronovanie(void *cast) {
 		      }		
 		      else{
 			sd_ta->is_ipv6=table->is_ipv6;
-			sd_ta->ip_s=strtol(row[0],NULL,10);
-			sd_ta->ip_d=strtol(row[1],NULL,10);
+			sd_ta->ip_s=atoll(row[0]);
+			sd_ta->ip_d=atoll(row[1]);
 		      }
 		      sd_ta->pocet_B12=atoll(row[2]);
 		      sd_ta->pocet_ramcov12=atoll(row[3]);
