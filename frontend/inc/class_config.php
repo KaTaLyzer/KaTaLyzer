@@ -163,7 +163,7 @@ class config {
 			array('group'=>'Network layer',   'name'=>'ARP',            'config_name'=>'PROTOCOL_ARP',  'dbname'=>'ARP'),
 			array('group'=>'Network layer',   'name'=>'RARP',           'config_name'=>'PROTOCOL_RARP', 'dbname'=>'RARP'),
 			array('group'=>'Network layer',   'name'=>'ICMP',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMP'),
-			array('group'=>'Network layer',   'name'=>'ICMPv6',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMP_v6'),
+			array('group'=>'Network layer',   'name'=>'ICMPv6',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMPv6_v6'),
 			array('group'=>'Network layer',   'name'=>'IGMP',           'config_name'=>'PROTOCOL_IGMP', 'dbname'=>'IGMP'),
 			array('group'=>'Network layer',   'name'=>'IPX',            'config_name'=>'PROTOCOL_IPX',  'dbname'=>'IPX'),
 			array('group'=>'Transport layer', 'name'=>'TCP',            'config_name'=>'PROTOCOL_TCP',  'dbname'=>'TCP'),

@@ -262,25 +262,31 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 /////////////////////
 
 /// TCP protocol
-        if(protocol_tcp == 1 && strcmp(TCP_UDP, "TCP") == 0) {
+        if(protocol_tcp == 1 && strcmp(trans_layer, "TCP") == 0) {
 		strcpy(protokol,"TCP");
 		m_protokoly(&z_protokoly,protokol);
         }
 
 /// UDP protocol
-	if(protocol_udp == 1 && strcmp(TCP_UDP, "UDP") == 0) {
+	if(protocol_udp == 1 && strcmp(trans_layer, "UDP") == 0) {
 		strcpy(protokol,"UDP");
 		m_protokoly(&z_protokoly,protokol);
         }
 
 ///  ICMP PROTOKOL
-	if(protocol_icmp == 1 && strcmp(TCP_UDP, "ICMP") == 0) {
+	if(protocol_icmp == 1 && strcmp(trans_layer, "ICMP") == 0) {
 		strcpy(protokol,"ICMP");
 		m_protokoly(&z_protokoly,protokol);
         }
+        
+///  ICMPv6 PROTOKOL
+        if(protocol_icmp == 1 && strcmp(trans_layer, "ICMPv6") == 0){
+	  strcpy(protokol,"ICMPv6");
+	  m_protokoly(&z_protokoly,protokol);
+        }
 		
 /// IGMP protokol
-	if(protocol_igmp == 1 && strcmp(TCP_UDP, "IGMP") == 0) {
+	if(protocol_igmp == 1 && strcmp(trans_layer, "IGMP") == 0) {
 		strcpy(protokol,"IGMP");
 		m_protokoly(&z_protokoly,protokol);
 	}
@@ -638,7 +644,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	MAC_adr_S=0;
 	MAC_adr_D=0;
 	net_proto[0]=0;
-	TCP_UDP[0]=0;
+	trans_layer[0]=0;
 	protocol=0;	
 	s_protocol=0;
 	d_protocol=0;
@@ -724,7 +730,7 @@ void ip_protokol(const u_char *pkt_data, int len)
 	IP_adr_D=iph->daddr;
 
 
-	trans_protokol(protocol,TCP_UDP);
+	trans_protokol(protocol,trans_layer);
 	
 	len = iph->ihl*4;
 
@@ -750,7 +756,7 @@ void ipv6_protokol(const u_char *pkt_data, int len)
   
   len=sizeof(struct ip6_hdr);
   
-  //prejdeme celu hlavi?ku ipv6
+  //prejdeme celu hlavicku ipv6
   for(;;){
     switch(protocol){
       case IPPROTO_HOPOPTS:
@@ -778,13 +784,17 @@ void ipv6_protokol(const u_char *pkt_data, int len)
 	len+=sizeof(struct ip6_dest);
 	break;
       case IPPROTO_TCP:
-	trans_protokol(protocol,TCP_UDP);
+	trans_protokol(protocol,trans_layer);
 	tcp_protokol(pkt_data, len);		//we continue analysis in case there is TCP, UDP or ICMP protocol inside IP packet
 	end=1;
 	break;
       case IPPROTO_UDP:
-	trans_protokol(protocol,TCP_UDP);
+	trans_protokol(protocol,trans_layer);
 	udp_protokol(pkt_data, len);
+	end=1;
+	break;
+      case IPPROTO_ICMPV6:
+	strcpy(trans_layer,"ICMPv6");
 	end=1;
 	break;
       default:

@@ -37,7 +37,7 @@ uint32_t IP_adr_S;
 uint32_t IP_adr_D;
 unsigned int *IPV6_adr_S;
 unsigned int *IPV6_adr_D;
-char TCP_UDP[10];
+char trans_layer[10];
 //char protocol[35];
 int protocol=0;
 int s_protocol=0;

@@ -117,7 +117,7 @@ extern uint32_t IP_adr_S;
 extern uint32_t IP_adr_D;
 extern unsigned int *IPV6_adr_S;
 extern unsigned int *IPV6_adr_D;
-extern char TCP_UDP[10];
+extern char trans_layer[10];
 extern int protocol;
 extern int s_protocol;
 extern int d_protocol;
