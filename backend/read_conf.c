@@ -53,11 +53,10 @@ void read_conf()
 			else if (!strcmp (name, "PROTOCOL_ARP")) protocol_arp = atoi(value);
 			else if (!strcmp (name, "PROTOCOL_RARP")) protocol_rarp = atoi(value);
 			else if (!strcmp (name, "PROTOCOL_IP"))	protocol_ip = atoi(value);
-/*			else if (!strcmp (name, "PROTOCOL_IPv6"))
+			else if (!strcmp (name, "PROTOCOL_IPv6"))
 			{
 				protocol_ipv6 = atoi(value);
 			}
-*/
 			else if (!strcmp (name, "PROTOCOL_IGMP")) protocol_igmp = atoi(value);
 			else if (!strcmp (name, "PROTOCOL_ICMP")) protocol_icmp = atoi(value);
 			else if (!strcmp (name, "PROTOCOL_IPX")) protocol_ipx = atoi(value);

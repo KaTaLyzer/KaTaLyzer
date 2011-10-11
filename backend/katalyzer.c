@@ -234,7 +234,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		m_protokoly(&z_protokoly,protokol);
         }
 
-	if(protocol_ip == 1 && strcmp(net_proto, "IPv6") == 0){
+	if(protocol_ipv6 == 1 && strcmp(net_proto, "IPv6") == 0){
 		strcpy(protokol,"IPv6");
 		m_protokoly(&z_protokoly,protokol);
 	}

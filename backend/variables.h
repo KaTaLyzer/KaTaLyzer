@@ -23,11 +23,11 @@
 #define NUMBER_OF_TCP_PORTS 20
 #define NUMBER_OF_UDP_PORTS 20
 #define IPV6SIZE 4
-//#define _DEBUG_WRITE
 
 #ifdef _DEBUG_WRITE
 #define NAME_FILE "dt.txt"
 #define NAME_FILE2 "sub.txt"
+#define NAME_FILE3 "cronovanie.txt"
 #endif
 
 extern char isoffline;
@@ -175,7 +175,7 @@ extern         int protocol_8023;                    // povolenie grafu pre 802.
 extern         int protocol_arp;
 extern         int protocol_rarp;
 extern 	       int protocol_ip;
-//extern 	       int protocol_ipv6;
+extern 	       int protocol_ipv6;
 extern         int protocol_igmp;
 extern         int protocol_icmp;
 extern         int protocol_ipx;
