@@ -1,5 +1,6 @@
 
 #include "capture.h"
+#include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <dirent.h>
@@ -13,8 +14,7 @@
 #include <linux/if_packet.h>
 #include <unistd.h>
 #include <time.h>
-
-struct packet_mreq mr;
+#include <sys/time.h>
 
 struct c_net_dev *get_interface(struct c_net_dev *interface){
  
@@ -94,6 +94,8 @@ uint64_t read_mac(const char *dir){
 int raw_init(struct k_capture *p_capture,char* device)
 {
   struct ifreq ifr;
+  struct packet_mreq mr;
+  struct sockaddr_ll sll;
   int raw_socket;
   int ifindex;
   
@@ -127,6 +129,11 @@ int raw_init(struct k_capture *p_capture,char* device)
     return 1;
   }
   
+  sll.sll_family = AF_PACKET;
+  sll.sll_ifindex = ifr.ifr_ifindex;
+  sll.sll_protocol = ETH_P_ALL;
+//   bind(raw_socket, (struct sockaddr_ll*)&sll, sizeof(sll));
+  
   ifindex = ifr.ifr_ifindex;
   mr.mr_ifindex = ifindex;
   mr.mr_type = PACKET_MR_PROMISC;
@@ -137,6 +144,7 @@ int raw_init(struct k_capture *p_capture,char* device)
   }
   
   p_capture->socket = raw_socket;
+  p_capture->sll = sll;
   
   return 0;
 
@@ -145,13 +153,22 @@ int raw_init(struct k_capture *p_capture,char* device)
 void k_loop(struct k_capture *p_capture, k_handler calback){
   
   struct k_header head;
+  int len;
   
-  u_char buf[2050];
+  u_char buf[BUFSIZ];
   
+//   while(!connect(p_capture->socket,(struct sockaddr_ll*) &p_capture->sll, sizeof(p_capture->sll))){
   while(1){
-    read(p_capture->socket,buf, sizeof(buf));
-    head.time = time(NULL);
+    len = recvfrom(p_capture->socket,buf, sizeof(buf), 0, NULL, NULL);
+    if(len < 0){
+      fprintf(stderr, "Error recv packet. %s\n", strerror(errno));
+      continue;
+    }
+    gettimeofday(&head.ts, NULL);
+    head.len = len;
     
+    printf("Len: %d\n", len);
+  
     calback(&head,(u_char *) &buf);
   }
   

@@ -1,8 +1,13 @@
+dir :=modules
+
 katalyzer: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o
 	gcc -g variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
 
 katalyzer_debug: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o
 	gcc -g -D_DEBUG_WRITE variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
+
+katalyzer_capt: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o capture.o
+	gcc -g -D_CAPTURE variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o $(dir)/capture.o katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
 
 wait_function.o: wait_function.c wait_function.h
 	gcc -g -c wait_function.c -o wait_function.o > ilog/ilog_wait_function.o
@@ -27,6 +32,9 @@ snmpp.o: snmpp.c
 
 sip.o: sip.c sip.h
 	gcc -g -c sip.c -o sip.o > ilog/ilog_sip.o
+
+capture.o : $(dir)/capture.c
+	gcc -g -c $(dir)/capture.c -o $(dir)/capture.o
 
 clean:
 	rm -f *.o > ilog/ilog_clean

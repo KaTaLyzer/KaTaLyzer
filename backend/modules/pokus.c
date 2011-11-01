@@ -15,7 +15,7 @@ int main(void){
     printf("%s: %lu\n", dev->name, dev->address);
   }
   
-  raw_init(&c, "wlan0");
+  raw_init(&c, "eth0");
   
   k_loop(&c, pokus);
   
@@ -29,7 +29,7 @@ void pokus(const struct k_header* h, const u_char* bytes)
   
   fw = fopen("Pokus.txt", "a+");
   
-  fprintf(fw, "%X\n", bytes);
+  fprintf(fw, "%s\n", bytes);
   
   fclose(fw);
 

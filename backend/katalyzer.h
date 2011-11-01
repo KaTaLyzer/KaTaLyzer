@@ -28,6 +28,10 @@
 #include "variables.h"
 #include "sip.h"
 
+#ifdef _CAPTURE
+#include "modules/capture.h"
+#endif
+
 #define LINE_LEN 24
 #define HTML_PERIOD 5
 
@@ -40,7 +44,11 @@ void tcp_protokol(const u_char *pkt_data,int len);
 void udp_protokol(const u_char *pkt_data,int len);
 void net_protokol(int number, char *protokols);
 void trans_protokol(int number, char *protokols);
+#ifdef _CAPTURE
+void dispatcher_handler(const struct k_header *header, const u_char *pkt_data);
+#else
 void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data);
+#endif
 void ieee802(const u_char *pkt_data,int type);
 void help();
 void m_protokoly(ZACIATOK_P *p_zac, char *s);

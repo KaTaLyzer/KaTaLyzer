@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <linux/if_packet.h>
 
 #define DEVDIR "/sys/class/net/"
 #define MAXNUMBER 30
@@ -18,16 +19,16 @@ struct c_net_dev{
 
 struct k_capture{
   int socket;
+  struct sockaddr_ll sll;
   char *name;
 };
 
 struct k_header{
-  time_t time;
+  struct timeval ts;
+  unsigned int len;
 };
 
-typedef void (*k_handler)(const struct k_header *h, const u_char *bytes);
-
-extern struct packet_mreq mr;
+typedef void (*k_handler)(const struct k_header *header, const u_char *pkt_data);
 
 /* funkcia zisti existujuce sietove rozhrania v pocitaci 
  *a naplni nimi strukturu c_net_dev*/

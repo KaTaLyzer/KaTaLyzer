@@ -19,6 +19,7 @@
 #include "cdp.h"
 #include "snmpp.h"
 #include "sip.h"
+#include <arpa/inet.h>
 
 struct cdp_struct *cdp_st;
 
@@ -87,6 +88,14 @@ int main(int argc, char **argv) {
 		printf("*** protocol CDP\n");
 #endif
 	}
+	
+#ifdef _CAPTURE
+
+  struct k_capture c;
+  
+  raw_init(&c, "eth0");
+  
+#else
 	if(isoffline){
 	  FILE *offile;
 	  offile = fopen(offilename,"r");
@@ -108,6 +117,7 @@ int main(int argc, char **argv) {
 	    exit(ERR_OPEN_IF);
 	  }
 	}
+#endif
 
 	// we wait after opening network adapter - we do not need to wait for error message if we are not able to open the adapter
         
@@ -130,9 +140,13 @@ int main(int argc, char **argv) {
 	z_protokoly.empty=1;				//array is free
 	z_protokoly.p_protokoly=NULL;
 	z_pair_array=NULL;
+#ifdef _CAPTURE
+  k_loop(&c, dispatcher_handler);
+#else
 	pcap_loop(fp,0,dispatcher_handler,NULL);
 	
 	pcap_close(fp); 	//closing the interface
+#endif
 	
 //cakame na beziace vlakna a potom uvolnime strukturu	
 	for(kt1=p_thread;kt1!=NULL;){
@@ -160,7 +174,11 @@ void help()
 }
 
 //toto spusta funkcia pcap_loop - tu sa robi analyza prevadzky
+#ifdef _CAPTURE
+void dispatcher_handler(const struct k_header *header, const u_char *pkt_data) {
+#else
 void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data) {
+#endif
 	int lng_type;		// here is stored value from frame - considering this value we have to decide whether it is length of the frame or type 
         //time_t actual_time;	// actual time is stored here
         char temp[15];          // temp - variable for converting IP address from INTEGER into STRING - we put IP address into DB in a.b.c.d format
@@ -1020,6 +1038,8 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	PROTOKOLY *help_protokol, *p_protokol;
 	int find, find_p;
 	char pokus;
+	struct in_addr *addr_d, *add_s;
+	char ip_s[20], ip_d[20];
 	
 #ifdef _DEBUG_WRITE
 	FILE *fw;
@@ -1027,6 +1047,20 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	fprintf(fw,"%s \n",s);
 	fclose(fw);
 #endif
+	
+	if(debug){
+	  if(is_ipv6ext){
+	    printf("Protocol: %s:IPv6 Bytes: %d\n", s, pocet_B);
+	  }
+	  else{
+	    add_s = (struct in_addr*) &IP_adr_S;
+	    sprintf(ip_s,"%s", inet_ntoa(*add_s));
+	    addr_d = (struct in_addr*) &IP_adr_D;
+	    sprintf(ip_d,"%s", inet_ntoa(*addr_d));
+	    printf("Protocol: %s: %s -> %s, Bytes: %d\n", s,ip_s, ip_d, pocet_B);
+	    
+	  }
+	}
 
 	if(p_zac->empty) { //if struct is empty, we create it
 		p_zac->empty=0;
