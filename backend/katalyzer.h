@@ -29,7 +29,7 @@
 #include "sip.h"
 
 #ifdef _CAPTURE
-#include "modules/capture.h"
+#include "socket/ksocket.h"
 #endif
 
 #define LINE_LEN 24
