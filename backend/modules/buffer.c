@@ -31,7 +31,9 @@ static unsigned int net_buff(unsigned int hooknum,
   
   printk(KERN_INFO "Capture data?\n");
   
-  k_buffer_write(skb->data);
+  
+  
+//   k_buffer_write(skb->data);
   
   return NF_ACCEPT;
 } 
@@ -55,6 +57,7 @@ static int __init buffer_init(void){
   printk(KERN_INFO "Hello world: buffer\n");
   
   int rvl;
+  int rc;
   
 //   memset(&nf_buff_hook_ops, 0x00, 
 //     sizeof(struct nf_hook_ops));
@@ -62,6 +65,11 @@ static int __init buffer_init(void){
   if ((rvl = nf_register_hook(&nf_buff_hook_ops)) != 0){
     printk(KERN_ERR "nf_register_hook() failed");
     return rvl;
+  }
+  
+  if((rc = genl_register_family(&katalyzer_family)) != 0){
+    printk(KERN_ERR "genl_register_family() failed")
+    return rc;
   }
 //   struct sk_buff_head *p_head;
 //   struct sk_buff *skb;
