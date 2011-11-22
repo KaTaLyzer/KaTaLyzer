@@ -598,8 +598,12 @@ inline void *cronovanie(void *cast) {
                 sd_prvy=sd_ta;
                 sd_ta=sd_ta->dalsi;
 		if(sd_prvy->is_ipv6){
-		  free(sd_prvy->ipv6_d);
-		  free(sd_prvy->ipv6_s);
+		  if(sd_prvy->ipv6_d)
+		    free(sd_prvy->ipv6_d);
+		  sd_prvy->ipv6_d=NULL;
+		  if(sd_prvy->ipv6_s)
+		    free(sd_prvy->ipv6_s);
+		  sd_prvy->ipv6_s=NULL;
 		}
                 free(sd_prvy);
 		sd_prvy=NULL;
@@ -687,6 +691,7 @@ inline void *cronovanie(void *cast) {
         prvy=table;
         table=table->dalsi;
         free(prvy);
+	prvy=NULL;
     }
 
     if(result)

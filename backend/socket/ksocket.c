@@ -167,7 +167,7 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
     gettimeofday(&head.ts, NULL);
     head.len = len;
     
-    printf("Len: %d\n", len);
+//     printf("Len: %d\n", len);
   
     calback(&head,(u_char *) &buf);
   }

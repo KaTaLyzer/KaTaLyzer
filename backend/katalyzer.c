@@ -1038,8 +1038,8 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	PROTOKOLY *help_protokol, *p_protokol;
 	int find, find_p;
 	char pokus;
-	struct in_addr *addr_d, *add_s;
-	char ip_s[20], ip_d[20];
+// 	struct in_addr *addr_d, *add_s;
+// 	char ip_s[20], ip_d[20];
 	
 #ifdef _DEBUG_WRITE
 	FILE *fw;
@@ -1047,7 +1047,7 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	fprintf(fw,"%s \n",s);
 	fclose(fw);
 #endif
-	
+	/*
 	if(debug){
 	  if(is_ipv6ext){
 	    printf("Protocol: %s:IPv6 Bytes: %d\n", s, pocet_B);
@@ -1060,7 +1060,7 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	    printf("Protocol: %s: %s -> %s, Bytes: %d\n", s,ip_s, ip_d, pocet_B);
 	    
 	  }
-	}
+	}*/
 
 	if(p_zac->empty) { //if struct is empty, we create it
 		p_zac->empty=0;
@@ -1241,7 +1241,7 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	}
 	fprintf(stderr,"Zapis do DB...\t[DONE]\n");
 	kt->run=0;
-	mysql_close(conn);
+// 	mysql_close(conn); //presunuty do processing
 	free_protokoly(p_zac);
 }
 
