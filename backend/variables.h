@@ -1,7 +1,9 @@
 #ifndef __PREMENNE_H__
 #define __PREMENNE_H__
 
+#ifndef  CAPTURE
 #include <pcap.h>
+#endif
 #include "time.h"
 #include <stdlib.h>
 #include <stdio.h>

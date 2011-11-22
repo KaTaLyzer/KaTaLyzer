@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
   struct k_capture c;
   
-  raw_init(&c, "eth0");
+  raw_init(&c, "wlan0");
   
 #else
 	if(isoffline){
