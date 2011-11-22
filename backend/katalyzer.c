@@ -1241,7 +1241,7 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	}
 	fprintf(stderr,"Zapis do DB...\t[DONE]\n");
 	kt->run=0;
-// 	mysql_close(conn); //presunuty do processing
+	mysql_close(conn);
 	free_protokoly(p_zac);
 }
 
