@@ -31,10 +31,12 @@ typedef struct {
 } PRETAH;
 
 int main(int argc, char **argv) {
-        char errbuf[PCAP_ERRBUF_SIZE];
+//         char errbuf[PCAP_ERRBUF_SIZE];
 	int o;
-        int snaplen=65535;
+//         int snaplen=65535;
 	int i_is_config = 0;
+	IPV6_adr_D = NULL;
+	IPV6_adr_S = NULL;
 	char offilename[255];
 	KTHREAD *kt1, *kt2;
 
@@ -181,8 +183,8 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 #endif
 	int lng_type;		// here is stored value from frame - considering this value we have to decide whether it is length of the frame or type 
         //time_t actual_time;	// actual time is stored here
-        char temp[15];          // temp - variable for converting IP address from INTEGER into STRING - we put IP address into DB in a.b.c.d format
-        int prepinac = 0;	// switching variable for searching in arrays and inserting new IP/MAC addresses into the array if it does not exist there yet
+//         char temp[15];          // temp - variable for converting IP address from INTEGER into STRING - we put IP address into DB in a.b.c.d format
+//         int prepinac = 0;	// switching variable for searching in arrays and inserting new IP/MAC addresses into the array if it does not exist there yet
 	char protokol[9];	// pomocna premena
 
 #ifdef CHCEM_POCTY
@@ -195,6 +197,12 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	IP_adr_S=0;
 	IP_adr_D=0;
 	is_ipv6ext=0;
+	if(IPV6_adr_D)
+	  free(IPV6_adr_D);
+	IPV6_adr_D = NULL;
+	if(IPV6_adr_S)
+	  free(IPV6_adr_S);
+	IPV6_adr_S = NULL;
 	
 	if(isoffline){
 	  if(!isfirsttime){
@@ -396,7 +404,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	        MYSQL *conn;
                 conn = mysql_init(NULL);
 		char prikaz[20000];
-		char temp_str[10000];
+// 		char temp_str[10000];
 
 		if((actual_time - beggining_time) >= casovac_zapisu*2) processing_time+=60;
 		else processing_time=unix_time;
@@ -697,11 +705,12 @@ void eth2_frame(const u_char *pkt_data,int type)
 
 void arp_protokol(const u_char *pkt_data)
 {
-	int l_prot,op_code, i, j;
+// 	int l_prot,op_code;
+	int i, j;
 	arph=(struct arphdr*) (pkt_data + sizeof(struct ether_header));
 
-	l_prot=ntohs(arph->ar_hrd);
-	op_code=ntohs(arph->ar_op);
+// 	l_prot=ntohs(arph->ar_hrd);
+// 	op_code=ntohs(arph->ar_op);
 
 	MAC_adr_S=0;
 	MAC_adr_D=0;
@@ -824,12 +833,11 @@ void ipv6_protokol(const u_char *pkt_data, int len)
       break;
   }
   
-  // treba vyriesit ukladanie do DB
-  if((IPV6_adr_D =(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+  if((IPV6_adr_D =(unsigned int*) malloc(sizeof(unsigned int)*IPV6SIZE)) == NULL){
     fprintf(stderr,"Error malloc: %s\n", strerror(errno));
     return;
   }
-  if((IPV6_adr_S =(int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+  if((IPV6_adr_S =(unsigned int*) malloc(sizeof(unsigned int)*IPV6SIZE)) == NULL){
     fprintf(stderr,"Error malloc: %s\n", strerror(errno));
     return;
   }
@@ -879,14 +887,15 @@ void trans_protokol(int number, char *protokols) { //according to number from IP
 
 
 void tcp_protokol(const u_char *pkt_data,int len) {
-	unsigned int s_port,d_port,port_id,sn_port,dn_port;
+	unsigned int s_port,d_port;
+// 	unsigned int port_id,sn_port,dn_port;
 
 	tcph=(struct tcphdr*) (pkt_data + sizeof(struct ether_header) + len);
 
 	s_port=ntohs(tcph->source);
-	sn_port=tcph->source;
+// 	sn_port=tcph->source;
 	d_port=ntohs(tcph->dest);
-	dn_port=tcph->dest;
+// 	dn_port=tcph->dest;
 
 /*
 	a=14+h_len;					//a->begining of TCP header
@@ -924,14 +933,15 @@ void icmp_protokol(const u_char *pkt_data,int h_len)
 */
 
 void udp_protokol(const u_char *pkt_data,int len) {
-	int s_port,d_port,port_id,sn_port,dn_port;
+	int s_port,d_port, port_id;
+// 	int sn_port,dn_port;
 
 	udph=(struct udphdr*) (pkt_data + sizeof(struct ether_header) + len);
 
 	s_port=ntohs(udph->source);
-	sn_port=udph->source;		//network order
+// 	sn_port=udph->source;		//network order
 	d_port=ntohs(udph->dest);
-	dn_port=udph->dest;		//network order
+// 	dn_port=udph->dest;		//network order
 /*
 	a=14+h_len;					//a->begining of UDP header
 	s_port=pkt_data[a]*256+pkt_data[a+1];
@@ -1037,7 +1047,7 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	ZAZNAMY *help_zaznamy;  //pomocna struktura
 	PROTOKOLY *help_protokol, *p_protokol;
 	int find, find_p;
-	char pokus;
+// 	char pokus;
 // 	struct in_addr *addr_d, *add_s;
 // 	char ip_s[20], ip_d[20];
 	
@@ -1082,8 +1092,16 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 		p_protokol->zoznam->ipv6_d=NULL;
 		p_protokol->zoznam->ipv6_s=NULL;
 		if(is_ipv6ext){
-		  p_protokol->zoznam->ipv6_d = IPV6_adr_D;
-		  p_protokol->zoznam->ipv6_s = IPV6_adr_S;
+		  if((p_protokol->zoznam->ipv6_d = (unsigned int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+		    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+		    return;
+		  }
+		  *p_protokol->zoznam->ipv6_d = *IPV6_adr_D;
+		  if((p_protokol->zoznam->ipv6_s = (unsigned int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+		    fprintf(stderr, "Error malloc: %s\n", strerror(errno));
+		    return;
+		  }
+		  *p_protokol->zoznam->ipv6_s = *IPV6_adr_S;
 		}
 		else{
 		  p_protokol->zoznam->ip_s=ntohl(IP_adr_S);			// we use ntohl, because of frontend
@@ -1110,7 +1128,6 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 						if((!is_ipv6ext && ((help_zaznamy->ip_s==ntohl(IP_adr_S)) && (help_zaznamy->ip_d==ntohl(IP_adr_D))))
 						  || (is_ipv6ext && ((compare_IPv6(help_zaznamy->ipv6_d, IPV6_adr_D)) && (compare_IPv6(help_zaznamy->ipv6_s, IPV6_adr_S))))
 						) {	//we find the IP adress and MAC adress
-						pokus=is_ipv6ext;
 							help_zaznamy->pocet_B += pocet_B;
 							help_zaznamy->pocet_ramcov++;
 							find=1;	//set we find the IP adress and MAC adress
@@ -1132,8 +1149,16 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 					help_zaznamy->ipv6_d=NULL;
 					help_zaznamy->ipv6_s=NULL;
 					if(is_ipv6ext){
-					  help_zaznamy->ipv6_d=IPV6_adr_D;
-					  help_zaznamy->ipv6_s=IPV6_adr_S;
+					  if((help_zaznamy->ipv6_d = (unsigned int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+					    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+					    return;
+					  }
+					  *help_zaznamy->ipv6_d=*IPV6_adr_D;
+					  if((help_zaznamy->ipv6_s = (unsigned int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+					    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+					    return;
+					  }
+					  *help_zaznamy->ipv6_s=*IPV6_adr_S;
 					}
 					 else{
 					  help_zaznamy->ip_s=ntohl(IP_adr_S);  // we use ntohl, because of frontend
@@ -1170,8 +1195,16 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 			help_protokol->zoznam->ipv6_d=NULL;
 			help_protokol->zoznam->ipv6_s=NULL;
 			if(is_ipv6ext){
-			  help_protokol->zoznam->ipv6_d=IPV6_adr_D;
-			  help_protokol->zoznam->ipv6_s=IPV6_adr_S;
+			  if((help_protokol->zoznam->ipv6_d = (unsigned int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+			    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+			    return;
+			  }
+			  *help_protokol->zoznam->ipv6_d=*IPV6_adr_D;
+			  if((help_protokol->zoznam->ipv6_s = (unsigned int*) malloc(sizeof(int)*IPV6SIZE)) == NULL){
+			    fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+			    return;
+			  }
+			  *help_protokol->zoznam->ipv6_s=*IPV6_adr_S;
 			}
 			help_protokol->zoznam->ip_s=ntohl(IP_adr_S);   // we use ntohl, because of frontend 
 			help_protokol->zoznam->ip_d=ntohl(IP_adr_D);

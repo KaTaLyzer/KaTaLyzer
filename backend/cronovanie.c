@@ -16,16 +16,16 @@ typedef struct pro {
 
 //struktura na nacitanie udajov z db
 typedef struct sd_t {
+    int spracovany;
+    char is_ipv6;
     uint64_t mac_s;
     uint64_t mac_d;
     uint32_t ip_s;
     uint32_t ip_d;
-    unsigned int *ipv6_s;
-    unsigned int *ipv6_d;
     unsigned long int pocet_B12, pocet_B21;
     unsigned long int pocet_ramcov12, pocet_ramcov21;
-    int spracovany;
-    char is_ipv6;
+    unsigned int *ipv6_s;
+    unsigned int *ipv6_d;
     struct sd_t *dalsi;
 } SD_T;
 
@@ -463,6 +463,7 @@ inline void *cronovanie(void *cast) {
 
 //IP_SD TABULKA - SELECT
             sd_ta=(SD_T*)malloc(sizeof(SD_T));
+	    sd_ta->is_ipv6=0;
             sd_prvy=sd_ta;
 	    sd_prvy->dalsi=NULL;
             sprintf(prikaz,"SELECT IP_1,IP_2,bytes_12,packets_12,bytes_21,packets_21 FROM %s_%s_IP_SD WHERE id BETWEEN %d AND %d;",table->nazov,nl,IP_SD_id[0],IP_SD_id[1]);
