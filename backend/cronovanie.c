@@ -594,7 +594,8 @@ inline void *cronovanie(void *cast) {
             if (mysql_query(conn, prikaz)) {
                 fprintf(stderr,"Failed to insert '%s' into MYSQL database %s: %s\n",prikaz,db_name,mysql_error(conn));
             }
-
+            
+// komentar            
             for (sd_ta=sd_prvy;sd_ta!=NULL;) {
                 sd_prvy=sd_ta;
                 sd_ta=sd_ta->dalsi;
