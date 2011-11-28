@@ -4,7 +4,7 @@
 
 //version 3.4.2010 - 10:56
 //#define DEBUG_CRONX
-//#define DEBUG_CRON
+#define DEBUG_CRON
 //#define DEBUG
 
 //struktura na ukladanie nazvov protokolov

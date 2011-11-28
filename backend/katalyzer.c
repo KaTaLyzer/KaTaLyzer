@@ -1316,7 +1316,9 @@ KTHREAD *create_thread(KTHREAD **thread)
 	  start_thread=pom_thread1->p_next;
 	  if(pom_thread1)
 	    free(pom_thread1);
-	  pom_thread1=NULL;
+	  pom_thread1=start_thread;
+	  if(!pom_thread1)
+	    break;
 	}
 	else{
 	  pom_thread2 = pom_thread1->p_next;
