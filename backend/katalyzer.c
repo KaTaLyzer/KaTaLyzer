@@ -21,6 +21,8 @@
 #include "sip.h"
 #include <arpa/inet.h>
 
+#define CHCEM_POCTY
+
 struct cdp_struct *cdp_st;
 
 //struktura na pretiahnutie MySQL a dat cez thread - nechutne, ja viem, ale inak sa to neda (aspon co ja viem)
@@ -31,9 +33,9 @@ typedef struct {
 } PRETAH;
 
 int main(int argc, char **argv) {
-//         char errbuf[PCAP_ERRBUF_SIZE];
+        char errbuf[PCAP_ERRBUF_SIZE];
 	int o;
-//         int snaplen=65535;
+        int snaplen=65535;
 	int i_is_config = 0;
 	IPV6_adr_D = NULL;
 	IPV6_adr_S = NULL;
@@ -95,7 +97,7 @@ int main(int argc, char **argv) {
 
   struct k_capture c;
   
-  raw_init(&c, "wlan0");
+  raw_init(&c, interface);
   
 #else
 	if(isoffline){
