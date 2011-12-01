@@ -87,7 +87,9 @@ int main(int argc, char **argv) {
 
 //SIP
 	if(debug) {
+#ifdef _SIP
 		printf("*** protocol_sip = %d\n",protocol_sip);
+#endif
 #ifdef CDP_P
 		printf("*** protocol CDP\n");
 #endif
