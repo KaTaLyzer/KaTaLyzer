@@ -23,6 +23,12 @@
 
 #define CHCEM_POCTY
 
+#ifdef _CAPTURE
+#define POCTY_SUBOR "spaketov.txt"
+#else
+#define POCTY_SUBOR "ppaketov.txt"
+#endif
+
 struct cdp_struct *cdp_st;
 
 //struktura na pretiahnutie MySQL a dat cez thread - nechutne, ja viem, ale inak sa to neda (aspon co ja viem)
@@ -189,7 +195,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
         //time_t actual_time;	// actual time is stored here
 //         char temp[15];          // temp - variable for converting IP address from INTEGER into STRING - we put IP address into DB in a.b.c.d format
 //         int prepinac = 0;	// switching variable for searching in arrays and inserting new IP/MAC addresses into the array if it does not exist there yet
-	char protokol[9];	// pomocna premena
+	char protokol[DLZKA_POLA_P];	// pomocna premena
 
 #ifdef CHCEM_POCTY
 	//increment number of packets
@@ -418,7 +424,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 
 #ifdef CHCEM_POCTY
 		FILE *fw;
-		if((fw=fopen("ppaketov.txt","a"))!=NULL) {
+		if((fw=fopen(POCTY_SUBOR,"a"))!=NULL) {
 			fprintf(fw,"%d\n",ppaketov);
 			ppaketov=0;
 			if(fclose(fw)==EOF) fprintf(stderr,"Neviem zavriet subor ppaketov.txt!\n");

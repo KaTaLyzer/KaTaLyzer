@@ -25,6 +25,7 @@
 #define NUMBER_OF_TCP_PORTS 20
 #define NUMBER_OF_UDP_PORTS 20
 #define IPV6SIZE 4
+#define DLZKA_POLA_P 11
 
 #ifdef _DEBUG_WRITE
 #define NAME_FILE "dt.txt"

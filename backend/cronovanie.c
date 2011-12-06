@@ -9,7 +9,7 @@
 
 //struktura na ukladanie nazvov protokolov
 typedef struct pro {
-    char nazov[9];
+    char nazov[DLZKA_POLA_P];
     char is_ipv6;
     struct pro *dalsi;
 } PRO;
