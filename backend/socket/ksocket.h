@@ -10,6 +10,7 @@
 
 #define DEVDIR "/sys/class/net/"
 #define MAXNUMBER 30
+#define NUMSTATE 5
 
 struct c_net_dev{
  char *name;		// meno sietoveho rozhranie
@@ -30,11 +31,19 @@ struct k_header{
 
 typedef void (*k_handler)(const struct k_header *header, const u_char *pkt_data);
 
-/* funkcia zisti existujuce sietove rozhrania v pocitaci 
- *a naplni nimi strukturu c_net_dev*/
+/* find network interface in the system
+ * save it in to structure c_net_dev 
+ * if interface don`t allock, must by define as NULL */
 struct c_net_dev *get_interface(struct c_net_dev *interface);
+
 uint64_t read_mac(const char *dir);
+
+/* create socket */
 int raw_init(struct k_capture *p_capture,char *device);
+
 void k_loop(struct k_capture *p_capture, k_handler callback);
+
+/* find running network interface */
+char *find_dev(char *dev_name);
 
 #endif

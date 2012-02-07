@@ -23,6 +23,7 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
   char help_dir[250];
   struct c_net_dev *pom_interface, *dev_interface = NULL;
   
+  // open dir
   if(!(dp = opendir(DEVDIR))){
     fprintf(stderr,"get_interface error: %s", strerror(errno));
     return NULL;
@@ -67,6 +68,7 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
   return interface;
 }
 
+// funkcia zisti aktualnu MAC adresu daneho rozhrania
 uint64_t read_mac(const char *dir){
   int i, j;
   FILE *fr;
@@ -91,6 +93,49 @@ uint64_t read_mac(const char *dir){
   return strtoll(s_addr,NULL,16);
 }
 
+char *find_dev(char *dev_name){
+  
+  struct c_net_dev *dev_interface = NULL, *dev_help = NULL;
+  char* file = NULL;
+  char state[NUMSTATE];
+  const char operstate[] = "operstate";
+  FILE *fr;
+  
+  dev_interface = NULL;
+  dev_interface = get_interface(dev_interface);
+  if((file = (char*) malloc((strlen(DEVDIR)+strlen(dev_interface->name)+strlen(operstate)+1)*sizeof(char))) == NULL){
+      fprintf(stderr,"Find_dev(): Error malloc: %s\n", strerror(errno));
+      return NULL;
+  }
+  
+  for(dev_interface=dev_help; dev_help = NULL; dev_help = dev_help->p_next){
+    if(sprintf(file,"%s%s/%s",DEVDIR, dev_help->name, operstate) < 0){
+      fprintf(stderr,"Find_dev(): Error sprintf: %s\n", strerror(errno));
+      return NULL;
+    }
+    
+    if(!(fr = fopen(file, "r"))){
+      fprintf(stderr,"Find_dev(): Error read operstate file: %s", strerror(errno));
+      return NULL;
+    }
+    
+    free(file);
+    file=NULL;
+    
+    fgets(state,NUMSTATE, fr);
+    
+    fclose(fr);
+    
+    if(!(strcmp(state,"up"))){
+      dev_name = dev_help->name;
+      return dev_name;
+    }
+  }
+  
+  return NULL;
+  
+}
+
 int raw_init(struct k_capture *p_capture,char* device)
 {
   struct ifreq ifr;
@@ -99,11 +144,25 @@ int raw_init(struct k_capture *p_capture,char* device)
   int raw_socket;
   int ifindex;
   
+  if(strcmp(device,"auto")){
+    if((p_capture->name=(char*) malloc(strlen(device)*sizeof(char) + 1)) == NULL){
+      fprintf(stderr,"Raw_init(): Error malloc: %s\n", strerror(errno));
+      return 1;
+    }
+    strcpy(p_capture->name, device);
+  }
+  else{
+    char* file;
+    file = find_dev(file);
+     if((p_capture->name=(char*) malloc(strlen(file)*sizeof(char) + 1)) == NULL){
+      fprintf(stderr,"Raw_init(): Error malloc: %s\n", strerror(errno));
+      return 1;
+    }
+    strcpy(p_capture->name, file);
+  }
+  
   memset(&ifr, 0, sizeof(struct ifreq));
   memset(&mr, 0, sizeof(struct packet_mreq));
-  
-  p_capture->name = (char*) malloc(strlen(device) + 1);
-  strcpy(p_capture->name, device);
   
   if((raw_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 1){
     fprintf(stderr, "ERROR: Could not open socket, Got ?\n");
