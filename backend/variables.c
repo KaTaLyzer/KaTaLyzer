@@ -26,7 +26,7 @@ KTHREAD *p_thread = NULL;
 
 //global definitions for update to mysql database
 int unix_time;
-int processing_time; 
+int processing_time;
 time_t actual_time;
 int pocet_B=0;
 char Eor8[2];

@@ -30,6 +30,7 @@ require_once('inc/core.php');
 		<a href="http://katalyzer.sk/">Home</a>
 		<a class="small" href="./sip.php">SIP</a>
 		<a class="small" href="./cdp.php">CDP</a>
+		<a class="small" href="./config_edit.php">Edit</a>
 		<a class="small" href="http://katalyzer.sk/contact">Contact Us</a>
 	</div></div>
 </div>
@@ -40,7 +41,7 @@ require_once('inc/core.php');
 	<div class="form2">
 		Theme: <select id="theme_select" name="theme"></select>
 	</div>
-	Server: <select id="config_select"></select>
+	Database: <select id="config_select"></select>
 
 	<span id="nav-buttons">
 

@@ -38,7 +38,7 @@ extern char isfirsttime;
 
 extern int wait;
 extern char *interface_from_argument;
-//extern char interface_from_argument[25]; 
+//extern char interface_from_argument[25];
 extern int b_interface_from_argument;
 extern char is_ipv6ext;
 
@@ -55,61 +55,61 @@ extern int i_is_configured;
 extern int b_is_iface;
 
 //pointer to thread
-typedef struct kthread{
-  struct kthread *p_next;
-  struct kthread *p_previous;
-  char run;
-  pthread_t zapdb;
+typedef struct kthread {
+        struct kthread *p_next;
+        struct kthread *p_previous;
+        char run;
+        pthread_t zapdb;
 }KTHREAD;
 
 extern KTHREAD *p_thread;
 
 //global structure for IP adress and MAC addres
-typedef struct zaznamy{
-	struct zaznamy *p_next;		// pointer to next structure
-	uint64_t mac_s;
-	uint64_t mac_d;
-	uint32_t ip_s;
-	uint32_t ip_d;
-	unsigned int *ipv6_s;
-	unsigned int *ipv6_d;
-	unsigned long int pocet_B;	
-	unsigned long int pocet_ramcov;
-	int spracovany[4];
+typedef struct zaznamy {
+        struct zaznamy *p_next;		// pointer to next structure
+        uint64_t mac_s;
+        uint64_t mac_d;
+        uint32_t ip_s;
+        uint32_t ip_d;
+        unsigned int *ipv6_s;
+        unsigned int *ipv6_d;
+        unsigned long int pocet_B;
+        unsigned long int pocet_ramcov;
+        int spracovany[4];
 }ZAZNAMY;
 
 //global structure for name of the protocol
 typedef struct protokoly {
-	int empty;
-	char is_ipv6;
-	char protokol[9];		// name of the protocol
-	ZAZNAMY *zoznam;		// pointer to stucture ZAZNAMY
-	struct protokoly *p_next;	// pointer to next structure
+        int empty;
+        char is_ipv6;
+        char protokol[9];		// name of the protocol
+        ZAZNAMY *zoznam;		// pointer to stucture ZAZNAMY
+        struct protokoly *p_next;	// pointer to next structure
 } PROTOKOLY;
 
 //help structure
-typedef struct zaciatok_p{
-	int empty;
-	PROTOKOLY *p_protokoly;
+typedef struct zaciatok_p {
+        int empty;
+        PROTOKOLY *p_protokoly;
 }ZACIATOK_P;
 
 //global structure for pair array
-typedef struct pair_array{
-	int empty;
-	char is_ipv6;
-	uint64_t mac_s;
-	uint64_t mac_d;
-	uint32_t ip_s;
-	uint32_t ip_d;
-	unsigned int *ipv6_s;
-	unsigned int *ipv6_d;
-	struct pair_array *p_next;
+typedef struct pair_array {
+        int empty;
+        char is_ipv6;
+        uint64_t mac_s;
+        uint64_t mac_d;
+        uint32_t ip_s;
+        uint32_t ip_d;
+        unsigned int *ipv6_s;
+        unsigned int *ipv6_d;
+        struct pair_array *p_next;
 }PAIR_ARRAY;
 
 
 //global definitions for update to mysql database
 extern int unix_time;
-extern int processing_time; 
+extern int processing_time;
 extern time_t actual_time;
 extern int pocet_B;
 extern char Eor8[2];
@@ -207,14 +207,14 @@ extern pcap_t *fp;
 
 extern  int protocol_snmp;
 
-typedef struct snmp_struk{
-	int empty;
-	int bytes;
-	int number;
-	uint32_t IP_S;
-	uint32_t IP_D;
-	char *p_snmp;
-	struct snmp_struk *p_next;
+typedef struct snmp_struk {
+        int empty;
+        int bytes;
+        int number;
+        uint32_t IP_S;
+        uint32_t IP_D;
+        char *p_snmp;
+        struct snmp_struk *p_next;
 } SNMP_STRUK;
 
 extern SNMP_STRUK sn;
@@ -223,15 +223,15 @@ extern SNMP_STRUK sn;
 //SIP
 
 typedef struct sipmsg {
-	int time;
-	int type;
-	int ip_s[4];
-	int ip_d[4];
-	int comm;
-	char name[1500];
-	char *callid;
-	int pridany;
-	struct sipmsg *next;
+        int time;
+        int type;
+        int ip_s[4];
+        int ip_d[4];
+        int comm;
+        char name[1500];
+        char *callid;
+        int pridany;
+        struct sipmsg *next;
 } SIPMSG;
 
 extern SIPMSG *sipmsgs;

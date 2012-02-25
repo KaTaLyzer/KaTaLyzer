@@ -31,7 +31,7 @@
 
 struct cdp_struct *cdp_st;
 
-//struktura na pretiahnutie MySQL a dat cez thread - nechutne, ja viem, ale inak sa to neda (aspon co ja viem)
+//struktura na pretiahnutie MySQL a dat cez thread - nechutne, ale lepsie riesenie ma zatial nenapadlo
 typedef struct {
 	MYSQL *d;
 	ZACIATOK_P *p;
@@ -45,10 +45,15 @@ int main(int argc, char **argv) {
 	int i_is_config = 0;
 	IPV6_adr_D = NULL;
 	IPV6_adr_S = NULL;
+#ifndef _CAPTURE
 	char offilename[255];
+#endif
 	KTHREAD *kt1, *kt2;
-
+#ifdef _CAPTURE
+	while((o=getopt(argc,argv,":hwc:d:")) != -1 ) {  // usage of getopt() is that if you expect argument than you specify colon ':' after the option (i.e. here we expect interface name after -i)
+#else
 	while((o=getopt(argc,argv,":hwc:df:")) != -1 ) {  // usage of getopt() is that if you expect argument than you specify colon ':' after the option (i.e. here we expect interface name after -i)
+#endif
 		switch(o)
 		{ 
 			case 'h':
@@ -64,12 +69,14 @@ int main(int argc, char **argv) {
 			case 'd':
 				debug = 1;
 				break;
+#ifndef _CAPTURE
 			case 'f':
 			  fprintf(stderr,"WARNING: DANGEROUS FUNCTION. PRESS CTRL+C TO EXIT OR ANY KEY TO CONTINUE.\n");
 			//  getchar();
 			  isoffline = 1;
 			  strcpy(offilename,optarg);
 			  break;
+#endif			
 			default:
 				help();
 				exit(OK);
@@ -104,8 +111,13 @@ int main(int argc, char **argv) {
 #ifdef _CAPTURE
 
   struct k_capture c;
+  c.name = NULL;
+  c.file_status = NULL;
   
-  raw_init(&c, interface);
+  if(raw_init(&c, interface)){
+    fprintf(stderr,"Error: Can not create socket\n");
+    return 1;
+  }
   
 #else
 	if(isoffline){
@@ -182,7 +194,9 @@ void help()
         printf("-w disable waiting for new minute after start of analyzator(e.g. in case we debug this program)\n");
 	printf("-c sets path to configuration file (e.g. /tmp/my_config.conf); do not use space " " in the path\n");
         printf("-d sets debug mode on\n");
+#ifndef _CAPTURE	
 	printf("-f sets offline mode and path to offline capture file. WARNING: DANGEROUS");
+#endif	
 }
 
 //toto spusta funkcia pcap_loop - tu sa robi analyza prevadzky
@@ -617,13 +631,18 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		
 		PRETAH pretah1;
 		KTHREAD *kt;
-		kt = create_thread(&p_thread);
-		kt->run=1;
-		pretah1.p=&z_protokoly2;
-		pretah1.d=conn;
-		pretah1.t=kt;
-		pthread_t zapdb = kt->zapdb;
-		pthread_create(&zapdb,NULL,zapis_do_DB_protokoly,(void *)&pretah1);
+		if((kt = create_thread(&p_thread)) != NULL){
+		  kt->run=1;
+		  pretah1.p=&z_protokoly2;
+		  pretah1.d=conn;
+		  pretah1.t=kt;
+		  pthread_t zapdb = kt->zapdb;
+		  pthread_create(&zapdb,NULL,zapis_do_DB_protokoly,(void *)&pretah1);
+		}
+		else{
+		  fprintf(stderr,"Error, Can not write to the database\n");
+		}
+		
 
 		flag = 1; // after processing the frame we just processed we set 'flag' to true which indicates that data in this time interval were already processed and in this second we are not going to insert any more data into DB - we will do it after passing 'casovac_zapisu' seconds
 		
@@ -1307,7 +1326,10 @@ KTHREAD *create_thread(KTHREAD **thread)
   start_thread=*thread;
   // ak struktura neexistuje tak ju vytvorime
   if(!start_thread){
-    start_thread = (KTHREAD*) malloc(sizeof(KTHREAD));
+    if((start_thread = (KTHREAD*) malloc(sizeof(KTHREAD))) == NULL){
+      fprintf(stderr,"Create_thread, Error malloc start_thread: %s\n", strerror(errno));
+      return 0;
+    }
     start_thread->p_next=NULL;
     start_thread->p_previous=NULL;
     start_thread->run=0;
@@ -1342,7 +1364,10 @@ KTHREAD *create_thread(KTHREAD **thread)
     }
     
 //vytvorime nove vlakno    
-    pom_thread3 = (KTHREAD*) malloc(sizeof(KTHREAD));
+    if((pom_thread3 = (KTHREAD*) malloc(sizeof(KTHREAD))) == NULL){
+      fprintf(stderr, "create_thread: Error malloc pom_thread3: %s\n", strerror(errno));
+      return 0;
+    }
     pom_thread3->p_next=NULL;
     pom_thread3->p_previous=pom_thread1;
     pom_thread3->run=0;

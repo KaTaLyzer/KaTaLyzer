@@ -25,7 +25,7 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
   
   // open dir
   if(!(dp = opendir(DEVDIR))){
-    fprintf(stderr,"get_interface error: %s", strerror(errno));
+    fprintf(stderr,"get_interface error: %s\n", strerror(errno));
     return NULL;
   }
   
@@ -37,11 +37,11 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
     
     if(!interface){
       if((interface =(struct c_net_dev*) malloc(sizeof(struct c_net_dev))) == NULL){
-	fprintf(stderr,"Error malloc get_interface: %s", strerror(errno));
+	fprintf(stderr,"Error malloc get_interface: %s\n", strerror(errno));
 	return NULL;
       }
       if((interface->name =(char*) malloc(strlen(dir->d_name)+1)) == NULL){
-	fprintf(stderr,"Error malloc get_interface: %s", strerror(errno));
+	fprintf(stderr,"Error malloc get_interface: %s\n", strerror(errno));
 	return NULL;
       }
       strcpy(interface->name,dir->d_name);
@@ -53,7 +53,7 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
       for(pom_interface = interface->p_next, dev_interface = interface;dev_interface->p_next != NULL;  dev_interface = dev_interface->p_next){
       }
       if((dev_interface->p_next = (struct c_net_dev*) malloc(sizeof(struct c_net_dev))) == NULL){
-	fprintf(stderr,"Error malloc get_interface: %s", strerror(errno));
+	fprintf(stderr,"Error malloc get_interface: %s\n", strerror(errno));
 	return NULL;
       }
       pom_interface = dev_interface->p_next;
@@ -65,6 +65,8 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
     }
   }
   
+  closedir(dp);
+  
   return interface;
 }
 
@@ -75,8 +77,8 @@ uint64_t read_mac(const char *dir){
   char s_addr[MAXNUMBER], pom_addr[MAXNUMBER];
   
   if(!(fr = fopen(dir, "r"))){
-    fprintf(stderr,"Error read mac: %s", strerror(errno));
-    return NULL;
+    fprintf(stderr,"Error read mac: %s\n", strerror(errno));
+    return 0;
   }
   
   fgets(pom_addr,MAXNUMBER, fr);
@@ -93,47 +95,69 @@ uint64_t read_mac(const char *dir){
   return strtoll(s_addr,NULL,16);
 }
 
-char *find_dev(char *dev_name){
-  
-  struct c_net_dev *dev_interface = NULL, *dev_help = NULL;
-  char* file = NULL;
+int get_status (const char *file)
+{
   char state[NUMSTATE];
-  const char operstate[] = "operstate";
   FILE *fr;
+  char *f_help = NULL;
   
-  dev_interface = NULL;
-  dev_interface = get_interface(dev_interface);
-  if((file = (char*) malloc((strlen(DEVDIR)+strlen(dev_interface->name)+strlen(operstate)+1)*sizeof(char))) == NULL){
-      fprintf(stderr,"Find_dev(): Error malloc: %s\n", strerror(errno));
-      return NULL;
+  if(!file){
+    fprintf(stderr,"Get_status, error in file\n");
+    return 0;
   }
   
-  for(dev_interface=dev_help; dev_help = NULL; dev_help = dev_help->p_next){
-    if(sprintf(file,"%s%s/%s",DEVDIR, dev_help->name, operstate) < 0){
+  if(!(fr = fopen(file, "r"))){
+    fprintf(stderr,"Get_status(): Error read operstate file: %s\n", strerror(errno));
+    return 0;
+  }
+  
+  fgets(state, NUMSTATE, fr);
+  
+  if(fclose(fr)){
+    fprintf(stderr,"Get_status(): Error close file: %s\n", strerror(errno));
+    exit(1);
+  }
+  
+  // ak sa v danom retazci vyskytuje koniec riadku tak ho odstranime a nahradime koncom retezca
+  // je to zlozitehsie ako keby sme pouzili strncmp(), ale istejsie    
+  if((f_help = strchr(state, '\n')) != NULL)
+    *f_help='\0';
+  
+  if(!(strcmp(state,"up")))
+    return 1;
+  
+  return 0;
+}
+
+
+char *find_dev(char *dev_name){
+  
+  struct c_net_dev *dev_interface = NULL;
+  struct c_net_dev *dev_help = NULL;
+  char *file = NULL;
+  
+  dev_interface = get_interface(dev_interface);
+  
+  for(dev_help = dev_interface; dev_help != NULL; dev_help = dev_help->p_next){
+    if((file = (char*) malloc((strlen(DEVDIR)+strlen(dev_help->name)+strlen(FILEOPERSTATE)+1)*sizeof(char))) == NULL){
+      fprintf(stderr,"Find_dev(): Error malloc: %s\n", strerror(errno));
+      return NULL;
+    }
+    if(sprintf(file,"%s%s/%s",DEVDIR, dev_help->name, FILEOPERSTATE) < 0){
       fprintf(stderr,"Find_dev(): Error sprintf: %s\n", strerror(errno));
       return NULL;
     }
     
-    if(!(fr = fopen(file, "r"))){
-      fprintf(stderr,"Find_dev(): Error read operstate file: %s", strerror(errno));
-      return NULL;
-    }
-    
-    free(file);
-    file=NULL;
-    
-    fgets(state,NUMSTATE, fr);
-    
-    fclose(fr);
-    
-    if(!(strcmp(state,"up"))){
+    if(get_status(file)){
+      free(file);
+      file = NULL;
       dev_name = dev_help->name;
       return dev_name;
     }
+    free(file);
+    file = NULL;
   }
-  
   return NULL;
-  
 }
 
 int raw_init(struct k_capture *p_capture,char* device)
@@ -144,21 +168,43 @@ int raw_init(struct k_capture *p_capture,char* device)
   int raw_socket;
   int ifindex;
   
+  if(p_capture->name){
+    free(p_capture->name);
+    p_capture->name = NULL;
+  }
+  
+  if(p_capture->file_status){
+    free(p_capture->file_status);
+    p_capture = NULL;
+  }
+  
   if(strcmp(device,"auto")){
+    p_capture->interface_auto = 0;
+    p_capture->file_status = NULL;
     if((p_capture->name=(char*) malloc(strlen(device)*sizeof(char) + 1)) == NULL){
-      fprintf(stderr,"Raw_init(): Error malloc: %s\n", strerror(errno));
+      fprintf(stderr,"Raw_init(): Error malloc p_capture->name: %s\n", strerror(errno));
       return 1;
     }
     strcpy(p_capture->name, device);
   }
   else{
     char* file;
-    file = find_dev(file);
+    if((file = find_dev(file)) == NULL)
+      return 1;
      if((p_capture->name=(char*) malloc(strlen(file)*sizeof(char) + 1)) == NULL){
       fprintf(stderr,"Raw_init(): Error malloc: %s\n", strerror(errno));
       return 1;
     }
+    p_capture->interface_auto = 1;
     strcpy(p_capture->name, file);
+    if((p_capture->file_status=(char*) malloc(strlen(DEVDIR)*strlen(file)*strlen(FILEOPERSTATE)*sizeof(char) + 1)) == NULL){
+      fprintf(stderr,"Raw_init(): Error malloc p_capture->filestatus: %s\n", strerror(errno));
+      return 1;
+    }
+    if(sprintf(p_capture->file_status,"%s%s/%s",DEVDIR, file, FILEOPERSTATE) < 0){
+      fprintf(stderr,"raw_init(): Error sprintf: %s\n", strerror(errno));
+      return 0;
+    }
   }
   
   memset(&ifr, 0, sizeof(struct ifreq));
@@ -169,7 +215,7 @@ int raw_init(struct k_capture *p_capture,char* device)
     return 1;
   }
   
-  strcpy(ifr.ifr_name, device);
+  strcpy(ifr.ifr_name, p_capture->name);
   
   if(ioctl(raw_socket, SIOCGIFFLAGS, &ifr) == -1){
     fprintf(stderr, "ERROR: Could not retrive the flags from the divice. %s\n", strerror(errno));
@@ -218,6 +264,26 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
   
 //   while(!connect(p_capture->socket,(struct sockaddr_ll*) &p_capture->sll, sizeof(p_capture->sll))){
   while(1){
+    // if interface is down, find new interface and create new socket
+    if(p_capture->interface_auto){
+      if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
+	if(p_capture->file_status){
+	  free(p_capture->file_status);
+	  p_capture->file_status = NULL;
+	}
+	if(p_capture->name){
+	  free(p_capture->name);
+	  p_capture->name = NULL;
+	}
+	if(p_capture->socket){
+	  close(p_capture->socket);
+	  p_capture->socket = 0;
+	}
+	if(raw_init(p_capture, "auto"))
+	  continue;
+      }
+    }
+//    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
     len = recvfrom(p_capture->socket,buf, sizeof(buf), 0, NULL, NULL);
     if(len < 0){
       fprintf(stderr, "Error recv packet. %s\n", strerror(errno));

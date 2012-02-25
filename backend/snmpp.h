@@ -20,9 +20,9 @@
 #include <net-snmp/library/tools.h>
 
 
-extern void snmp_protokol(const u_char *pkt_data,SNMP_STRUK *sn);
+extern void snmp_protokol ( const u_char *pkt_data,SNMP_STRUK *sn );
 SNMP_STRUK *create_snmp();
-void procesing_snmp(SNMP_STRUK s, MYSQL *conn);
+void procesing_snmp ( SNMP_STRUK s, MYSQL *conn );
 #endif
 
 #endif

@@ -7,7 +7,7 @@
 #include "variables.h"
 
 void waiting();
-int __nsleep(const struct timespec *req, struct timespec *rem);
-int msleep(unsigned long milisec);
+int __nsleep ( const struct timespec *req, struct timespec *rem );
+int msleep ( unsigned long milisec );
 
 #endif
