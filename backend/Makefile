@@ -43,10 +43,18 @@ clean:
 
 install:
 	cp ./katalyzer /usr/local/bin/katalyzer
+	cp ./start_katalyzer /etc/init.d/katalyzer
+	chmod 755 /etc/init.d/katalyzer
 	chmod 555 /usr/local/bin/katalyzer
 	mkdir -p /etc/katalyzer
-	cp ./files/my_config.conf /etc/katalyzer/my_config.conf
-	chown www-data:www-data /etc/katalyzer/my_config.conf
+	cp ./files/my_config.conf /etc/katalyzer/config.conf
+	chown www-data:www-data /etc/katalyzer/config.conf
 	cp -r ../frontend /var/www/katalyzer
-	ln -s /etc/katalyzer/my_config.conf /var/www/katalyzer/configs/my_config.conf
+	ln -s /etc/katalyzer/config.conf /var/www/katalyzer/configs/config.conf
 	chown -R www-data:www-data /var/www/katalyzer
+
+uninstall:
+	rm /usr/local/bin/katalyzer
+	rm /etc/init.d/katalyzer
+	rm -rf /etc/katalyzer
+	rm -rf /var/www/katalyzer

@@ -76,4 +76,5 @@ void read_conf()
                 printf ( "*** Incorrect configuration, check %s configuration file!\n",config_name );
                 exit ( ERR_INC_CONF );
         }
+	sprintf(db_name,"%s_%s",db_name, interface);
 }

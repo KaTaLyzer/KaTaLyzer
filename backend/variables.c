@@ -43,7 +43,11 @@ int protocol=0;
 int s_protocol=0;
 int d_protocol=0;
 int interval=0;
+
+#ifdef CHCEM_POCTY
 int ppaketov=0;
+int pocetpaketov=0;
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // arrays where numbers of Bytes and frames are storred for each protocol

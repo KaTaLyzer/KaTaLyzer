@@ -13,6 +13,13 @@
 #define NUMSTATE 5
 #define FILEOPERSTATE "operstate"
 
+// do struktury ulozime cas zmeny rozhrania
+struct dev_time{
+  struct timeval ts;
+  char *name_z;
+  char *name_do;
+};
+
 struct c_net_dev{
   uint64_t address;	// mac address
   char *name;		// interface name
@@ -30,6 +37,8 @@ struct k_capture{
 struct k_header{
   struct timeval ts;
   unsigned int len;
+  unsigned short int interface_auto;
+  struct dev_time *dt;
 };
 
 typedef void (*k_handler)(const struct k_header *header, const u_char *pkt_data);
@@ -41,7 +50,9 @@ struct c_net_dev *get_interface(struct c_net_dev *interface);
 
 uint64_t read_mac(const char *dir);
 
-/* create socket */
+/* create socket
+ * return 0 on success
+ * return 1 on false */
 int raw_init(struct k_capture *p_capture,char *device);
 
 void k_loop(struct k_capture *p_capture, k_handler callback);

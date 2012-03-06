@@ -258,12 +258,30 @@ int raw_init(struct k_capture *p_capture,char* device)
 void k_loop(struct k_capture *p_capture, k_handler calback){
   
   struct k_header head;
+  struct dev_time *dt;
   int len;
-  
   u_char buf[BUFSIZ];
+  char *old_interface = "NOT";
+  
+  head.dt = NULL;
   
 //   while(!connect(p_capture->socket,(struct sockaddr_ll*) &p_capture->sll, sizeof(p_capture->sll))){
   while(1){
+    dt=NULL;
+    
+    if(p_capture->name != NULL){
+      if(old_interface != NULL){
+	free(old_interface);
+	old_interface=NULL;
+      }
+      
+      if((old_interface = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
+	fprintf(stderr, "k_loop(): Error malloc old_interface: %s", strerror(errno));
+	exit(1);
+      }
+      strcpy(old_interface,p_capture->name);
+    }
+    
     // if interface is down, find new interface and create new socket
     if(p_capture->interface_auto){
       if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
@@ -281,6 +299,17 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
 	}
 	if(raw_init(p_capture, "auto"))
 	  continue;
+	if((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL){
+	  fprintf(stderr, "k_loop(): Error malloc struct dev_time: %s", strerror(errno));
+	  exit(1);
+	}
+	gettimeofday(&dt->ts, NULL);
+	if((dt->name_z = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
+	  fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
+	  exit(1);
+	}
+	strcpy(dt->name_z,p_capture->name);
+	strcpy(dt->name_do,old_interface);
       }
     }
 //    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
@@ -291,10 +320,27 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
     }
     gettimeofday(&head.ts, NULL);
     head.len = len;
+    head.interface_auto = p_capture->interface_auto;
+    
+    if(p_capture->interface_auto && (head.dt == NULL))
+      head.dt=dt;
     
 //     printf("Len: %d\n", len);
   
     calback(&head,(u_char *) &buf);
+    
+    if(head.dt !=NULL){
+      if(head.dt->name_z != NULL){
+	free(head.dt->name_z);
+	head.dt->name_z = NULL;
+      }
+      if(head.dt->name_do){
+	free(head.dt->name_do);
+	head.dt->name_do = NULL;
+      }
+    }
+    free(head.dt);
+    head.dt = NULL;
   }
   
 }

@@ -21,8 +21,6 @@
 #include "sip.h"
 #include <arpa/inet.h>
 
-#define CHCEM_POCTY
-
 #ifdef _CAPTURE
 #define POCTY_SUBOR "spaketov.txt"
 #else
@@ -214,6 +212,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 #ifdef CHCEM_POCTY
 	//increment number of packets
 	ppaketov++;
+	pocetpaketov=pocetpaketov + header->len;
 #endif
 
 	MAC_adr_S=0;
@@ -227,6 +226,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	if(IPV6_adr_S)
 	  free(IPV6_adr_S);
 	IPV6_adr_S = NULL;
+	
 	
 	if(isoffline){
 	  if(!isfirsttime){
@@ -439,8 +439,9 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 #ifdef CHCEM_POCTY
 		FILE *fw;
 		if((fw=fopen(POCTY_SUBOR,"a"))!=NULL) {
-			fprintf(fw,"%d\n",ppaketov);
+			fprintf(fw,"%d; %d\n",ppaketov, pocetpaketov);
 			ppaketov=0;
+			pocetpaketov=0;
 			if(fclose(fw)==EOF) fprintf(stderr,"Neviem zavriet subor ppaketov.txt!\n");
 		}
 		else fprintf(stderr,"Neviem otvorit subor ppaketov.txt pre dopis!\n");
@@ -463,6 +464,26 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		mysql_next_result(conn);
 		
 		// creating DB tables 
+		
+#ifdef _CAPTURE
+		if((header->interface_auto) && (header->dt != NULL)){
+		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
+		  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `INTERFACE_time` ( `time` int(11) NOT NULL, `interface_z` varchar(255) NOT NULL, `interface_do` varchar(255) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
+		  if (mysql_query(conn, prikaz)) {
+		    fprintf(stderr,"Failed to create INTERFACE_time table in MYSQL database %s: %s\n",db_name, mysql_error(conn));
+		    exit (ERR_MYSQL_DB_CREATE);
+		  }
+		  mysql_next_result(conn);
+		  
+		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
+		  sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (%d, %s, %s)", gettimeofday(&header->dt->ts, NULL), header->dt->name_z, header->dt->name_do); 
+		  if (mysql_query(conn, prikaz)) {
+		    fprintf(stderr,"Failed to create INTERFACE_time table in MYSQL database %s: %s\n",db_name, mysql_error(conn));
+		    exit (ERR_MYSQL_DB_CREATE);
+		  }
+		  mysql_next_result(conn);
+		}
+#endif
 
 		if(!(z_protokoly.empty)) {
 			PROTOKOLY *p_prot;

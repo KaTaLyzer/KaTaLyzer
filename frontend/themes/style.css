@@ -1,0 +1,52 @@
+
+body {
+	font-size: 75%;
+	padding: 0px;
+	margin: 0px; 
+	color: #eee; 
+	font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif; 
+	background: #111 url(images/bg.gif);
+}
+div, p, a {font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;}
+
+
+h1,h2,h3,h4,h5,h6 { 
+  color: #eee; 
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; 
+}
+h1		{font-size: 3em; font-weight: normal; font-style: italic; margin: 30px 0 0 0; text-shadow:1px 1px 3px #000;}
+h1 a {color: white; text-decoration: none;}
+h1 a span	{color: #aaa;}
+h1 a:hover span	{color:white; }
+h3 {margin-bottom: 5px; margin-bottom: 5px; border-bottom: solid 1px #3a588e; text-shadow:1px 1px 1px #111;}
+
+a {color:#92b6f4}
+
+
+img {border: 0; margin: 0; padding: 0;}
+
+select, input {
+	padding: 0; margin: 0;
+	font-size: 12px;
+	font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+	height: 18px;
+	border: 1px solid #1e1e1e; 
+	padding-bottom:1px;
+
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+}
+input {padding-left:3px; margin-bottom:1px; padding-bottom:0px; background: #1e1e1e url(images/but-black.gif) no-repeat; color:#eee;}
+select {cursor: pointer; cursor: hand; background: #1e1e1e url(images/but-black.gif) no-repeat; color:#92b6f4;}
+select:hover {background: #1e1e1e url(images/but-blue.gif) no-repeat; color: #f57900;}
+
+form label	{font-size: 0.9em; color: #eee; display: block; padding: 0 0 6px 2px;}
+form span	 {display: block; padding: 1px;  margin: 0 0 0 -2px;}
+
+form span a	{padding-top:1px; width:98%; display: block; text-align:center;  height: 17px; text-decoration:none;
+		border: 1px solid #1e1e1e; 
+		-moz-border-radius: 4px;
+		-webkit-border-radius: 4px;
+		background: #1e1e1e url(images/but-black-up.gif) no-repeat;
+        	color:#92b6f4;
+}
