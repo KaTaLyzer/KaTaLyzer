@@ -210,9 +210,25 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	char protokol[DLZKA_POLA_P];	// pomocna premena
 
 #ifdef CHCEM_POCTY
+	static unsigned int pr_Eth=0;
+	static unsigned int pr_Eth8=0;
+	static unsigned int pr_Ip=0;
+	static unsigned int pr_Ipv6=0;
+	static unsigned int pr_UDP=0;
+	static unsigned int pr_TCP=0;
+	static unsigned int pr_ARP=0;
+	static unsigned int pr_RARP=0;
+	static unsigned int pr_ICMP=0;
+	static unsigned int pr_ICMPv6=0;
+	static unsigned int pr_IGMP=0;
+
 	//increment number of packets
 	ppaketov++;
+#ifdef _CAPTURE
 	pocetpaketov=pocetpaketov + header->len;
+#else
+	pocetpaketov=pocetpaketov + header->caplen;
+#endif
 #endif
 
 	MAC_adr_S=0;
@@ -266,12 +282,18 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	if(protocol_eth == 1 && strcmp(Eor8, "E") == 0) {// if we specified to watch ETHERNET II frames in config file and we catched 'E'(it means ETHERNET II frame), we adjust particular statistics
 		strcpy(protokol,"E");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_Eth++;
+#endif
 	}
 
 /// 802.3
 	if(protocol_8023 == 1 && strcmp(Eor8, "8") == 0) { 
 		strcpy(protokol,"8");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_Eth8++;
+#endif
         }
 
 ///////////////////
@@ -282,23 +304,35 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
         if(protocol_ip == 1 && strcmp(net_proto, "IP") == 0) {
 		strcpy(protokol,"IP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_Ip++;
+#endif
         }
 
 	if(protocol_ipv6 == 1 && strcmp(net_proto, "IPv6") == 0){
 		strcpy(protokol,"IPv6");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_Ipv6++;
+#endif
 	}
 
 /// ARP
 	if(protocol_arp == 1 && strcmp(net_proto, "ARP") == 0) {
 		strcpy(protokol,"ARP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_ARP++;
+#endif
         }
 
 /// RARP
 	if(protocol_rarp == 1 && strcmp(net_proto, "RARP") == 0) {
 		strcpy(protokol,"RARP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_RARP++;
+#endif
  	}
 
 /// IPX protocol
@@ -315,30 +349,45 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
         if(protocol_tcp == 1 && strcmp(trans_layer, "TCP") == 0) {
 		strcpy(protokol,"TCP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_TCP++;
+#endif
         }
 
 /// UDP protocol
 	if(protocol_udp == 1 && strcmp(trans_layer, "UDP") == 0) {
 		strcpy(protokol,"UDP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_UDP++;
+#endif
         }
 
 ///  ICMP PROTOKOL
 	if(protocol_icmp == 1 && strcmp(trans_layer, "ICMP") == 0) {
 		strcpy(protokol,"ICMP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_ICMP++;
+#endif
         }
         
 ///  ICMPv6 PROTOKOL
         if(protocol_icmp == 1 && strcmp(trans_layer, "ICMPv6") == 0){
 	  strcpy(protokol,"ICMPv6");
 	  m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_ICMPv6++;
+#endif
         }
 		
 /// IGMP protokol
 	if(protocol_igmp == 1 && strcmp(trans_layer, "IGMP") == 0) {
 		strcpy(protokol,"IGMP");
 		m_protokoly(&z_protokoly,protokol);
+#ifdef CHCEM_POCTY
+		pr_IGMP++;
+#endif
 	}
 
 /////////////////////
@@ -438,10 +487,37 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 
 #ifdef CHCEM_POCTY
 		FILE *fw;
+		/* skonrolujeme ci je subor, prazdny alebo neexistuje
+		 * ak je prazdny tak na zaciatok suboru pridame hlavicku
+		 */
+		if((fw=fopen(POCTY_SUBOR,"a+")) == NULL){
+		  fprintf(stderr,"Subor sa nepodarilo vytvorit: %s", strerror(errno));
+		}
+		else{
+		  if(fseek(fw, 0, SEEK_END) == -1){
+		    fprintf(stderr,"Error in fseek(): %s", strerror(errno));
+		    exit(1);
+		  }
+		  if(!ftell(fw)){
+		    fprintf(fw,"Pocet zachytenych paketov, Pocet bytov, Eth, Eth8, IP, IPv6, ARP, RARP, TCP, UDP, ICMP, ICMPv6, IGMP\n");
+		  }
+		  if(fclose(fw)==EOF) fprintf(stderr,"Neviem zavriet subor ppaketov.txt!\n");
+		}
 		if((fw=fopen(POCTY_SUBOR,"a"))!=NULL) {
-			fprintf(fw,"%d; %d\n",ppaketov, pocetpaketov);
+			fprintf(fw,"%d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d\n",ppaketov, pocetpaketov, pr_Eth, pr_Eth8, pr_Ip, pr_Ipv6, pr_ARP, pr_RARP, pr_TCP, pr_UDP, pr_ICMP, pr_ICMPv6, pr_IGMP);
 			ppaketov=0;
 			pocetpaketov=0;
+			pr_Eth=0;
+			pr_Eth8=0;
+			pr_Ip=0;
+			pr_Ipv6=0;
+			pr_ARP=0;
+			pr_RARP=0;
+			pr_TCP=0;
+			pr_UDP=0;
+			pr_ICMP=0;
+			pr_ICMPv6=0;
+			pr_IGMP=0;
 			if(fclose(fw)==EOF) fprintf(stderr,"Neviem zavriet subor ppaketov.txt!\n");
 		}
 		else fprintf(stderr,"Neviem otvorit subor ppaketov.txt pre dopis!\n");
@@ -492,7 +568,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 				if(!p_prot->is_ipv6)
 				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 				else
-				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(32),`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(32), `IP_2` char(32),`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
+				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(32),`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D`  mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(32), `IP_2` char(32),`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 
 				if(mysql_query(conn, prikaz)){
 					fprintf(stderr,"Failed to create %s tables in MYSQL database %s: %s\nPrikaz: %s\n",p_prot->protokol ,db_name, mysql_error(conn), prikaz);

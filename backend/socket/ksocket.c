@@ -261,7 +261,14 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
   struct dev_time *dt;
   int len;
   u_char buf[BUFSIZ];
-  char *old_interface = "NOT";
+  char *old_interface;
+  
+  if((old_interface=(char*) malloc(sizeof(char)*strlen("NOT"))) == NULL){
+    fprintf(stderr, "k_loop: Error malloc old_interface: %s", strerror(errno));
+    exit(1);
+  }
+  
+  strcpy(old_interface,"NOT");
   
   head.dt = NULL;
   
