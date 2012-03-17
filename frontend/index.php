@@ -6,8 +6,11 @@ Header("Pragma: no-cache");
 Header("Cache-Control: no-cache");
 Header("Expires: ".GMDate("D, d M Y H:i:s")." GMT");
 
-require_once('inc/core.php');
+echo $_SERVER['HTTP_HOST'];
+echo $_SERVER['PHP_SELF'];
 
+require_once('inc/core.php');
+    
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
@@ -20,6 +23,19 @@ require_once('inc/core.php');
 
 </head>
 <body>
+<?php
+
+  require_once './inc/class_loggin.php';
+
+  if (isset($_POST['submit_loggin'])) {
+  $login = new loggin($config->host, $config->user, $config->pass, "KATALYZER_USER");
+      if($login->loged($_POST['name'], $_POST['password'])){
+	unset($_POST['submit_loggin']);
+      }
+  }
+if (isset($_SESSION['logged']) && $_SESSION['logged'] == true ) {
+
+?>
 <div class="container">
 <div id="top_menu">
 
@@ -31,6 +47,7 @@ require_once('inc/core.php');
 		<a class="small" href="./sip.php">SIP</a>
 		<a class="small" href="./cdp.php">CDP</a>
 		<a class="small" href="./config_edit.php">Edit</a>
+		<a class="small" href="./user.php">User</a>
 		<a class="small" href="http://katalyzer.sk/contact">Contact Us</a>
 	</div></div>
 </div>
@@ -191,4 +208,20 @@ require_once('inc/core.php');
 <hr>
 </div>
 
+<?php
+}
+else {
+?>
+<div>
+Prosim prihláste sa
+<form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="post">
+<input type="text" name="name">
+<input type="password" name="password">
+<input type="submit" name="submit_loggin" value="posli" />
+</form>
+</div>
+
+<?php
+}
+?>
 </body></html>

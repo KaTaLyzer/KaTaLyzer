@@ -16,8 +16,11 @@ $config_file = new conf_edit($input->config);
 
   if (isset($_POST['submit'])) {
       $config_file->writef($_POST);
+  }
+  if (isset($_POST['restart'])) {
       system("/etc/init.d/atalyzer restart");
   }
+  
 $config_file->readf();  
   
 ?>
@@ -29,9 +32,13 @@ $config_file->readf();
 
 </head>
 <body>
+<div id="back">
+<a href="../KaTalyzer">Back</a>
+</div>
+
 <div id="tabs">
 <form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="post">
-  <label>Rozhranie:<span class="long"><select name="INTERFACE" class="long" />
+  <label>Interface:<span class="long"><select name="INTERFACE" class="long" />
   <?php
   echo "<option  value=\"".$config_file->interface."\">".$config_file->interface."</ option>";
   foreach($config_file->list_interface as $interface) {
@@ -41,13 +48,13 @@ $config_file->readf();
   }
   ?>
   </select></span></label>
-  <label>Databaza Host:<span class="long"><input name="DB_HOST" value='<?php echo $config_file->host ?>' class="long" /></span></label>
-  <label>Databaza meno:<span class="long"><input name="DB_NAME" value='<?php echo $config_file->database ?>' class="long" /></span></label>
-  <label>Databaza uzivatel:<span class="long"><input name="DB_USER" value='<?php echo $config_file->user ?>' class="long" /></span></label>
-  <label>Databaza heslo:<span class="long"><input type="password" name="DB_PASS" value='<?php echo $config_file->pass ?>' class="long" /></span></label>
+  <label>Database Host:<span class="long"><input name="DB_HOST" value='<?php echo $config_file->host ?>' class="long" /></span></label>
+  <label>Database name:<span class="long"><input name="DB_NAME" value='<?php echo $config_file->database ?>' class="long" /></span></label>
+  <label>Database user:<span class="long"><input name="DB_USER" value='<?php echo $config_file->user ?>' class="long" /></span></label>
+  <label>Database password:<span class="long"><input type="password" name="DB_PASS" value='<?php echo $config_file->pass ?>' class="long" /></span></label>
   
   <?php
-  echo "<label>Protokoly:<span>";
+  echo "<label>Protocol:<span>";
   foreach($config_file->protocols as $key => $value) {
     if ($value == 1) {
       echo "<span class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" checked />".$key."</span>";  
@@ -69,11 +76,12 @@ $config_file->readf();
   }
   
   ?>
-  <label>TCP porty:<span class="long"><input name="tcp_port" value="<?php echo $tcp_p; ?>" /></span></label>
+  <label>TCP ports:<span class="long"><input name="tcp_port" value="<?php echo $tcp_p; ?>" /></span></label>
   
-  <label>UDP porty:<span class="long"><input name="udp_port" value="<?php echo $udp_p; ?>" /></span></label>
+  <label>UDP ports:<span class="long"><input name="udp_port" value="<?php echo $udp_p; ?>" /></span></label>
   
-  <input type="submit" name="submit" value="posli" />
+  <input type="submit" name="submit" value="Send" />
+  <input type="submit" name="restart" value="Restart" />
   
   </form>
   

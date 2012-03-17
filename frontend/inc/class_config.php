@@ -18,7 +18,7 @@ class config {
 					if($option == 'db_host'){ $this->host = $value;}
 					if($option == 'db_user'){ $this->user = $value;}
 					if($option == 'db_pass'){ $this->pass = $value;}
-					if($option == 'db_name'){ $this->database = $value;}
+					if($option == 'db_name'){ $db_name = $value;}
 				}
 		}
 		$id = array();
@@ -180,9 +180,11 @@ class config {
 				$pieces = explode("=", $line);
 		                if (trim($pieces[0]) == "INTERFACE"){
 					$protocol_default_status = true;
+					$interface=strtolower(trim($pieces[1]));
 		                }
 			}
 		}
+		$this->database=$db_name."_".$interface;
 
 		foreach($protocol_translat as $protocol){
 			$protocol_status=$protocol_default_status;
