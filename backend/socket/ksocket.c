@@ -16,6 +16,16 @@
 #include <time.h>
 #include <sys/time.h>
 
+#ifdef _DEBUG_SOCKET
+#include <net/ethernet.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
+#include <net/ethernet.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#endif
+
 struct c_net_dev *get_interface(struct c_net_dev *interface){
  
   DIR *dp;
@@ -188,7 +198,19 @@ int raw_init(struct k_capture *p_capture,char* device)
     strcpy(p_capture->name, device);
   }
   else{
-    char* file;
+/*  
+    struct ifaddrs *ifa;
+    
+  if(getifaddrs(&ifap) == -1){
+    fprintf(stderr, "Error getifaddrs in raw_init(): %s", strerror(errno));
+    exit(1);
+  }
+  
+  for(ifa = ifap;ifa != NULL; ifa = ifa->ifa_next){
+    fprintf(stderr, "Interface: %s, Flag: %d\n", ifa->ifa_name, ifa->ifa_flags);
+  }
+*/    
+    char* file;    
     if((file = find_dev(file)) == NULL)
       return 1;
      if((p_capture->name=(char*) malloc(strlen(file)*sizeof(char) + 1)) == NULL){
@@ -210,15 +232,19 @@ int raw_init(struct k_capture *p_capture,char* device)
   memset(&ifr, 0, sizeof(struct ifreq));
   memset(&mr, 0, sizeof(struct packet_mreq));
   
-  if((raw_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 1){
+  if((raw_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 1){
     fprintf(stderr, "ERROR: Could not open socket, Got ?\n");
     return 1;
   }
   
   strcpy(ifr.ifr_name, p_capture->name);
   
+#ifdef _DEBUG_SOCKET
+  fprintf(stderr,"Interface: %s\n",ifr.ifr_name);
+#endif
+  
   if(ioctl(raw_socket, SIOCGIFFLAGS, &ifr) == -1){
-    fprintf(stderr, "ERROR: Could not retrive the flags from the divice. %s\n", strerror(errno));
+    fprintf(stderr, "ERROR: Could not retrieve the flags from the device. %s\n", strerror(errno));
     return 1;
   }
   
@@ -229,25 +255,34 @@ int raw_init(struct k_capture *p_capture,char* device)
     return 1;
   }
   
+  ifr.ifr_flags |= !IFF_LOOPBACK;
+  
+   if(ioctl(raw_socket, SIOCSIFFLAGS, &ifr) == -1){
+    fprintf(stderr, "ERROR: Could not set flags !IFF_LOOPBACK. %s\n", strerror(errno));
+    return 1;
+  }
+  
+  fprintf(stderr,"Flag: %d\n",ifr.ifr_flags);
+  
   if(ioctl(raw_socket, SIOCGIFINDEX, &ifr) < 0){
-    fprintf(stderr, "ERROR: Error gettinf the device index.\n");
+    fprintf(stderr, "ERROR: Error getting the device index.\n");
     return 1;
   }
   
   sll.sll_family = AF_PACKET;
   sll.sll_ifindex = ifr.ifr_ifindex;
-  sll.sll_protocol = ETH_P_ALL;
-//   bind(raw_socket, (struct sockaddr_ll*)&sll, sizeof(sll));
+  sll.sll_protocol = htons(ETH_P_ALL);
+  bind(raw_socket, (struct sockaddr_ll*)&sll, sizeof(sll));
   
   ifindex = ifr.ifr_ifindex;
   mr.mr_ifindex = ifindex;
   mr.mr_type = PACKET_MR_PROMISC;
-  
+    
   if(setsockopt(raw_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0){
     fprintf(stderr, "ERROR: Error setsockopt. %s\n", strerror(errno));
     return 1;
   }
-  
+
   p_capture->socket = raw_socket;
   p_capture->sll = sll;
   
@@ -321,7 +356,7 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
     }
 //    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
     len = recvfrom(p_capture->socket,buf, sizeof(buf), 0, NULL, NULL);
-    if(len < 0){
+    if(len <= 0){
       fprintf(stderr, "Error recv packet. %s\n", strerror(errno));
       continue;
     }
@@ -332,6 +367,35 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
     if(p_capture->interface_auto && (head.dt == NULL))
       head.dt=dt;
     
+#ifdef _DEBUG_SOCKET
+      struct ether_header *ethh_d = NULL; //ethernetova header
+      struct iphdr *iph_d = NULL;       //ip header
+      struct tcphdr *tcph_d = NULL;     //tcp header
+      struct udphdr *udph_d = NULL;     //udp header
+      struct in_addr in_s, in_d;
+      unsigned const char *pom_buf;
+      unsigned short int type;
+      
+      pom_buf = (unsigned char*) &buf;
+      ethh_d = (struct ether_header*) pom_buf;
+      type = ntohs(ethh_d->ether_type);
+      fprintf(stderr,"Type: %d, %X\n", type, type);
+      if(type == ETHERTYPE_IP){
+	iph_d = (struct iphdr*) (pom_buf + sizeof(struct ether_header));
+	if(iph_d->protocol == IPPROTO_TCP){
+	  tcph_d = (struct tcphdr*) (pom_buf + sizeof(struct ether_header) + iph_d->ihl*4);
+	  in_s.s_addr = iph_d->saddr;
+	  in_d.s_addr = iph_d->daddr;
+	  fprintf(stderr, "IP_S: %s, IP_D: %s, Port_S: %d, Port_D: %d\n", inet_ntoa(in_s), inet_ntoa(in_d), ntohs(tcph_d->source), ntohs(tcph_d->dest));
+	}
+	if(iph_d->protocol == IPPROTO_UDP){
+	  udph_d = (struct udphdr*) (pom_buf + sizeof(struct ether_header) + iph_d->ihl*4);
+	  in_s.s_addr = iph_d->saddr;
+	  in_d.s_addr = iph_d->daddr;
+	  fprintf(stderr, "IP_S: %s, IP_D: %s, Port_S: %d, Port_D: %d\n", inet_ntoa(in_s), inet_ntoa(in_d), ntohs(udph_d->source), ntohs(udph_d->dest));
+	}
+      }
+#endif
 //     printf("Len: %d\n", len);
   
     calback(&head,(u_char *) &buf);

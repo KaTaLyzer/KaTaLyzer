@@ -1,4 +1,9 @@
 <?php
+
+session_start();
+
+if (isset($_SESSION['logged']) AND $_SESSION['logged'] == true AND isset($_SESSION['group']) AND $_SESSION['group'] == 0) {
+   
 error_reporting(E_ALL); 
 ini_set("display_errors", 1); 
 // headers 
@@ -89,3 +94,6 @@ $config_file->readf();
 
 </body>
 </html>
+<?php
+}
+?>

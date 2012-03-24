@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <time.h>
 #include <linux/if_packet.h>
+#include <ifaddrs.h>
+#include <sys/types.h>
 
 #define DEVDIR "/sys/class/net/"
 #define MAXNUMBER 30
@@ -19,6 +21,9 @@ struct dev_time{
   char *name_z;
   char *name_do;
 };
+
+// struct for interface
+struct ifaddrs *ifap;
 
 struct c_net_dev{
   uint64_t address;	// mac address

@@ -9,6 +9,8 @@ katalyzer_debug: variables.o katalyzer.h katalyzer.c processing.o wait_function.
 katalyzer_sock: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o ksocket.o
 	gcc -g -Wall -D_CAPTURE variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o $(dir)/ksocket.o katalyzer.c -L/usr/lib/mysql -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
 	
+katalyzer_sock_debug: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o ksocket.o
+	gcc -g -Wall -D_CAPTURE variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o $(dir)/ksocket.o katalyzer.c -L/usr/lib/mysql -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
 
 wait_function.o: wait_function.c wait_function.h
 	gcc -g -c wait_function.c -o wait_function.o > ilog/ilog_wait_function.o
@@ -48,6 +50,7 @@ install:
 	chmod 555 /usr/local/bin/katalyzer
 	mkdir -p /etc/katalyzer
 	cp ./files/my_config.conf /etc/katalyzer/config.conf
+	mysql -u root -p << ../frontend.sql
 	chown www-data:www-data /etc/katalyzer/config.conf
 	cp -r ../frontend /var/www/katalyzer
 	ln -s /etc/katalyzer/config.conf /var/www/katalyzer/configs/config.conf

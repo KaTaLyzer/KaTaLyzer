@@ -26,6 +26,13 @@ require_once('inc/core.php');
 <?php
 
   require_once './inc/class_loggin.php';
+  
+  if (isset($_GET['act']) AND $_GET['act'] == "out") {
+      $_SESSION['logged'] = false;
+      unset($_SESSION['logged']);
+      session_destroy();
+  }
+  
 
   if (isset($_POST['submit_loggin'])) {
   $login = new loggin($config->host, $config->user, $config->pass, "KATALYZER_USER");
@@ -46,9 +53,18 @@ if (isset($_SESSION['logged']) && $_SESSION['logged'] == true ) {
 		<a href="http://katalyzer.sk/">Home</a>
 		<a class="small" href="./sip.php">SIP</a>
 		<a class="small" href="./cdp.php">CDP</a>
+<?php
+  
+if ($_SESSION['group'] == 0) {
+
+?>
 		<a class="small" href="./config_edit.php">Edit</a>
 		<a class="small" href="./user.php">User</a>
+<?php
+}
+?>
 		<a class="small" href="http://katalyzer.sk/contact">Contact Us</a>
+		<a class="small" href="<?php echo $_SERVER['PHP_SELF']."?act=out" ?>">Logout</a>
 	</div></div>
 </div>
 
