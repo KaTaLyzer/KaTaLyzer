@@ -70,7 +70,7 @@ function validatePwd() {
 <body>
 
 <div id="back">
-<a href="../KaTalyzer">Back</a>
+<a href="index.php">Back</a>
 </div>
 
 <center>

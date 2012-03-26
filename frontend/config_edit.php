@@ -38,7 +38,7 @@ $config_file->readf();
 </head>
 <body>
 <div id="back">
-<a href="../KaTalyzer">Back</a>
+<a href="index.php">Back</a>
 </div>
 
 <div id="tabs">
