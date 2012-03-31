@@ -22,9 +22,6 @@ struct dev_time{
   char *name_do;
 };
 
-// struct for interface
-struct ifaddrs *ifap;
-
 struct c_net_dev{
   uint64_t address;	// mac address
   char *name;		// interface name
@@ -36,7 +33,7 @@ struct k_capture{
   int socket;
   struct sockaddr_ll sll;
   char *name;
-  char *file_status;	// dir to file operstate, where is status of the interface
+//  char *file_status;	// dir to file operstate, where is status of the interface
 };
 
 struct k_header{
@@ -68,6 +65,6 @@ char *find_dev(char *dev_name);
 /* get status of interface, is up or down 
  * is up return 1
  * is down return 0 */
-int get_status(const char *file);
+int get_status(struct k_capture *dev);
 
 #endif

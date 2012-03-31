@@ -105,18 +105,43 @@ uint64_t read_mac(const char *dir){
   return strtoll(s_addr,NULL,16);
 }
 
-int get_status (const char *file)
+int get_status (struct k_capture *dev)
 {
+
+  struct ifreq ifr;
+  
+  if(!dev->name)
+    return 0;
+  
+  memset(&ifr, 0, sizeof(struct ifreq));
+ 
+  strcpy(ifr.ifr_name, dev->name);
+  
+  if(ioctl(dev->socket, SIOCGIFFLAGS, &ifr) == -1){
+    fprintf(stderr, "ERROR get_status(): Could not retrieve the flags from the device. %s\n", strerror(errno));
+    exit(1);
+  }
+  
+  if((ifr.ifr_flags & IFF_UP) && (ifr.ifr_flags & IFF_RUNNING))
+    return 1;
+  else
+    return 0;
+  
+  
+/* Old solution */
+/*
   char state[NUMSTATE];
   FILE *fr;
   char *f_help = NULL;
   
-  if(!file){
+  name = dev->name;
+  
+  if(!name){
     fprintf(stderr,"Get_status, error in file\n");
     return 0;
   }
   
-  if(!(fr = fopen(file, "r"))){
+  if(!(fr = fopen(name, "r"))){
     fprintf(stderr,"Get_status(): Error read operstate file: %s\n", strerror(errno));
     return 0;
   }
@@ -137,36 +162,65 @@ int get_status (const char *file)
     return 1;
   
   return 0;
+*/
 }
-
 
 char *find_dev(char *dev_name){
   
-  struct c_net_dev *dev_interface = NULL;
-  struct c_net_dev *dev_help = NULL;
+  /*  
+   *  struct c_net_dev *dev_interface = NULL;
+   *  struct c_net_dev *dev_help = NULL;
+   */  
   char *file = NULL;
+  // struct for interface
+  struct ifaddrs *ifap;
+  struct ifaddrs *ifa;
   
-  dev_interface = get_interface(dev_interface);
-  
-  for(dev_help = dev_interface; dev_help != NULL; dev_help = dev_help->p_next){
-    if((file = (char*) malloc((strlen(DEVDIR)+strlen(dev_help->name)+strlen(FILEOPERSTATE)+1)*sizeof(char))) == NULL){
-      fprintf(stderr,"Find_dev(): Error malloc: %s\n", strerror(errno));
-      return NULL;
-    }
-    if(sprintf(file,"%s%s/%s",DEVDIR, dev_help->name, FILEOPERSTATE) < 0){
-      fprintf(stderr,"Find_dev(): Error sprintf: %s\n", strerror(errno));
-      return NULL;
-    }
-    
-    if(get_status(file)){
-      free(file);
-      file = NULL;
-      dev_name = dev_help->name;
-      return dev_name;
-    }
-    free(file);
-    file = NULL;
+  if(getifaddrs(&ifap) == -1){
+    fprintf(stderr, "Error getifaddrs in raw_init(): %s", strerror(errno));
+    exit(1);
   }
+  
+  for(ifa = ifap;ifa != NULL; ifa = ifa->ifa_next){
+    fprintf(stderr, "Interface: %s, Flag: %d\n", ifa->ifa_name, ifa->ifa_flags);
+    
+    if((ifa->ifa_flags & IFF_UP) && ( ifa->ifa_flags & IFF_RUNNING) && !(ifa->ifa_flags & IFF_LOOPBACK)){
+      if((file = (char*) malloc((strlen(ifa->ifa_name)+1)*sizeof(char))) == NULL){
+	fprintf(stderr,"Find_dev(): Error malloc: %s\n", strerror(errno));
+	return NULL;
+      }
+      strcpy(file, ifa->ifa_name);
+      freeifaddrs(ifap);
+      return file;
+    }
+  }
+  freeifaddrs(ifap);
+  
+  //old solution
+  /*  
+     dev_interface = get_interface(dev_interface);
+     
+     for(dev_help = dev_interface; dev_help != NULL; dev_help = dev_help->p_next){
+       if((file = (char*) malloc((strlen(DEVDIR)+strlen(dev_help->name)+strlen(FILEOPERSTATE)+1)*sizeof(char))) == NULL){
+         fprintf(stderr,"Find_dev(): Error malloc: %s\n", strerror(errno));
+         return NULL;
+}
+if(sprintf(file,"%s%s/%s",DEVDIR, dev_help->name, FILEOPERSTATE) < 0){
+  fprintf(stderr,"Find_dev(): Error sprintf: %s\n", strerror(errno));
+  return NULL;
+}
+
+if(get_status(file)){
+  free(file);
+  file = NULL;
+  dev_name = dev_help->name;
+  return dev_name;
+}
+free(file);
+file = NULL;
+}
+*/
+  
   return NULL;
 }
 
@@ -183,14 +237,18 @@ int raw_init(struct k_capture *p_capture,char* device)
     p_capture->name = NULL;
   }
   
+/*  
   if(p_capture->file_status){
     free(p_capture->file_status);
     p_capture = NULL;
   }
-  
+*/
+
   if(strcmp(device,"auto")){
     p_capture->interface_auto = 0;
+    /*
     p_capture->file_status = NULL;
+    */
     if((p_capture->name=(char*) malloc(strlen(device)*sizeof(char) + 1)) == NULL){
       fprintf(stderr,"Raw_init(): Error malloc p_capture->name: %s\n", strerror(errno));
       return 1;
@@ -198,27 +256,17 @@ int raw_init(struct k_capture *p_capture,char* device)
     strcpy(p_capture->name, device);
   }
   else{
-/*  
-    struct ifaddrs *ifa;
-    
-  if(getifaddrs(&ifap) == -1){
-    fprintf(stderr, "Error getifaddrs in raw_init(): %s", strerror(errno));
-    exit(1);
-  }
-  
-  for(ifa = ifap;ifa != NULL; ifa = ifa->ifa_next){
-    fprintf(stderr, "Interface: %s, Flag: %d\n", ifa->ifa_name, ifa->ifa_flags);
-  }
-*/    
-    char* file;    
+    char* file=NULL;    
     if((file = find_dev(file)) == NULL)
       return 1;
-     if((p_capture->name=(char*) malloc(strlen(file)*sizeof(char) + 1)) == NULL){
+    if((p_capture->name=(char*) malloc(strlen(file)*sizeof(char) + 1)) == NULL){
       fprintf(stderr,"Raw_init(): Error malloc: %s\n", strerror(errno));
       return 1;
     }
-    p_capture->interface_auto = 1;
     strcpy(p_capture->name, file);
+    p_capture->interface_auto = 1;
+    
+/*    
     if((p_capture->file_status=(char*) malloc(strlen(DEVDIR)*strlen(file)*strlen(FILEOPERSTATE)*sizeof(char) + 1)) == NULL){
       fprintf(stderr,"Raw_init(): Error malloc p_capture->filestatus: %s\n", strerror(errno));
       return 1;
@@ -226,6 +274,11 @@ int raw_init(struct k_capture *p_capture,char* device)
     if(sprintf(p_capture->file_status,"%s%s/%s",DEVDIR, file, FILEOPERSTATE) < 0){
       fprintf(stderr,"raw_init(): Error sprintf: %s\n", strerror(errno));
       return 0;
+    }
+*/    
+    if(!file){
+      free(file);
+      file=NULL;
     }
   }
   
@@ -255,14 +308,7 @@ int raw_init(struct k_capture *p_capture,char* device)
     return 1;
   }
   
-  ifr.ifr_flags |= !IFF_LOOPBACK;
-  
-   if(ioctl(raw_socket, SIOCSIFFLAGS, &ifr) == -1){
-    fprintf(stderr, "ERROR: Could not set flags !IFF_LOOPBACK. %s\n", strerror(errno));
-    return 1;
-  }
-  
-  fprintf(stderr,"Flag: %d\n",ifr.ifr_flags);
+ fprintf(stderr,"Flag: %d\n",ifr.ifr_flags);
   
   if(ioctl(raw_socket, SIOCGIFINDEX, &ifr) < 0){
     fprintf(stderr, "ERROR: Error getting the device index.\n");
@@ -282,6 +328,19 @@ int raw_init(struct k_capture *p_capture,char* device)
     fprintf(stderr, "ERROR: Error setsockopt. %s\n", strerror(errno));
     return 1;
   }
+  
+/*  Set timeout
+ * We set how long, we will wait for data
+*/
+  struct timeval tv;
+  
+  tv.tv_sec = 30;  /* 30 Secs Timeout */
+  tv.tv_usec = 0;  // Not init'ing this can cause strange errors
+  
+  if(setsockopt(raw_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv, sizeof(struct timeval))){
+    fprintf(stderr, "ERROR: Error setsockopt for time: %s\n", strerror(errno));
+    return 1;
+  };
 
   p_capture->socket = raw_socket;
   p_capture->sll = sll;
@@ -326,11 +385,14 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
     
     // if interface is down, find new interface and create new socket
     if(p_capture->interface_auto){
-      if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
-	if(p_capture->file_status){
-	  free(p_capture->file_status);
-	  p_capture->file_status = NULL;
-	}
+      /*
+       if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
+          if(*p_capture->file_status){
+       free(p_capture->file_status);
+       p_capture->file_status = NULL;
+       }
+       */
+      if(!get_status(p_capture)){
 	if(p_capture->name){
 	  free(p_capture->name);
 	  p_capture->name = NULL;
@@ -346,18 +408,23 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
 	  exit(1);
 	}
 	gettimeofday(&dt->ts, NULL);
-	if((dt->name_z = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
+	if((dt->name_do = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
 	  fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
 	  exit(1);
 	}
-	strcpy(dt->name_z,p_capture->name);
-	strcpy(dt->name_do,old_interface);
+	strcpy(dt->name_do,p_capture->name);
+	
+	if((dt->name_z = (char*) malloc(strlen(old_interface)*sizeof(char))) == NULL){
+	  fprintf(stderr,"k_loop(): Error malloc old_interface: %s", strerror(errno));
+	  exit(1);
+	}
+	strcpy(dt->name_z,old_interface);
       }
-    }
+       }
 //    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
     len = recvfrom(p_capture->socket,buf, sizeof(buf), 0, NULL, NULL);
     if(len <= 0){
-      fprintf(stderr, "Error recv packet. %s\n", strerror(errno));
+      fprintf(stderr, "Warring recv packet. %s\n", strerror(errno));
       continue;
     }
     gettimeofday(&head.ts, NULL);
@@ -415,4 +482,5 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
   }
   
 }
+
 
