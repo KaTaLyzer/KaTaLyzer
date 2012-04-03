@@ -91,7 +91,7 @@ if ($_SESSION['group'] == 0) {
 <?php
 }
 ?>
-		<a class="small" href="<?php echo $_SERVER['PHP_SELF']."?act=out" ?>">Logout</a>
+		<a class="small" href="<?php echo "./index.php?act=out" ?>">Logout</a>
 	</div></div>
 </div>
 
