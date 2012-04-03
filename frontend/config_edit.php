@@ -24,22 +24,23 @@ $config_file->readf();
   }
   ?>
   </select></li></ul>
-  <ul>Database Host:<li><input name="DB_HOST" value='<?php echo $config_file->host ?>' class="long" /></li></ul>
-  <ul>Database name:<li><input name="DB_NAME" value='<?php echo $config_file->database ?>' class="long" /></li></ul>
-  <ul>Database user:<li><input name="DB_USER" value='<?php echo $config_file->user ?>' class="long" /></li></ul>
-  <ul>Database password:<li><input type="password" name="DB_PASS" value='<?php echo $config_file->pass ?>' class="long" /></li></ul>
+  <br />
+  <ul>Database Host:<li><input name="DB_HOST" value='<?php echo $config_file->host ?>' class="long" /></li></ul><br />
+  <ul>Database name:<li><input name="DB_NAME" value='<?php echo $config_file->database ?>' class="long" /></li></ul><br />
+  <ul>Database user:<li><input name="DB_USER" value='<?php echo $config_file->user ?>' class="long" /></li></ul><br />
+  <ul>Database password:<li><input type="password" name="DB_PASS" value='<?php echo $config_file->pass ?>' class="long" /></li></ul><br />
   
   <?php
-  echo "<ul>Protocol:<li>";
+  echo "<ul>Protocol:<li><br />";
   foreach($config_file->protocols as $key => $value) {
     if ($value == 1) {
-      echo "<li class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" checked />".$key."</li>";  
+      echo "<li class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" checked />".$key."</li><br />";  
     }
     else {
-      echo "<li class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" />".$key."</li>";
+      echo "<li class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" />".$key."</li><br />";
     }
   }
-  echo "</li></ul>";
+  echo "</li></ul><br />";
   
   $tcp_p="";
   foreach($config_file->tcp as $value) {
@@ -52,9 +53,9 @@ $config_file->readf();
   }
   
   ?>
-  <ul>TCP ports:<li><input name="tcp_port" value="<?php echo $tcp_p; ?>" /></li></ul>
+  <ul>TCP ports:<li><input name="tcp_port" value="<?php echo $tcp_p; ?>" /></li></ul><br />
   
-  <ul>UDP ports:<li><input name="udp_port" value="<?php echo $udp_p; ?>" /></li></ul>
+  <ul>UDP ports:<li><input name="udp_port" value="<?php echo $udp_p; ?>" /></li></ul><br />
   
   <input type="submit" name="submit_config" value="Send" />
   <input type="submit" name="restart_katalyzer" value="Restart" />
