@@ -553,7 +553,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		  
 		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 		  fprintf(stderr,"Time: %d\n", &header->dt->ts);
-		  sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (\"%d\", \"%s\", \"%s\")", gettimeofday(&header->dt->ts, NULL), header->dt->name_z, header->dt->name_do); 
+		  sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (\"%d\", \"%s\", \"%s\")", header->dt->ts.tv_sec, header->dt->name_z, header->dt->name_do); 
 		  if (mysql_query(conn, prikaz)) {
 		      fprintf(stderr,"Failed to insert into INTERFACE_time table in MYSQL database %s: %s\nPrikaz: %s\n",db_name, mysql_error(conn), prikaz);
 		    exit (ERR_MYSQL_DB_CREATE);

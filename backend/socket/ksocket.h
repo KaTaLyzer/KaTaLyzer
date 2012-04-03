@@ -9,6 +9,7 @@
 #include <linux/if_packet.h>
 #include <ifaddrs.h>
 #include <sys/types.h>
+#include <net/if.h>
 
 #define DEVDIR "/sys/class/net/"
 #define MAXNUMBER 30
@@ -33,6 +34,7 @@ struct k_capture{
   int socket;
   struct sockaddr_ll sll;
   char *name;
+  struct ifreq old_status;	//save old status, of interface
 //  char *file_status;	// dir to file operstate, where is status of the interface
 };
 

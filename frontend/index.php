@@ -58,8 +58,7 @@ if (isset($_SESSION['logged']) && $_SESSION['logged'] == true ) {
 if ($_SESSION['group'] == 0) {
 
 ?>
-		<a class="small" href="./config_edit.php">Edit</a>
-		<a class="small" href="./user.php">User</a>
+		<a class="small" href="./managment.php">Management</a>
 <?php
 }
 ?>

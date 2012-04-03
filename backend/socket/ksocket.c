@@ -9,7 +9,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <net/if.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
 #include <unistd.h>
@@ -301,6 +300,9 @@ int raw_init(struct k_capture *p_capture,char* device)
     return 1;
   }
   
+// save old interface state  
+  p_capture->old_status = ifr;
+  
   ifr.ifr_flags |= IFF_PROMISC;
   
   if(ioctl(raw_socket, SIOCSIFFLAGS, &ifr) == -1){
@@ -397,12 +399,18 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
 	  free(p_capture->name);
 	  p_capture->name = NULL;
 	}
+	//return interface to old state
+	if(ioctl(p_capture->socket,SIOCSIFFLAGS, &p_capture->old_status) == -1){
+	  fprintf(stderr, "Error, set old state in k_loop(): %s\n",strerror(errno));
+	}
 	if(p_capture->socket){
 	  close(p_capture->socket);
 	  p_capture->socket = 0;
 	}
-	if(raw_init(p_capture, "auto"))
+	if(raw_init(p_capture, "auto")){
+	  sleep(2);
 	  continue;
+	}
 	if((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL){
 	  fprintf(stderr, "k_loop(): Error malloc struct dev_time: %s", strerror(errno));
 	  exit(1);

@@ -1,49 +1,20 @@
 <?php
 
-session_start();
-
-if (isset($_SESSION['logged']) AND $_SESSION['logged'] == true AND isset($_SESSION['group']) AND $_SESSION['group'] == 0) {
-   
-error_reporting(E_ALL); 
-ini_set("display_errors", 1); 
-// headers 
-Header("Pragma: no-cache");
-Header("Cache-Control: no-cache");
-Header("Expires: ".GMDate("D, d M Y H:i:s")." GMT");
-define("INTERVAL", 86400);
-
-//require_once('inc/core.php');
-require_once('inc/class_input.php');
-require_once 'inc/class_edit_conf.php';
-
-$input = new input('configs');
 $config_file = new conf_edit($input->config);
 
-  if (isset($_POST['submit'])) {
+  if (isset($_POST['submit_config'])) {
       $config_file->writef($_POST);
   }
-  if (isset($_POST['restart'])) {
+  if (isset($_POST['restart_katalyzer'])) {
       system("/etc/init.d/atalyzer restart");
   }
   
 $config_file->readf();  
-  
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><head>
+?> 
 
-<link rel="stylesheet" type="text/css" href="themes/style.css" media="screen" />
-
-</head>
-<body>
-<div id="back">
-<a href="index.php">Back</a>
-</div>
-
-<div id="tabs">
-<form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="post">
-  <label>Interface:<span class="long"><select name="INTERFACE" class="long" />
+<div id="config_tabs">
+<form class="config" action="<?php echo $_SERVER['PHP_SELF']."?mod=edit" ?>" method="post">
+  <ul>Interface:<li><select name="INTERFACE" class="long" />
   <?php
   echo "<option  value=\"".$config_file->interface."\">".$config_file->interface."</ option>";
   foreach($config_file->list_interface as $interface) {
@@ -52,23 +23,23 @@ $config_file->readf();
     }
   }
   ?>
-  </select></span></label>
-  <label>Database Host:<span class="long"><input name="DB_HOST" value='<?php echo $config_file->host ?>' class="long" /></span></label>
-  <label>Database name:<span class="long"><input name="DB_NAME" value='<?php echo $config_file->database ?>' class="long" /></span></label>
-  <label>Database user:<span class="long"><input name="DB_USER" value='<?php echo $config_file->user ?>' class="long" /></span></label>
-  <label>Database password:<span class="long"><input type="password" name="DB_PASS" value='<?php echo $config_file->pass ?>' class="long" /></span></label>
+  </select></li></ul>
+  <ul>Database Host:<li><input name="DB_HOST" value='<?php echo $config_file->host ?>' class="long" /></li></ul>
+  <ul>Database name:<li><input name="DB_NAME" value='<?php echo $config_file->database ?>' class="long" /></li></ul>
+  <ul>Database user:<li><input name="DB_USER" value='<?php echo $config_file->user ?>' class="long" /></li></ul>
+  <ul>Database password:<li><input type="password" name="DB_PASS" value='<?php echo $config_file->pass ?>' class="long" /></li></ul>
   
   <?php
-  echo "<label>Protocol:<span>";
+  echo "<ul>Protocol:<li>";
   foreach($config_file->protocols as $key => $value) {
     if ($value == 1) {
-      echo "<span class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" checked />".$key."</span>";  
+      echo "<li class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" checked />".$key."</li>";  
     }
     else {
-      echo "<span class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" />".$key."</span>";
+      echo "<li class=\"long\"><input type=\"checkbox\" name=\"protocols[]\" value=\"".strtoupper($key)."\" />".$key."</li>";
     }
   }
-  echo "</span></label>";
+  echo "</li></ul>";
   
   $tcp_p="";
   foreach($config_file->tcp as $value) {
@@ -81,19 +52,13 @@ $config_file->readf();
   }
   
   ?>
-  <label>TCP ports:<span class="long"><input name="tcp_port" value="<?php echo $tcp_p; ?>" /></span></label>
+  <ul>TCP ports:<li><input name="tcp_port" value="<?php echo $tcp_p; ?>" /></li></ul>
   
-  <label>UDP ports:<span class="long"><input name="udp_port" value="<?php echo $udp_p; ?>" /></span></label>
+  <ul>UDP ports:<li><input name="udp_port" value="<?php echo $udp_p; ?>" /></li></ul>
   
-  <input type="submit" name="submit" value="Send" />
-  <input type="submit" name="restart" value="Restart" />
+  <input type="submit" name="submit_config" value="Send" />
+  <input type="submit" name="restart_katalyzer" value="Restart" />
   
   </form>
   
 </div>
-
-</body>
-</html>
-<?php
-}
-?>

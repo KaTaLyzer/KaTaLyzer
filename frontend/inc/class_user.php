@@ -63,7 +63,6 @@ class user extends database{
   
   public function add_user($name, $passwd,$group){
     $sql = "INSERT INTO USER (name, password, groups) VALUES('".$name."', '".$passwd."', '".$group."')";
-    echo $sql;
     $return = $this->query($sql);
     if ($return) {
         return true;
