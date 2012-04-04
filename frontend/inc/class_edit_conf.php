@@ -127,7 +127,7 @@ class conf_edit {
     }
    
    unlink($this->fr);
-   $f = fopen($this->fr,"at");
+   $f = fopen($this->fr,"w");
    foreach($new_line as $line) {
        fwrite($f, $line);
    }
