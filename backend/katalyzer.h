@@ -35,12 +35,18 @@
 #define LINE_LEN 24
 #define HTML_PERIOD 5
 
+/* analyse ethernet protocol */
 void eth2_frame ( const u_char *pkt_data,int type );
+/* analyse arp protocol */
 void arp_protokol ( const u_char *pkt_data );
+/* analyse ip protocol */
 void ip_protokol ( const u_char *pkt_data, int len );
+/* analyse IP version 6 protocol */
 void ipv6_protokol ( const u_char *pkt_data, int len );
+/* analyse tcp protocol */
 void tcp_protokol ( const u_char *pkt_data,int len );
 //void icmp_protokol(const u_char *pkt_data,int h_len);
+/* analyse udp protocol */
 void udp_protokol ( const u_char *pkt_data,int len );
 void net_protokol ( int number, char *protokols );
 void trans_protokol ( int number, char *protokols );

@@ -929,10 +929,21 @@ void ipv6_protokol(const u_char *pkt_data, int len)
 	len+=sizeof(struct ip6_frag);
 	break;
       case IPPROTO_ESP:
+	ip6d=(struct ip6_dest*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6d->ip6d_nxt;
+	len+=sizeof(struct ip6_dest);
 	break;
       case IPPROTO_AH:
+	ip6d=(struct ip6_dest*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6d->ip6d_nxt;
+	len+=sizeof(struct ip6_dest);
 	break;
       case IPPROTO_DSTOPTS:
+	ip6d=(struct ip6_dest*) (pkt_data + (sizeof(struct ether_header)) + len);
+	protocol=ip6d->ip6d_nxt;
+	len+=sizeof(struct ip6_dest);
+	break;
+      case IPPROTO_GRE:
 	ip6d=(struct ip6_dest*) (pkt_data + (sizeof(struct ether_header)) + len);
 	protocol=ip6d->ip6d_nxt;
 	len+=sizeof(struct ip6_dest);
@@ -951,6 +962,8 @@ void ipv6_protokol(const u_char *pkt_data, int len)
 	strcpy(trans_layer,"ICMPv6");
 	end=1;
 	break;
+      case IPPROTO_NONE:
+	end=1;
       default:
 	end=1;
 	break;
