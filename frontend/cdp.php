@@ -28,9 +28,8 @@ require_once('inc/core.php');
 		<h1><a href=".">KaTaLyzer</a></h1>
 	</div>
 	<div id="navlist"><div id="navlist_left">
-		<a href="http://katalyzer.sk/">Home</a>
+		<a href="./index.php">Home</a>
 
-		<a class="small" href="./index.php">Back</a>
 	</div></div>
 </div>
 

@@ -282,15 +282,21 @@ class config {
 		}
 
 		//add-ons to menu
-		$this->aproto = "";
+		$this->aproto['SIP'] = false;
+		$this->aproto['CDP'] = false;
 		foreach($configfile as $line){
 			$line = trim($line);
 			$pieces = explode("=", $line);
 				if(isset($pieces[0],$pieces[1])){
 					$option = strtolower(trim($pieces[0]));
 					$value = trim($pieces[1]);
-					if($option == 'protocol_sip'){ $this->aproto .= "SIP ";}
-					if($option == 'protocol_cdp'){ $this->aproto .= "CDP ";}
+					if(($option == 'protocol_sip') && ($value == 1)){
+					    $this->aproto['SIP'] = true;
+					}
+					
+					if(($option == 'protocol_cdp') && ($value == 1)){ 
+					     $this->aproto['CDP'] = true;
+					  }
 				}
 		}
 

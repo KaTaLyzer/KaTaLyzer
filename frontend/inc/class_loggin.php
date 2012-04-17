@@ -190,7 +190,6 @@ class loggin extends database {
     
     
     $sql = "SELECT * FROM USER WHERE name='".$username."' AND password='".$passw."'";
-    echo $sql;
     $this->query($sql);
     
     if($this->num_rows() != 0){

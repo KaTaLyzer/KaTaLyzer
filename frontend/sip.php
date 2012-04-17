@@ -12,7 +12,7 @@ include('inc/class_sip_svg.php');
 			<h1><a href=".">KaTaLyzer</a></h1>
 		</div>
 		<div id="navlist"><div id="navlist_left">
-			<a href="../">Home</a>
+			<a href="./index.php">Home</a>
 			<a class="small" href="sip.php">SIP</a>
 		</div></div>
 	</div>

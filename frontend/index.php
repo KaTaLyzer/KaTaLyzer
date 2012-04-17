@@ -55,13 +55,14 @@ require_once('inc/core.php');
 		<a href="http://katalyzer.sk/">Home</a>
 
 <?php
-	if(strpos($config->aproto,"SIP")!==FALSE) {echo('<a class="small" href="./sip.php">SIP</a>');}
-	if(strpos($config->aproto,"CDP")!==FALSE) {echo('<a class="small" href="./cdp.php">CDP</a>');}
 
-	if ($_SESSION['group'] == 0) echo('<a class="small" href="./managment.php">Management</a>');
+	if(isset($config->aproto['SIP']) && $config->aproto['SIP']) {echo('<a class="small" href="./sip.php">SIP</a>');}
+	if(isset($config->aproto['CDP']) && $config->aproto['CDP']) {echo('<a class="small" href="./cdp.php">CDP</a>');}
+
+	if ($_SESSION['group'] == 0) echo("<a class=\"small\" href=\"./managment.php\">Management</a>\n");
+	echo	"<a class=\"small\" href=\"http://katalyzer.sk/contact\">Contact Us</a>\n";
+	echo	"<a class=\"small\" href=\"".$_SERVER['PHP_SELF']."\"?act=out\">Logout</a>\n";
 ?>
-		<a class="small" href="http://katalyzer.sk/contact">Contact Us</a>
-		<a class="small" href="<?php echo $_SERVER['PHP_SELF']."?act=out" ?>">Logout</a>
 	</div></div>
 </div>
 
