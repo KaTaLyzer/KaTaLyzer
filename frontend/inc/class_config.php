@@ -6,6 +6,7 @@ class config {
 	public $pass;
 	public $database;
 	public $tree;
+	public $aproto;
 
 	public function __construct($file){
 		$configfile = file($file,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
@@ -280,7 +281,19 @@ class config {
 			}
 		}
 
-	
+		//add-ons to menu
+		$this->aproto = "";
+		foreach($configfile as $line){
+			$line = trim($line);
+			$pieces = explode("=", $line);
+				if(isset($pieces[0],$pieces[1])){
+					$option = strtolower(trim($pieces[0]));
+					$value = trim($pieces[1]);
+					if($option == 'protocol_sip'){ $this->aproto .= "SIP ";}
+					if($option == 'protocol_cdp'){ $this->aproto .= "CDP ";}
+				}
+		}
+
 	}
 
 }

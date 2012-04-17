@@ -13,7 +13,9 @@ require_once('inc/core.php');
     
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <script type="text/javascript" src="ajax/jquery-1.3.2.min.js"></script>
 <script type="text/javascript" src="ajax/jquery-ui-1.7.2.custom.min.js"></script>
 <script type="text/javascript" src="ajax/global.js"></script>
@@ -40,7 +42,7 @@ require_once('inc/core.php');
 	unset($_POST['submit_loggin']);
       }
   }
-if (isset($_SESSION['logged']) && $_SESSION['logged'] == true ) {
+  if (isset($_SESSION['logged']) && $_SESSION['logged'] == true ) {
 
 ?>
 <div class="container">
@@ -51,16 +53,12 @@ if (isset($_SESSION['logged']) && $_SESSION['logged'] == true ) {
 	</div>
 	<div id="navlist"><div id="navlist_left">
 		<a href="http://katalyzer.sk/">Home</a>
-		<a class="small" href="./sip.php">SIP</a>
-		<a class="small" href="./cdp.php">CDP</a>
-<?php
-  
-if ($_SESSION['group'] == 0) {
 
-?>
-		<a class="small" href="./managment.php">Management</a>
 <?php
-}
+	if(strpos($config->aproto,"SIP")!==FALSE) {echo('<a class="small" href="./sip.php">SIP</a>');}
+	if(strpos($config->aproto,"CDP")!==FALSE) {echo('<a class="small" href="./cdp.php">CDP</a>');}
+
+	if ($_SESSION['group'] == 0) echo('<a class="small" href="./managment.php">Management</a>');
 ?>
 		<a class="small" href="http://katalyzer.sk/contact">Contact Us</a>
 		<a class="small" href="<?php echo $_SERVER['PHP_SELF']."?act=out" ?>">Logout</a>
