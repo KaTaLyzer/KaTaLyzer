@@ -54,7 +54,7 @@ stop() {
 		exit
         else
 		echo "Shutting down katalyzer. "
-		start-stop-daemon --stop --exec /usr/local/bin/katalyzer \
+		start-stop-daemon --stop --exec /usr/local/bin/katalyzer 
 #	        kill `ps -ef|grep /katalyzer |grep -v grep |awk '{ print $2; }';`	
 #		killproc katalyzer
 #                [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/katalyzer

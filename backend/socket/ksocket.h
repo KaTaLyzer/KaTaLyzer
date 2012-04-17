@@ -50,9 +50,10 @@ typedef void (*k_handler)(const struct k_header *header, const u_char *pkt_data)
 /* find network interface in the system
  * save it in to structure c_net_dev 
  * if interface don`t allock, must by define as NULL */
-struct c_net_dev *get_interface(struct c_net_dev *interface);
+//struct c_net_dev *get_interface(struct c_net_dev *interface);
 
-uint64_t read_mac(const char *dir);
+
+//uint64_t read_mac(const char *dir);
 
 /* create socket
  * return 0 on success

@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
@@ -25,6 +24,8 @@
 #include <netinet/in.h>
 #endif
 
+// Not use
+/*
 struct c_net_dev *get_interface(struct c_net_dev *interface){
  
   DIR *dp;
@@ -78,7 +79,9 @@ struct c_net_dev *get_interface(struct c_net_dev *interface){
   
   return interface;
 }
+*/
 
+/*
 // funkcia zisti aktualnu MAC adresu daneho rozhrania
 uint64_t read_mac(const char *dir){
   int i, j;
@@ -103,6 +106,7 @@ uint64_t read_mac(const char *dir){
   
   return strtoll(s_addr,NULL,16);
 }
+*/
 
 int get_status (struct k_capture *dev)
 {
@@ -170,7 +174,7 @@ char *find_dev(char *dev_name){
    *  struct c_net_dev *dev_interface = NULL;
    *  struct c_net_dev *dev_help = NULL;
    */  
-  char *file = NULL;
+  char *file = dev_name;
   // struct for interface
   struct ifaddrs *ifap;
   struct ifaddrs *ifa;
@@ -336,7 +340,7 @@ int raw_init(struct k_capture *p_capture,char* device)
 */
   struct timeval tv;
   
-  tv.tv_sec = 30;  /* 30 Secs Timeout */
+  tv.tv_sec = 10;  /* 10 Secs Timeout */
   tv.tv_usec = 0;  // Not init'ing this can cause strange errors
   
   if(setsockopt(raw_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv, sizeof(struct timeval))){
