@@ -54,6 +54,9 @@ int pocetpaketov=0;
 /////////////////////////////////////////////////////////////////////////
 
 ZACIATOK_P z_protokoly;
+#ifdef NETFLOW
+ZACIATOK_P *z_pom_protokoly;
+#endif
 PAIR_ARRAY *z_pair_array;
 
 ///////////////
@@ -63,11 +66,6 @@ PAIR_ARRAY *z_pair_array;
 unsigned int parovacie_pole__IP_adresa[500];
 char parovacie_pole__MAC_adresa[500][13];
 int velkost_parovacieho_pola=0; // je to pocet vsetkych doteraz so mnou komunikujucich IP adries
-
-/*
-std::map <uint32_t, uint64_t> pair_array_S;
-std::map <uint32_t, uint64_t> pair_array_D;
-*/
 
 // flag - premenna, ktorou sa kontroluje ci som uz zapisal v danom intervale data do DB alebo este len cakaju
 int flag = 0;  // ak FALSE - data zapisane este neboli
@@ -119,6 +117,39 @@ struct arphdr *arph;	//arp header
 
 
 pcap_t *fp;
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////      premenne pre NetFlow a sFlow meranie
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef NETFLOW
+
+int flow_pocet_B;
+uint64_t flow_MAC_adr_S;
+uint64_t flow_MAC_adr_D;
+uint32_t flow_IP_adr_S;
+uint32_t flow_IP_adr_D;
+unsigned int *flow_IPV6_adr_S;
+unsigned int *flow_IPV6_adr_D;
+int flow_pocet_paketov;
+int flow_protocol;
+int flow_src_port;
+int flow_dst_port;
+uint32_t exporter_IP;
+int template_timeout;
+int is_ip_configured;
+int flow_capttime;
+int flow_flag;
+
+NFLOW9_TEMPLATE *n9_tmpl;
+NFLOW9_TEMPLATE *n9_tmpl_first;
+NFLOW9_TEMPLATE *novy;
+NFLOW9_TEMPLATE *n9_tmpl_akt;
+NFLOW9_TEMPLATE *selected_tmpl;
+NFLOW9_BUFFER *n9_buf_akt;
+NFLOW9_BUFFER *n9_buf_first;
+NFLOW9_BUFFER *n9_buf_pom;
+#endif
 
 #ifdef SNMP_P
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

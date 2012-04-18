@@ -27,6 +27,7 @@
 
 #include "variables.h"
 #include "sip.h"
+#include "nflow_sflow.h"
 
 #ifdef _CAPTURE
 #include "socket/ksocket.h"
@@ -56,6 +57,7 @@ void dispatcher_handler ( const struct k_header *header, const u_char *pkt_data 
 void dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );
 #endif
 void ieee802 ( const u_char *pkt_data,int type );
+void netflow_sflow_protocol(const u_char *pkt_data, int type);
 void help();
 void m_protokoly ( ZACIATOK_P *p_zac, char *s );
 void free_protokoly ( ZACIATOK_P *p_zac );

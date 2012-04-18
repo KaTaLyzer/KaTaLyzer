@@ -1,11 +1,13 @@
 /* Copyright (c) 2006 Roman Benkovic
  * modified by Tomas Kovacik  & Stanislav Bocinec (2008) 
  * modified by Roman Bronis & Andrej Kozemcak (2009)
+ * modified by Martin Hyben (2010)
  * benkovic_roman@post.sk *
  * tokosk16@yahoo.com *
  * svacko@gmail.com *
  * roman.bronis@gmail.com *
  * akozemcak@gmail.com *
+ * hyben.martin@gmail.com *
 */
 
 #include "katalyzer.h"
@@ -639,46 +641,48 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 
 
 #ifdef CDP_P
-	sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
-	sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `CDP_1mm_time`(`time` int(10) unsigned NOT NULL default '0',`id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS `CDP_1mm`(`id` int(10) unsigned NOT NULL auto_increment,`ttl` int(10) unsigned NOT NULL default '0',`device_ID` varchar(20) NOT NULL default '',`Capabilities` varchar(200) NOT NULL default '',`version` varchar(255) NOT NULL default '',`platform` varchar(100) NOT NULL default '',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS `CDP_ADDRS_1m`(`id` int(10) unsigned NOT NULL,`IP` int unsigned default '0') ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-
-	if(mysql_query(conn, prikaz)){
-		fprintf(stderr,"Failed to create CDP tables in MYSQL database %s: %s\n",db_name, mysql_error(conn));
-		sprintf(s_tmp_str,"%s:katalyzer.cpp:dispatcher_handler:Failed to create CDP tables in MYSQL database %s: %ld\n", db_name, mysql_error(conn),time(&actual_time));
-	}
-	int ii;
-	for (ii=0;ii<3;ii++) {// 3 is number of commands sent into DB - we have to release results of their execution
+		if(protocol_cdp==1){
+		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
+		  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `CDP_1mm_time`(`time` int(10) unsigned NOT NULL default '0',`id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS `CDP_1mm`(`id` int(10) unsigned NOT NULL auto_increment,`ttl` int(10) unsigned NOT NULL default '0',`device_ID` varchar(20) NOT NULL default '',`Capabilities` varchar(200) NOT NULL default '',`version` varchar(255) NOT NULL default '',`platform` varchar(100) NOT NULL default '',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS `CDP_ADDRS_1m`(`id` int(10) unsigned NOT NULL,`IP` int unsigned default '0') ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+		  
+		  if(mysql_query(conn, prikaz)){
+		    fprintf(stderr,"Failed to create CDP tables in MYSQL database %s: %s\n",db_name, mysql_error(conn));
+		    sprintf(s_tmp_str,"%s:katalyzer.cpp:dispatcher_handler:Failed to create CDP tables in MYSQL database %s: %ld\n", db_name, mysql_error(conn),time(&actual_time));
+		  }
+		  int ii;
+		  for (ii=0;ii<3;ii++) {// 3 is number of commands sent into DB - we have to release results of their execution
 		mysql_next_result(conn);
-	}
-
-	cdp_processing(cdp_st ,conn);
-
-	if(!cdp_st->empty){
-		struct cdp_struct *pom_cdp;
-		struct address *pom_adr1;
-		struct address *pom_adr2;
-		while(cdp_st!=NULL){
-			pom_cdp=cdp_st->p_next;
-			cdp_st->empty=1;
-			pom_adr1=cdp_st->p_addres;
-			while(pom_adr1!=NULL){
-				pom_adr2=pom_adr1->p_next;
-				free(pom_adr1);
-				pom_adr1=pom_adr2;
-			}
-			if(cdp_st->device_id!=NULL)
-				free(cdp_st->device_id);
-			if(cdp_st->port_id!=NULL)
-				free(cdp_st->port_id);
-			if(cdp_st->version!=NULL)
-				free(cdp_st->version);
-			if(cdp_st->platform!=NULL)
-				free(cdp_st->platform);
-			free(cdp_st);
-			cdp_st=pom_cdp;
 		}
-		cdp_st=(struct cdp_struct*) malloc(sizeof(struct cdp_struct));
-		cdp_st->empty=1;
+		
+		cdp_processing(cdp_st ,conn);
+		
+		if(!cdp_st->empty){
+		  struct cdp_struct *pom_cdp;
+		  struct address *pom_adr1;
+		  struct address *pom_adr2;
+		  while(cdp_st!=NULL){
+		    pom_cdp=cdp_st->p_next;
+		    cdp_st->empty=1;
+		    pom_adr1=cdp_st->p_addres;
+		    while(pom_adr1!=NULL){
+		      pom_adr2=pom_adr1->p_next;
+		      free(pom_adr1);
+		      pom_adr1=pom_adr2;
+		    }
+		    if(cdp_st->device_id!=NULL)
+		      free(cdp_st->device_id);
+		    if(cdp_st->port_id!=NULL)
+		      free(cdp_st->port_id);
+		    if(cdp_st->version!=NULL)
+		      free(cdp_st->version);
+		    if(cdp_st->platform!=NULL)
+		      free(cdp_st->platform);
+		    free(cdp_st);
+		    cdp_st=pom_cdp;
+		  }
+		  cdp_st=(struct cdp_struct*) malloc(sizeof(struct cdp_struct));
+		  cdp_st->empty=1;
+		}
 	}
 
 #endif
@@ -719,13 +723,29 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	}
 #endif
 
-		// FLUSH DATA INTO DB - 26.7.2010
+////////////////////////////////////
+// FLUSH DATA INTO DB - 26.7.2010
+////////////////////////////////////
+#ifdef NETFLOW
+		//vytvorenie "kopie" z_protokoly do z_protokoly2
+		ZACIATOK_P z_protokoly2;
+		//z_protokoly2.empty=0;
+		z_protokoly2.empty=z_protokoly.empty;   //NetFlow a sFlow spravy nemusia v danej minute prist - ak nepridu, nemame co ukladat, cize empty musi byt 1.
+		z_protokoly2.p_protokoly=z_protokoly.p_protokoly;
+		z_protokoly2.cas=z_protokoly.cas;
+		z_protokoly2.p_next=z_protokoly.p_next;
+		z_protokoly.empty=1;
+		z_protokoly.p_protokoly=NULL;
+		z_protokoly.cas=0;
+		z_protokoly.p_next=NULL;
+#else
 		//vytvorenie "kopie" z_protokoly do z_protokoly2
 		ZACIATOK_P z_protokoly2;
 		z_protokoly2.empty=0;
 		z_protokoly2.p_protokoly=z_protokoly.p_protokoly;
 		z_protokoly.empty=1;
 		z_protokoly.p_protokoly=NULL;
+#endif
 		
 		PRETAH pretah1;
 		KTHREAD *kt;
@@ -769,6 +789,21 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		int casy[4] = {5,30,2,1}, i=0;
 		int modu[4] = {5, 30, 120, 1440};
 		int rozd[4] = {1, 5, 30, 120};
+#ifdef NETFLOW
+		for (i=0;i<4;i++) {
+			if(i==0) fprintf(stderr,"interval:%d\n",interval);
+			if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i]) && (flow_flag==1)) {
+				switch(pthread_create(&cron,NULL,cronovanie,(void *)casy[i])) {
+					case -1: fprintf(stderr,"zlyhal thread\n");
+						 break;
+					case 0: fprintf(stderr,"cronovanie(%d) [DONE]\n",casy[i]);			
+						break;				 
+					default: break;
+				}
+				flow_flag=0;
+			}			
+		}
+#else
 		for (i=0;i<4;i++) {
 			if(i==0) fprintf(stderr,"interval:%d\n",interval);
 			if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i])) {
@@ -781,7 +816,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 				}
 			}			
 		}
-		
+#endif
 	}
 		
 	if(flag == 1 && actual_time - beggining_time >= 10) { // 10 seconds is considered enough time interval as we measure with minimum resolution of 60seconds and it is very probable that there will be another frame comming in that 10 seconds - it will set 'flag' again so we can insert data into DB again after'casovac_zapisu' 
@@ -1183,6 +1218,45 @@ void net_protokol(int number, char *protokols) {
 	strcpy(protokols, protokol);
 }
 
+#ifdef NETFLOW
+void netflow_sflow_protocol(const u_char *pkt_data, int type) {
+    int ver, len, ver_len, protocol, s_port, d_port, a;
+
+    if (type == 2048) {//type 2048 is IP packet
+
+        iph = (struct iphdr*) (pkt_data + (sizeof (struct ether_header)));
+        ver_len = iph->ihl;
+        ver = ver_len / 16; //version of IP protocol(in these days always version 4)
+        len = 4 * (ver_len % 16); //IP header length
+        protocol = iph->protocol; //protocol inside IP packet
+        IP_adr_S = iph->saddr;//only source IP is important, will be compared with exporter IP address
+
+        if (ntohl(IP_adr_S) == exporter_IP) {
+            if (protocol == 6) { //TCP protocol
+                a=14+len;					//a->begining of TCP header
+		d_port=pkt_data[a+2]*256+pkt_data[a+3];		//destination port
+		 if (d_port == 2055 || d_port == 9996) {
+                    N9_analyza(pkt_data, a + 20);   //NetFlow version 9 analysis
+                }
+            }
+            if (protocol == 17) { //UDP protocol
+                a = 14 + len; //a->begining of UDP header
+                d_port = pkt_data[a + 2]*256 + pkt_data[a + 3];//only destination port is important to identify NetFlow or sFlow datagram
+                if (d_port == 2055 || d_port == 9996) {
+                    N9_analyza(pkt_data, a + 8);    //NetFlow version 9 analysis
+                    N5_analyza(pkt_data, a + 8);    //NetFlow version 5 analysis
+                }
+                if (d_port == 6343) {
+                    //S5_analyza(pkt_data, a + 8); //sFlow v5 is not supported yet.
+                }
+            }
+        }
+
+    }
+}
+#endif
+
+
 void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	ZAZNAMY *help_zaznamy;  //pomocna struktura
 	PROTOKOLY *help_protokol, *p_protokol;
@@ -1361,10 +1435,165 @@ void m_protokoly(ZACIATOK_P *p_zac, char *s) {
 	}
 }
 
+
+#ifdef NETFLOW
+void flow_protokoly(ZACIATOK_P *p_zac, char *s) {   //save NetFlow or sFlow data 
+    ZAZNAMY *help_zaznamy; 
+    PROTOKOLY *help_protokol, *p_protokol;
+    int find, find_p;
+char pokus;
+
+    if(p_zac->cas!=flow_capttime){
+        while((p_zac->p_next!=NULL) && (flow_capttime != p_zac->p_next->cas)){  //finding z_protokoly record to save measured data - according time
+            p_zac=p_zac->p_next;
+        }
+        if(p_zac->p_next==NULL){    //no record found - make new
+            if((p_zac->p_next=(ZACIATOK_P*) malloc(sizeof(ZACIATOK_P))) == NULL){
+                fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+                return;
+            }
+            p_zac=p_zac->p_next;
+            p_zac->empty=1;
+            p_zac->p_next=NULL;
+            p_zac->cas=flow_capttime;
+        }else{
+            p_zac=p_zac->p_next;
+        }
+    }
+
+
+    if(p_zac->empty) { //if struct is empty, we create it
+		p_zac->empty=0;
+		if((p_zac->p_protokoly=(PROTOKOLY*) malloc(sizeof(PROTOKOLY))) == NULL){	// create structure PROTOKOLY
+			fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+			return;
+		}
+		p_protokol=p_zac->p_protokoly;
+		strcpy(p_protokol->protokol, s);				// set the name of the protocol
+		if((p_protokol->zoznam=(ZAZNAMY*) malloc(sizeof(ZAZNAMY))) == NULL){		// create structure ZAZNAMY
+			fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+			return;
+		}
+		p_protokol->is_ipv6=is_ipv6ext;  // check s it a ip6 ip adress
+		p_protokol->zoznam->mac_s=flow_MAC_adr_S;				// set the MAC adres and IP adress
+		p_protokol->zoznam->mac_d=flow_MAC_adr_D;
+		p_protokol->zoznam->ip_s=0;			// we use ntohl, because of frontend
+		p_protokol->zoznam->ip_d=0;
+		p_protokol->zoznam->ipv6_d=NULL;
+		p_protokol->zoznam->ipv6_s=NULL;
+		if(is_ipv6ext){
+		  p_protokol->zoznam->ipv6_d = flow_IPV6_adr_D;
+		  p_protokol->zoznam->ipv6_s = flow_IPV6_adr_S;
+		}
+		else{
+		  p_protokol->zoznam->ip_s=flow_IP_adr_S;			// we use ntohl, because of frontend
+		  p_protokol->zoznam->ip_d=flow_IP_adr_D;
+		}
+		p_protokol->zoznam->pocet_B = flow_pocet_B;				// set the number of bytes
+		p_protokol->zoznam->pocet_ramcov=flow_pocet_paketov;
+		p_protokol->zoznam->p_next=NULL;
+		p_protokol->zoznam->spracovany[0]=0;
+		p_protokol->zoznam->spracovany[1]=0;
+		p_protokol->zoznam->spracovany[2]=0;
+		p_protokol->zoznam->spracovany[3]=0;
+		p_protokol->p_next=NULL;
+		p_protokol->empty=0;
+	}
+	else {
+		for(help_protokol=p_zac->p_protokoly;help_protokol!=NULL;help_protokol=help_protokol->p_next) { //we looking for the protocol
+			find_p=0;	//we don't find the protocol
+			if(!strcmp(help_protokol->protokol,s) && (help_protokol->is_ipv6 == is_ipv6ext)) {
+				find_p=1;	//we find the protocol
+				for(help_zaznamy=help_protokol->zoznam;help_zaznamy!=NULL;help_zaznamy=help_zaznamy->p_next) { // prechadza strukturu zoznam
+					find=0; //set we don't find the IP adress and MAC adress
+					if((help_zaznamy->mac_s==flow_MAC_adr_S) && (help_zaznamy->mac_d==flow_MAC_adr_D)) { // we looking the IP adress and MAC adress in the structure
+						if((!is_ipv6ext && ((help_zaznamy->ip_s==flow_IP_adr_S) && (help_zaznamy->ip_d==flow_IP_adr_D)))
+						  || (is_ipv6ext && ((compare_IPv6(help_zaznamy->ipv6_d, flow_IPV6_adr_D)) && (compare_IPv6(help_zaznamy->ipv6_s, flow_IPV6_adr_S))))
+						) {	//we find the IP adress and MAC adress          
+							pokus=is_ipv6ext;
+							help_zaznamy->pocet_B += flow_pocet_B;
+							help_zaznamy->pocet_ramcov += flow_pocet_paketov;
+							find=1;	//set we find the IP adress and MAC adress
+							break;
+						}
+					}
+				}
+				if(!find) { // we don't find the IP adress and MAC adress, so we create new structure
+					for(help_zaznamy=help_protokol->zoznam;help_zaznamy->p_next!=NULL;help_zaznamy=help_zaznamy->p_next) ; //dojde na koniec struktury
+					if((help_zaznamy->p_next=(ZAZNAMY*) malloc(sizeof(ZAZNAMY))) == NULL) { //we create new structre ZANAMY
+						fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+						return;
+					}
+					help_zaznamy=help_zaznamy->p_next;
+					help_zaznamy->mac_s=flow_MAC_adr_S;
+					help_zaznamy->mac_d=flow_MAC_adr_D;
+					help_zaznamy->ip_s=0;  
+					help_zaznamy->ip_d=0;
+					help_zaznamy->ipv6_d=NULL;
+					help_zaznamy->ipv6_s=NULL;
+					if(is_ipv6ext){
+					  help_zaznamy->ipv6_d=flow_IPV6_adr_D;
+					  help_zaznamy->ipv6_s=flow_IPV6_adr_S;
+					}
+					 else{
+					  help_zaznamy->ip_s=flow_IP_adr_S;  // we use ntohl, because of frontend
+					  help_zaznamy->ip_d=flow_IP_adr_D;
+					}
+					help_zaznamy->pocet_B = flow_pocet_B;
+					help_zaznamy->pocet_ramcov=flow_pocet_paketov;
+					help_zaznamy->spracovany[0]=0;
+					help_zaznamy->spracovany[1]=0;
+					help_zaznamy->spracovany[2]=0;
+					help_zaznamy->spracovany[3]=0;
+					help_zaznamy->p_next=NULL;
+				}
+				break;
+			}
+		}
+		if(!find_p) { // we don't find the protocol, so we crete new structure for the new protocol
+			for(help_protokol=p_zac->p_protokoly;help_protokol->p_next!=NULL;help_protokol=help_protokol->p_next) ; //dojde na koniec struktury
+			if((help_protokol->p_next=(PROTOKOLY *) malloc(sizeof(PROTOKOLY))) == NULL) { 		// create structure PROTOKOLY
+				fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+				return;
+			}
+			help_protokol=help_protokol->p_next;
+			strcpy(help_protokol->protokol, s);  					// set the name of the new protocol
+			if((help_protokol->zoznam=(ZAZNAMY*) malloc(sizeof(ZAZNAMY))) == NULL) {		// create structure ZAZNAMY
+				fprintf(stderr,"Error malloc: %s\n", strerror(errno));
+				return;
+			}
+			help_protokol->is_ipv6 = is_ipv6ext;
+			help_protokol->zoznam->mac_s=flow_MAC_adr_S;
+			help_protokol->zoznam->mac_d=flow_MAC_adr_D;
+			help_protokol->zoznam->ip_s=0;
+			help_protokol->zoznam->ip_d=0;
+			help_protokol->zoznam->ipv6_d=NULL;
+			help_protokol->zoznam->ipv6_s=NULL;
+			if(is_ipv6ext){
+			  help_protokol->zoznam->ipv6_d=flow_IPV6_adr_D;
+			  help_protokol->zoznam->ipv6_s=flow_IPV6_adr_S;
+			}
+			help_protokol->zoznam->ip_s=flow_IP_adr_S;   // we use ntohl, because of frontend 
+			help_protokol->zoznam->ip_d=flow_IP_adr_D;
+			help_protokol->zoznam->pocet_B = flow_pocet_B;
+			help_protokol->zoznam->pocet_ramcov=flow_pocet_paketov;
+			help_protokol->zoznam->p_next=NULL;
+			help_protokol->zoznam->spracovany[0]=0;
+			help_protokol->zoznam->spracovany[1]=0;
+			help_protokol->zoznam->spracovany[2]=0;
+			help_protokol->zoznam->spracovany[3]=0;
+			help_protokol->p_next=NULL;
+			help_protokol->empty=0;
+		}
+	}
+}
+#endif
+
 //free structure
 void free_protokoly(ZACIATOK_P *p_zac) {
 	ZAZNAMY *help_zaznamy, *p_pomz;  //help structure
 	PROTOKOLY *help_protokol, *p_pomp, *p_protokol;
+	ZACIATOK_P *help_zac;
 
 	if(!p_zac->empty) {
 		p_protokol=p_zac->p_protokoly;
@@ -1393,6 +1622,36 @@ void free_protokoly(ZACIATOK_P *p_zac) {
 		p_zac->empty=1; // set the structure is empty
 		p_zac->p_protokoly=NULL;
 	}
+	while(p_zac->p_next!=NULL){
+		if(!p_zac->p_next->empty) {
+			p_protokol=p_zac->p_next->p_protokoly;
+			if(!p_protokol->empty){
+				for(help_protokol=p_protokol;help_protokol!=NULL;) {
+					for(help_zaznamy=help_protokol->zoznam;help_zaznamy!=NULL;){
+						p_pomz=help_zaznamy->p_next;
+						free(help_zaznamy);
+						help_zaznamy=p_pomz;
+					}
+					p_pomp=help_protokol->p_next;
+					if(!strcmp(help_protokol->protokol,"IPV6")){
+						if(!help_protokol->zoznam->ipv6_d){
+							free(help_protokol->zoznam->ipv6_d);
+							help_protokol->zoznam->ipv6_d=NULL;
+						}
+						if(!help_protokol->zoznam->ipv6_s){
+							free(help_protokol->zoznam->ipv6_s);
+							help_protokol->zoznam->ipv6_d=NULL;
+						}
+					}
+					free(help_protokol);
+					help_protokol=p_pomp;
+				}
+			}		
+		}
+		help_zac=p_zac->p_next->p_next;
+		free(p_zac->p_next);
+		p_zac->p_next=help_zac;
+	}
 }
 
 //zapis strukturu do DB
@@ -1405,6 +1664,27 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	conn=pretah1->d;
 	kt=pretah1->t;
 	PROTOKOLY *p_protokol;
+	
+#ifdef NETFLOW
+	ZACIATOK_P *help_zac;
+	int p_cas;
+
+	help_zac=p_zac->p_next; //we must start saving data into DB from second record of z_protokoly structure list, because this data aren't saved with processing_time, but with time smaller than processing_time.
+	for(help_zac;help_zac!=NULL;help_zac=help_zac->p_next){
+		if(!help_zac->empty){
+			p_cas=processing_time;
+			if(help_zac->cas!=0){
+				processing_time=help_zac->cas;  //time which will be saved into DB
+			}
+			p_protokol=help_zac->p_protokoly;
+			for(;p_protokol!=NULL;p_protokol=p_protokol->p_next){
+				processingl(p_protokol,conn);
+			}
+			processing_time=p_cas;
+		}
+	}
+#endif
+	
 
 	if(!p_zac->empty){
 		p_protokol=p_zac->p_protokoly;

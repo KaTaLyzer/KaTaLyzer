@@ -21,6 +21,8 @@
 //#define CDP_P
 //#define SNMP_P
 //#define _SIP
+#define NETFLOW
+
 
 #define CHCEM_POCTY
 
@@ -91,10 +93,19 @@ typedef struct protokoly {
 } PROTOKOLY;
 
 //help structure
+#ifdef NETFLOW
+typedef struct zaciatok_p {
+        int empty;
+	int cas;
+        PROTOKOLY *p_protokoly;
+	struct zaciatok_p *p_next;
+}ZACIATOK_P;
+#else
 typedef struct zaciatok_p {
         int empty;
         PROTOKOLY *p_protokoly;
 }ZACIATOK_P;
+#endif
 
 //global structure for pair array
 typedef struct pair_array {
@@ -139,6 +150,9 @@ extern int pocetpaketov;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern ZACIATOK_P z_protokoly;
+#ifdef NETFLOW
+extern ZACIATOK_P *z_pom_protokoly;
+#endif
 extern PAIR_ARRAY *z_pair_array;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,11 +162,6 @@ extern PAIR_ARRAY *z_pair_array;
 extern unsigned int parovacie_pole__IP_adresa[500];
 extern char parovacie_pole__MAC_adresa[500][13];
 extern int velkost_parovacieho_pola; // je to pocet vsetkych doteraz so mnou komunikujucich IP adries
-
-/*
-extern std::map <uint32_t, uint64_t> pair_array_S;
-extern std::map <uint32_t, uint64_t> pair_array_D;
-*/
 
 // flag - premenna, ktorou sa kontroluje ci som uz zapisal v danom intervale data do DB alebo este len cakaju
 extern int flag;  // ak FALSE - data zapisane este neboli
@@ -205,6 +214,78 @@ extern struct arphdr *arph;	//arp header
 
 extern pcap_t *fp;
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//      premenne pre NetFlow a sFlow meranie
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef NETFLOW
+extern int flow_pocet_B;
+extern uint64_t flow_MAC_adr_S;
+extern uint64_t flow_MAC_adr_D;
+extern uint32_t flow_IP_adr_S;
+extern uint32_t flow_IP_adr_D;
+extern unsigned int *flow_IPV6_adr_S;
+extern unsigned int *flow_IPV6_adr_D;
+extern int flow_pocet_paketov;
+extern int flow_protocol;
+extern int flow_src_port;
+extern int flow_dst_port;
+extern uint32_t exporter_IP;
+extern int template_timeout;
+extern int is_ip_configured;
+extern int flow_capttime;
+extern int flow_flag;
+
+
+typedef struct nflow9_template {
+	unsigned int source_ID;
+	unsigned int template_ID;
+	int ip_s_pos;
+	int ip_s_len;
+	int ip_d_pos;
+	int ip_d_len;
+	int ipv6_s_pos;
+	int ipv6_s_len;
+	int ipv6_d_pos;
+	int ipv6_d_len;
+	int mac_s_pos;
+	int mac_s_len;
+	int mac_d_pos;
+	int mac_d_len;
+	int pocet_B_pos;
+	int pocet_B_len;
+	int pocet_ramcov_pos;
+	int pocet_ramcov_len;
+        int protocol_pos;
+	int protocol_len;
+        int src_port_pos;
+	int src_port_len;
+        int dst_port_pos;
+	int dst_port_len;
+	int offset;
+	time_t add_time;
+	struct nflow9_template *next;
+} NFLOW9_TEMPLATE;
+     
+typedef struct nflow9_buffer {
+    unsigned int ID;
+    int flowset_len;
+    int capture_time;
+    int database_time;
+    u_char *datagram;
+    struct nflow9_buffer *next;
+} NFLOW9_BUFFER;
+     
+extern NFLOW9_TEMPLATE *n9_tmpl;
+extern NFLOW9_TEMPLATE *n9_tmpl_first;
+extern NFLOW9_TEMPLATE *novy;
+extern NFLOW9_TEMPLATE *n9_tmpl_akt;
+extern NFLOW9_TEMPLATE *selected_tmpl;
+extern NFLOW9_BUFFER *n9_buf_akt;
+extern NFLOW9_BUFFER *n9_buf_first;
+extern NFLOW9_BUFFER *n9_buf_pom;
+#endif
 
 #ifdef SNMP_P
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
