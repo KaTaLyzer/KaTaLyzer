@@ -18,7 +18,8 @@ class ipinfo {
 
 
 	public function find_mac($ip){
-		$ip = ip2long($ip);
+		//$ip = ip2long($ip);
+		$ip = sprintf("%u", ip2long($ip));
 		$query = "SELECT mac FROM IPlist where ip = '".mysql_real_escape_string($ip)."'";
 		$result=@mysql_query($query);
 		if(!$result){

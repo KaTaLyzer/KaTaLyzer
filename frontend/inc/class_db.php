@@ -183,7 +183,8 @@ class db {
 		if($this->sd_table){
 			if($this->table_suffix_last=='_IP') $ip_or_mac = 'IP';
 			else $ip_or_mac = 'MAC';
-			if($ip_or_mac=='IP') { $this->sd_parent_address = ip2long($this->sd_parent_address); }
+			//if($ip_or_mac=='IP') { $this->sd_parent_address = ip2long($this->sd_parent_address); }
+			if($ip_or_mac=='IP') { $this->sd_parent_address = sprintf("%u",ip2long($this->sd_parent_address)); }
 			else { $this->sd_parent_address = hexdec(str_replace(':','',$this->sd_parent_address)); }
 			$query = "SELECT id, ".$ip_or_mac."_1 as ".$ip_or_mac.", bytes_21 as bytes_S, packets_21 as packets_S, bytes_12 as bytes_D, packets_12 as packets_D FROM ".$this->table."_".$this->table_suffix.$this->table_suffix_last."_SD WHERE id >= $time_id_begin && id <= $time_id_end AND ".$ip_or_mac."_2 = ".mysql_real_escape_string($this->sd_parent_address)." ";
 			$query .= "UNION SELECT id, ".$ip_or_mac."_2 as ".$ip_or_mac.", bytes_12 as bytes_S, packets_12 as packets_S, bytes_21 as bytes_D, packets_21 as packets_D FROM ".$this->table."_".$this->table_suffix.$this->table_suffix_last."_SD WHERE id >= $time_id_begin && id <= $time_id_end AND ".$ip_or_mac."_1 = ".mysql_real_escape_string($this->sd_parent_address).";";
@@ -360,7 +361,8 @@ class db {
 
 		// convert IP or MAC to integer
 		if($this->convert_selected_ip_or_mac == 'ip' && $name!='all'){
-			$name = ip2long($name);
+			//$name = ip2long($name);
+			$name = sprintf("%u",ip2long($name));
 		}elseif($this->convert_selected_ip_or_mac == 'mac' && $name!='all'){
 			//wordwrap(strtoupper(str_pad(dechex($table[$c][0]), 12, "0", STR_PAD_LEFT)), 2, ":", true);
 			$name = hexdec(str_replace(':','',$name));
