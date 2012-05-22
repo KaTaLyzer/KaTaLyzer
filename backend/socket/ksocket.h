@@ -70,4 +70,10 @@ char *find_dev(char *dev_name);
  * is down return 0 */
 int get_status(struct k_capture *dev);
 
+/* Close promiscuite mode
+ * return 0 on success
+ * return 1 on false
+ */
+int close_promisc(int raw_socket ,char *device);
+
 #endif

@@ -6,8 +6,10 @@ Header("Pragma: no-cache");
 Header("Cache-Control: no-cache");
 Header("Expires: ".GMDate("D, d M Y H:i:s")." GMT");
 
-echo $_SERVER['HTTP_HOST'];
-echo $_SERVER['PHP_SELF'];
+//echo $_SERVER['HTTP_HOST'];
+//echo $_SERVER['PHP_SELF'];
+//date.timezone = "Europe/Berlin";
+date_default_timezone_set("Europe/Berlin");
 
 require_once('inc/core.php');
     
@@ -61,7 +63,7 @@ require_once('inc/core.php');
 
 	if ($_SESSION['group'] == 0) echo("<a class=\"small\" href=\"./managment.php\">Management</a>\n");
 	echo	"<a class=\"small\" href=\"http://katalyzer.sk/contact\">Contact Us</a>\n";
-	echo	"<a class=\"small\" href=\"".$_SERVER['PHP_SELF']."\"?act=out\">Logout</a>\n";
+	echo	"<a class=\"small\" href=\"".$_SERVER['PHP_SELF']."?act=out\">Logout</a>\n";
 ?>
 	</div></div>
 </div>
@@ -226,12 +228,19 @@ require_once('inc/core.php');
 }
 else {
 ?>
-<div>
-Prosim prihláste sa
+<div id="login">
+	<div id="nadpis">
+		<h1><a href=".">KaTaLyzer</a></h1>
+	</div>
 <form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="post">
-<input type="text" name="name">
-<input type="password" name="password">
-<input type="submit" name="submit_loggin" value="posli" />
+<table>
+<tr><td>Name:</td>
+<td><input type="text" name="name"></td></tr>
+<tr><td>Password:</td>
+<td><input type="password" name="password"></td></tr>
+<tr><td></td>
+<td><input type="submit" name="submit_loggin" value="posli" /></td></tr>
+</table>
 </form>
 </div>
 

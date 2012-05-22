@@ -21,7 +21,7 @@
 //#define CDP_P
 //#define SNMP_P
 //#define _SIP
-#define NETFLOW
+//#define NETFLOW
 
 
 #define CHCEM_POCTY

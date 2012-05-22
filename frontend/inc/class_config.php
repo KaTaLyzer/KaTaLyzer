@@ -154,6 +154,7 @@ class config {
 				),
 			),
 		);
+		/*
 		$protocol_translat = array(
 			array('group'=>'Data link layer', 'name'=>'Ethernet 2',     'config_name'=>'PROTOCOL_ETH',  'dbname'=>'E'),
 			array('group'=>'Data link layer', 'name'=>'Ethernet 2 - IPv6',     'config_name'=>'PROTOCOL_ETH',  'dbname'=>'E_v6'),
@@ -172,6 +173,7 @@ class config {
 			array('group'=>'Transport layer', 'name'=>'UDP',            'config_name'=>'PROTOCOL_UDP',  'dbname'=>'UDP'),
 			array('group'=>'Transport layer', 'name'=>'UDP - v6',            'config_name'=>'PROTOCOL_UDP',  'dbname'=>'UDP_v6'),
 		);
+		*/
 
 		$netflow_sflow_enabled = false;
 		foreach($configfile as $line){
@@ -186,28 +188,40 @@ class config {
 		$protocol_translat = array(
 			array('group'=>'General', 'name'=>'All',     'config_name'=>'PROTOCOL_ALL',  'dbname'=>'ALL'),
 			array('group'=>'Data link layer', 'name'=>'Ethernet 2',     'config_name'=>'PROTOCOL_ETH',  'dbname'=>'E'),
+			array('group'=>'Data link layer', 'name'=>'Ethernet 2 - IPv6',     'config_name'=>'PROTOCOL_ETH',  'dbname'=>'E_v6'),
 			array('group'=>'Data link layer', 'name'=>'Ethernet 802.3', 'config_name'=>'PROTOCOL_8023', 'dbname'=>'8'),
+			array('group'=>'Data link layer', 'name'=>'Ethernet 802.3 - IPv6', 'config_name'=>'PROTOCOL_8023', 'dbname'=>'8_v6'),
 			array('group'=>'Network layer',	  'name'=>'IP',             'config_name'=>'PROTOCOL_IP',   'dbname'=>'IP'),
+			array('group'=>'Network layer',	  'name'=>'IPv6',             'config_name'=>'PROTOCOL_IP',   'dbname'=>'IPv6_v6'),
 			array('group'=>'Network layer',   'name'=>'ARP',            'config_name'=>'PROTOCOL_ARP',  'dbname'=>'ARP'),
 			array('group'=>'Network layer',   'name'=>'RARP',           'config_name'=>'PROTOCOL_RARP', 'dbname'=>'RARP'),
 			array('group'=>'Network layer',   'name'=>'ICMP',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMP'),
+			array('group'=>'Network layer',   'name'=>'ICMPv6',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMPv6_v6'),
 			array('group'=>'Network layer',   'name'=>'IGMP',           'config_name'=>'PROTOCOL_IGMP', 'dbname'=>'IGMP'),
 			array('group'=>'Network layer',   'name'=>'IPX',            'config_name'=>'PROTOCOL_IPX',  'dbname'=>'IPX'),
 			array('group'=>'Transport layer', 'name'=>'TCP',            'config_name'=>'PROTOCOL_TCP',  'dbname'=>'TCP'),
+			array('group'=>'Transport layer', 'name'=>'TCP - v6',            'config_name'=>'PROTOCOL_TCP',  'dbname'=>'TCP_v6'),
 			array('group'=>'Transport layer', 'name'=>'UDP',            'config_name'=>'PROTOCOL_UDP',  'dbname'=>'UDP'),
+			array('group'=>'Transport layer', 'name'=>'UDP - v6',            'config_name'=>'PROTOCOL_UDP',  'dbname'=>'UDP_v6'),
 		);
 		}else{
 			$protocol_translat = array(
 			array('group'=>'Data link layer', 'name'=>'Ethernet 2',     'config_name'=>'PROTOCOL_ETH',  'dbname'=>'E'),
+			array('group'=>'Data link layer', 'name'=>'Ethernet 2 - IPv6',     'config_name'=>'PROTOCOL_ETH',  'dbname'=>'E_v6'),
 			array('group'=>'Data link layer', 'name'=>'Ethernet 802.3', 'config_name'=>'PROTOCOL_8023', 'dbname'=>'8'),
+			array('group'=>'Data link layer', 'name'=>'Ethernet 802.3 - IPv6', 'config_name'=>'PROTOCOL_8023', 'dbname'=>'8_v6'),
 			array('group'=>'Network layer',	  'name'=>'IP',             'config_name'=>'PROTOCOL_IP',   'dbname'=>'IP'),
+			array('group'=>'Network layer',	  'name'=>'IPv6',             'config_name'=>'PROTOCOL_IP',   'dbname'=>'IPv6_v6'),
 			array('group'=>'Network layer',   'name'=>'ARP',            'config_name'=>'PROTOCOL_ARP',  'dbname'=>'ARP'),
 			array('group'=>'Network layer',   'name'=>'RARP',           'config_name'=>'PROTOCOL_RARP', 'dbname'=>'RARP'),
 			array('group'=>'Network layer',   'name'=>'ICMP',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMP'),
+			array('group'=>'Network layer',   'name'=>'ICMPv6',           'config_name'=>'PROTOCOL_ICMP', 'dbname'=>'ICMPv6_v6'),
 			array('group'=>'Network layer',   'name'=>'IGMP',           'config_name'=>'PROTOCOL_IGMP', 'dbname'=>'IGMP'),
 			array('group'=>'Network layer',   'name'=>'IPX',            'config_name'=>'PROTOCOL_IPX',  'dbname'=>'IPX'),
 			array('group'=>'Transport layer', 'name'=>'TCP',            'config_name'=>'PROTOCOL_TCP',  'dbname'=>'TCP'),
+			array('group'=>'Transport layer', 'name'=>'TCP - v6',            'config_name'=>'PROTOCOL_TCP',  'dbname'=>'TCP_v6'),
 			array('group'=>'Transport layer', 'name'=>'UDP',            'config_name'=>'PROTOCOL_UDP',  'dbname'=>'UDP'),
+			array('group'=>'Transport layer', 'name'=>'UDP - v6',            'config_name'=>'PROTOCOL_UDP',  'dbname'=>'UDP_v6'),
 		);
 		}
 
@@ -258,6 +272,11 @@ class config {
 						$this->tree[$count]['dbname']='TCP'.$value;
 						$this->tree[$count]['group']='Application layer';
 						$count++;
+						$this->tree[$count]=$default_tree;
+						$this->tree[$count]['name']=$port_name->tcp($value).' (tcp - v6 '.$value.')';
+						$this->tree[$count]['dbname']='TCP'.$value.'_v6';
+						$this->tree[$count]['group']='Application layer';
+						$count++;
 		                        }
 		                }
 		                elseif ($option == "UDP_PORT"){
@@ -265,6 +284,11 @@ class config {
 						$this->tree[$count]=$default_tree;
 						$this->tree[$count]['name']=$port_name->udp($value).' (udp '.$value.')';
 						$this->tree[$count]['dbname']='UDP'.$value;
+						$this->tree[$count]['group']='Application layer';
+						$count++;
+						$this->tree[$count]=$default_tree;
+						$this->tree[$count]['name']=$port_name->udp($value).' (udp - v6 '.$value.')';
+						$this->tree[$count]['dbname']='UDP'.$value.'_v6';
 						$this->tree[$count]['group']='Application layer';
 						$count++;
 		                        }

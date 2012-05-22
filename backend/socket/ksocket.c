@@ -227,6 +227,30 @@ file = NULL;
   return NULL;
 }
 
+int close_promisc(int raw_socket ,char* device)
+{
+  struct ifreq ifr;
+  
+  memset(&ifr, 0, sizeof(struct ifreq));
+  
+  strcpy(ifr.ifr_name, device);
+  
+  if(ioctl(raw_socket, SIOCGIFFLAGS, &ifr) == -1){
+    fprintf(stderr, "ERROR: Could not retrieve the flags from the device. %s\n", strerror(errno));
+    return 1;
+  }
+  
+  ifr.ifr_flags ^= IFF_PROMISC;
+  
+  if(ioctl(raw_socket, SIOCSIFFLAGS, &ifr) == -1){
+    fprintf(stderr, "ERROR: Could not set flags IFF_PROMISC. %s\n", strerror(errno));
+    return 1;
+  }
+  
+  return 0;
+}
+
+
 int raw_init(struct k_capture *p_capture,char* device)
 {
   struct ifreq ifr;
@@ -359,82 +383,118 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
   
   struct k_header head;
   struct dev_time *dt;
-  int len;
+  int len, start=1;
   u_char buf[BUFSIZ];
   char *old_interface;
   
-  if((old_interface=(char*) malloc(sizeof(char)*strlen("NOT"))) == NULL){
-    fprintf(stderr, "k_loop: Error malloc old_interface: %s", strerror(errno));
-    exit(1);
-  }
-  
-  strcpy(old_interface,"NOT");
-  
   head.dt = NULL;
+  old_interface = NULL;
   
 //   while(!connect(p_capture->socket,(struct sockaddr_ll*) &p_capture->sll, sizeof(p_capture->sll))){
   while(1){
     dt=NULL;
     
-    if(p_capture->name != NULL){
-      if(old_interface != NULL){
-	free(old_interface);
-	old_interface=NULL;
-      }
-      
-      if((old_interface = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
-	fprintf(stderr, "k_loop(): Error malloc old_interface: %s", strerror(errno));
+    if(start){
+      if((old_interface=(char*) malloc(sizeof(char)*strlen("-")+sizeof(char))) == NULL){
+	fprintf(stderr, "k_loop: Error malloc old_interface: %s", strerror(errno));
 	exit(1);
       }
-      strcpy(old_interface,p_capture->name);
-    }
-    
-    // if interface is down, find new interface and create new socket
-    if(p_capture->interface_auto){
-      /*
-       if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
-          if(*p_capture->file_status){
-       free(p_capture->file_status);
-       p_capture->file_status = NULL;
-       }
-       */
-      if(!get_status(p_capture)){
-	if(p_capture->name){
-	  free(p_capture->name);
-	  p_capture->name = NULL;
-	}
-	//return interface to old state
-	if(ioctl(p_capture->socket,SIOCSIFFLAGS, &p_capture->old_status) == -1){
-	  fprintf(stderr, "Error, set old state in k_loop(): %s\n",strerror(errno));
-	}
-	if(p_capture->socket){
-	  close(p_capture->socket);
-	  p_capture->socket = 0;
-	}
-	if(raw_init(p_capture, "auto")){
-	  sleep(2);
-	  continue;
-	}
-	if((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL){
+      
+      strcpy(old_interface,"-");
+      
+      if((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL){
 	  fprintf(stderr, "k_loop(): Error malloc struct dev_time: %s", strerror(errno));
 	  exit(1);
 	}
 	gettimeofday(&dt->ts, NULL);
-	if((dt->name_do = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
-	  fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
-	  exit(1);
+	
+	if(p_capture->name){
+	  if((dt->name_do = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
+	    fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
+	    exit(1);
+	  }
+	  strcpy(dt->name_do,p_capture->name);
 	}
-	strcpy(dt->name_do,p_capture->name);
+	else{
+	  if((dt->name_do = (char*) malloc(strlen("unknown")*sizeof(char)+sizeof(char))) == NULL){
+	    fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
+	    exit(1);
+	  }
+	  strcpy(dt->name_do,"unknown");
+	}
 	
 	if((dt->name_z = (char*) malloc(strlen(old_interface)*sizeof(char))) == NULL){
 	  fprintf(stderr,"k_loop(): Error malloc old_interface: %s", strerror(errno));
 	  exit(1);
 	}
 	strcpy(dt->name_z,old_interface);
-      }
-       }
-//    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
-    len = recvfrom(p_capture->socket,buf, sizeof(buf), 0, NULL, NULL);
+	
+	start = 0;
+      
+    }
+    
+    // if interface is down, find new interface and create new socket
+    if(p_capture->interface_auto){
+      /*
+       *   if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
+       *      if(*p_capture->file_status){
+       *   free(p_capture->file_status);
+       *   p_capture->file_status = NULL;
+    }
+    */
+      if(!get_status(p_capture)){
+	
+	if(p_capture->name != NULL){
+	  if(old_interface != NULL){
+	    free(old_interface);
+	    old_interface=NULL;
+	  }
+	  
+	  if((old_interface = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
+	    fprintf(stderr, "k_loop(): Error malloc old_interface: %s", strerror(errno));
+	    exit(1);
+	  }
+	  strcpy(old_interface,p_capture->name);
+	}
+	if(p_capture->name && p_capture->socket){
+	  close_promisc(p_capture->socket, p_capture->name);
+	}
+	if(p_capture->name){
+	  free(p_capture->name);
+	  p_capture->name = NULL;
+	}
+	//return interface to old state
+	//if(ioctl(p_capture->socket,SIOCSIFFLAGS, &p_capture->old_status) == -1){
+	  //fprintf(stderr, "Error, set old state in k_loop(): %s\n",strerror(errno));
+	  //}
+	  if(p_capture->socket){
+	    close(p_capture->socket);
+	    p_capture->socket = 0;
+	  }
+	  if(raw_init(p_capture, "auto")){
+	    sleep(2);
+	    continue;
+	  }
+	  if((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL){
+	    fprintf(stderr, "k_loop(): Error malloc struct dev_time: %s", strerror(errno));
+	    exit(1);
+	  }
+	  gettimeofday(&dt->ts, NULL);
+	  if((dt->name_do = (char*) malloc(strlen(p_capture->name)*sizeof(char))) == NULL){
+	    fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
+	    exit(1);
+	  }
+	  strcpy(dt->name_do,p_capture->name);
+	  
+	  if((dt->name_z = (char*) malloc(strlen(old_interface)*sizeof(char))) == NULL){
+	    fprintf(stderr,"k_loop(): Error malloc old_interface: %s", strerror(errno));
+	    exit(1);
+	  }
+	  strcpy(dt->name_z,old_interface);
+    }
+  }
+  //    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
+  len = recvfrom(p_capture->socket,buf, sizeof(buf), 0, NULL, NULL);
     if(len <= 0){
       fprintf(stderr, "Warring recv packet. %s\n", strerror(errno));
       continue;
@@ -488,9 +548,9 @@ void k_loop(struct k_capture *p_capture, k_handler calback){
 	free(head.dt->name_do);
 	head.dt->name_do = NULL;
       }
+      free(head.dt);
+      head.dt = NULL;
     }
-    free(head.dt);
-    head.dt = NULL;
   }
   
 }

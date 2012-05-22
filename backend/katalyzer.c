@@ -22,6 +22,7 @@
 #include "snmpp.h"
 #include "sip.h"
 #include <arpa/inet.h>
+#include "socket/ksocket.h"
 
 #ifdef _CAPTURE
 #define POCTY_SUBOR "spaketov.txt"
@@ -210,6 +211,32 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 //         char temp[15];          // temp - variable for converting IP address from INTEGER into STRING - we put IP address into DB in a.b.c.d format
 //         int prepinac = 0;	// switching variable for searching in arrays and inserting new IP/MAC addresses into the array if it does not exist there yet
 	char protokol[DLZKA_POLA_P];	// pomocna premena
+	
+#ifdef _CAPTURE
+    static struct dev_time *head_dt=NULL;
+    
+    if((header->dt != NULL) && (head_dt == NULL)){
+      if((head_dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL){
+	fprintf(stderr, "k_loop(): Error malloc struct dev_time: %s", strerror(errno));
+	exit(1);
+      }
+      
+      head_dt->ts=header->dt->ts;
+      
+      if((head_dt->name_do = (char*) malloc(strlen(header->dt->name_do)*sizeof(char))) == NULL){
+	fprintf(stderr,"k_loop(): Error malloc dt->name: %s", strerror(errno));
+	exit(1);
+      }
+      strcpy(head_dt->name_do,header->dt->name_do);
+      
+      if((head_dt->name_z = (char*) malloc(strlen(header->dt->name_z)*sizeof(char))) == NULL){
+	fprintf(stderr,"k_loop(): Error malloc old_interface: %s", strerror(errno));
+	exit(1);
+      }
+      strcpy(head_dt->name_z,header->dt->name_z);
+    }
+    
+#endif
 
 #ifdef CHCEM_POCTY
 	static unsigned int pr_Eth=0;
@@ -544,7 +571,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		// creating DB tables 
 		
 #ifdef _CAPTURE
-		if((header->interface_auto) && (header->dt != NULL)){
+		if((header->interface_auto) && (head_dt != NULL)){
 		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 		  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `INTERFACE_time` ( `time` int(11) NOT NULL, `interface_z` varchar(255) NOT NULL, `interface_do` varchar(255) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
 		  if (mysql_query(conn, prikaz)) {
@@ -554,13 +581,27 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		  mysql_next_result(conn);
 		  
 		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
-		  fprintf(stderr,"Time: %d\n", &header->dt->ts);
-		  sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (\"%d\", \"%s\", \"%s\")", header->dt->ts.tv_sec, header->dt->name_z, header->dt->name_do); 
+		  fprintf(stderr,"Time: %d\n", &head_dt->ts);
+		  sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (\"%d\", \"%s\", \"%s\")", head_dt->ts.tv_sec, head_dt->name_z, head_dt->name_do); 
 		  if (mysql_query(conn, prikaz)) {
-		      fprintf(stderr,"Failed to insert into INTERFACE_time table in MYSQL database %s: %s\nPrikaz: %s\n",db_name, mysql_error(conn), prikaz);
+		    fprintf(stderr,"Failed to insert into INTERFACE_time table in MYSQL database %s: %s\nPrikaz: %s\n",db_name, mysql_error(conn), prikaz);
 		    exit (ERR_MYSQL_DB_CREATE);
 		  }
 		  mysql_next_result(conn);
+		  
+		  if(head_dt !=NULL){
+		    if(head_dt->name_z != NULL){
+		      free(head_dt->name_z);
+		      head_dt->name_z = NULL;
+		    }
+		    if(head_dt->name_do){
+		      free(head_dt->name_do);
+		      head_dt->name_do = NULL;
+		    }
+		    free(head_dt);
+		    head_dt = NULL;
+		  }
+		  
 		}
 #endif
 
@@ -571,7 +612,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 				if(!p_prot->is_ipv6)
 				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D`mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` int unsigned default '0',`IP_2` int unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 				else
-				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(32),`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(32), `IP_2` char(32),`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
+				  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS %s_v6_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` char(32),`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC(`id` int(10) unsigned NOT NULL auto_increment,`MAC` bigint unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D`  mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_IP_SD(`id` int(10) unsigned NOT NULL auto_increment,`IP_1` char(32), `IP_2` char(32),`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_v6_1m_MAC_SD(`id` int(10) unsigned NOT NULL auto_increment,`MAC_1` bigint unsigned default '0',`MAC_2` bigint unsigned default '0',`bytes_12` bigint(20) unsigned NOT NULL default '0',`packets_12` mediumint(8) unsigned NOT NULL default '0',`bytes_21` bigint(20) unsigned NOT NULL default '0',`packets_21` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`))  ENGINE=MyISAM DEFAULT CHARSET=latin1;",p_prot->protokol, p_prot->protokol, p_prot->protokol, p_prot->protokol,p_prot->protokol);
 
 				if(mysql_query(conn, prikaz)){
 					fprintf(stderr,"Failed to create %s tables in MYSQL database %s: %s\nPrikaz: %s\n",p_prot->protokol ,db_name, mysql_error(conn), prikaz);
@@ -1622,6 +1663,7 @@ void free_protokoly(ZACIATOK_P *p_zac) {
 		p_zac->empty=1; // set the structure is empty
 		p_zac->p_protokoly=NULL;
 	}
+#ifdef NETFLOW
 	while(p_zac->p_next!=NULL){
 		if(!p_zac->p_next->empty) {
 			p_protokol=p_zac->p_next->p_protokoly;
@@ -1652,6 +1694,7 @@ void free_protokoly(ZACIATOK_P *p_zac) {
 		free(p_zac->p_next);
 		p_zac->p_next=help_zac;
 	}
+#endif
 }
 
 //zapis strukturu do DB
@@ -1737,8 +1780,10 @@ KTHREAD *create_thread(KTHREAD **thread)
       else{
 	if(pom_thread1->p_previous==NULL){
 	  start_thread=pom_thread1->p_next;
-	  if(pom_thread1)
+	  if(pom_thread1){
 	    free(pom_thread1);
+	    pom_thread1=NULL;
+	  }
 	  pom_thread1=start_thread;
 	  if(!pom_thread1)
 	    break;

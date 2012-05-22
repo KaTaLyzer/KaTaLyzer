@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 #  katalyzer,v 0.10 2008/05/04 kovacik
+#  modified: 2012/05/07 kozemcak
 #
 # katalyzer:        Starts the katalyzer measurement 
 #
@@ -13,9 +14,8 @@
 # Source function library.
 #. /etc/rc.d/init.d/functions
 
-CONFIG='-c /etc/katalyzer/config.conf'
-
-[ -f /etc/katalyzer/config.conf ] && . /etc/katalyzer/config.conf
+CONFIGF="/etc/katalyzer/config.conf"
+CONFIG="-c $CONFIGF"
 
 depend(){
   need mysql
@@ -28,6 +28,7 @@ start() {
 #		exit
 		failure
         else
+	  if [ -f $CONFIGF ]; then
 	        echo "Starting katalyzer: "
 	        result=`ps -ef|grep katalyzer | grep -v init.d |grep -v grep `
 
@@ -42,6 +43,10 @@ start() {
 		fi;
 		RETVAL=$?
 #                [ $RETVAL -eq 0 ] && touch /var/lock/subsys/katalyzer
+	  else
+		echo "Error: File " $CONFIGF "not exists"
+		RETVAL=1
+	  fi
 	fi;
 	echo
 	return $RETVAL

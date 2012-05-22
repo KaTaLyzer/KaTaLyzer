@@ -518,3 +518,10 @@ form.config li input,
 form.config li select {width: 98%; height: 18px; margin:0px;
 		  padding-left:1px; padding-bottom:0px;}
 form.config li input {padding-left:4px; width:100px;}
+
+#login {
+  position: absolute;
+  top: 43%;
+  width: 150px;
+  left: 43%;
+}

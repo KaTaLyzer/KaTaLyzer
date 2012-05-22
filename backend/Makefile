@@ -1,5 +1,8 @@
 dir :=socket
 
+all: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o nflow_sflow.o
+	gcc -g -D'_CAPTURE CDP _SIP NETFLOW' variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o nflow_sflow.o $(dir)/ksocket.o katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
+
 katalyzer: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o nflow_sflow.o
 	gcc -g variables.o processing.o wait_function.o read_conf.o cronovanie.o cdp.o snmpp.o sip.o nflow_sflow.o katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
 
@@ -53,11 +56,9 @@ install:
 	chmod 555 /usr/local/bin/katalyzer
 	mkdir -p /etc/katalyzer
 	cp ./files/my_config.conf /etc/katalyzer/config.conf
-	mysql -u root -p << ../frontend.sql
-	chown www-data:www-data /etc/katalyzer/config.conf
+	mysql -u root -p < ../SQL/frontend.sql
 	cp -r ../frontend /var/www/katalyzer
 	ln -s /etc/katalyzer/config.conf /var/www/katalyzer/configs/config.conf
-	chown -R www-data:www-data /var/www/katalyzer
 
 uninstall:
 	rm /usr/local/bin/katalyzer

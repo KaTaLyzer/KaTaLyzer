@@ -193,7 +193,9 @@ class loggin extends database {
     $this->query($sql);
     
     if($this->num_rows() != 0){
-      session_start();
+      if (!isset($_SESSION)) {
+	session_start();
+      }
       $row = $this->fetch();
       $_SESSION['name'] = $row['name'];
       $_SESSION['group'] = $row['groups'];

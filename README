@@ -8,8 +8,8 @@ as well as communioating nodes. It supports widely used protocols (Ethernet, IP,
 
 KaTaLyzer was tested on Debian, Ubuntu and Gentoo operating system.
 
-??Licence?
-
+Licence
+GPL
 
 
 Install
@@ -30,7 +30,7 @@ Suport IPv6
 
 
 
-
 Modules
+=======================================
 dead branch
 not developed, yet

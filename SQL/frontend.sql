@@ -13,7 +13,7 @@ SET time_zone = "+00:00";
 --
 -- Databáza: `KATALYZER_USER`
 --
-CREATE DATABASE `KATALYZER_USER` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS `KATALYZER_USER` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE `KATALYZER_USER`;
 
 -- --------------------------------------------------------
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `USER` (
 -- Sťahujem dáta pre tabuľku `USER`
 --
 
-INSERT INTO `USER` (`id`, `name`, `password`, `groups`) VALUES
+INSERT IGNORE INTO `USER` (`id`, `name`, `password`, `groups`) VALUES
 (2, 'admin', '', 0);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

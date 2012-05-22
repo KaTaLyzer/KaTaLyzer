@@ -144,8 +144,10 @@ class db {
 	private function reload_db(){
 		$this->convert();
 		// mysql connect
-		@mysql_connect($this->servername,$this->username,$this->password) or die('Mysql connect failed! check your server, username and pass');
-		@mysql_select_db($this->database) or die('Database not found');
+//		@mysql_connect($this->servername,$this->username,$this->password) or die('Mysql connect failed! check your server, username and pass');
+//		@mysql_select_db($this->database) or die('Database not found');
+		@mysql_connect($this->servername,$this->username,$this->password) or print ('Mysql connect failed! check your server, username and pass');
+		@mysql_select_db($this->database) or print ('Database not found');
 
 		if($this->sd_table){ $tmp = explode('_',$this->table_relation_index_name); $this->table_relation_index_name = $tmp[0].'_SD_'.$tmp[1]; } // sdd _SD 
 
