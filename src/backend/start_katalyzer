@@ -1,0 +1,99 @@
+#!/bin/bash
+#
+#  katalyzer,v 0.10 2008/05/04 kovacik
+#  modified: 2012/05/07 kozemcak
+#
+# katalyzer:        Starts the katalyzer measurement 
+#
+# chkconfig: - 41 89
+# description: This is a daemon which discovers routers on the local subnet.
+# starting program /usr/local/bin/katalyzer
+# processname: katalyzer
+# config: /etc/katalyzer/config.conf
+
+# Source function library.
+#. /etc/rc.d/init.d/functions
+
+CONFIGF="/etc/katalyzer/config.conf"
+CONFIG="-c $CONFIGF"
+
+depend(){
+  need mysql
+}
+
+start() {
+	if [ $UID -ne 0 ]; then
+                RETVAL=1
+#                echo "only root can do that"
+#		exit
+		failure
+        else
+	  if [ -f $CONFIGF ]; then
+	        echo "Starting katalyzer: "
+	        result=`ps -ef|grep katalyzer | grep -v init.d |grep -v grep `
+
+		if [[ $result == "" ]]; then
+		  start-stop-daemon --start -b \
+		    --exec /usr/local/bin/katalyzer -- $CONFIG 
+		
+		echo "[ OK ]";
+		else 	
+			echo "process: \"$result\" is running."
+			echo "cannot start two such processes."
+		fi;
+		RETVAL=$?
+#                [ $RETVAL -eq 0 ] && touch /var/lock/subsys/katalyzer
+	  else
+		echo "Error: File " $CONFIGF "not exists"
+		RETVAL=1
+	  fi
+	fi;
+	echo
+	return $RETVAL
+}
+
+stop() {
+	if [ $UID -ne 0 ]; then
+                RETVAL=1
+                echo "only root can do that"
+		exit
+        else
+		echo "Shutting down katalyzer. "
+		start-stop-daemon --stop --exec /usr/local/bin/katalyzer 
+#	        kill `ps -ef|grep /katalyzer |grep -v grep |awk '{ print $2; }';`	
+#		killproc katalyzer
+#                [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/katalyzer
+		RETVAL=$?
+        fi;
+	echo
+	return $RETVAL
+}
+
+restart() {
+	stop
+	sleep 3
+	start
+}
+
+RETVAL=0
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status katalyzer
+	;;
+  restart|reload)
+	restart
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit $?
