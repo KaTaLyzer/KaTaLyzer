@@ -29,7 +29,7 @@
 #include "sip.h"
 #include "nflow_sflow.h"
 
-#ifdef _CAPTURE
+#ifndef _PCAP
 #include "socket/ksocket.h"
 #endif
 
@@ -51,7 +51,7 @@ void tcp_protokol ( const u_char *pkt_data,int len );
 void udp_protokol ( const u_char *pkt_data,int len );
 void net_protokol ( int number, char *protokols );
 void trans_protokol ( int number, char *protokols );
-#ifdef _CAPTURE
+#ifndef _PCAP
 void dispatcher_handler ( const struct k_header *header, const u_char *pkt_data );
 #else
 void dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );

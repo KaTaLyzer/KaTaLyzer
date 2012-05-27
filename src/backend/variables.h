@@ -1,9 +1,7 @@
 #ifndef __PREMENNE_H__
 #define __PREMENNE_H__
 
-#ifndef  CAPTURE
-#include <pcap.h>
-#endif
+#include <config.h>
 #include "time.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,6 +15,13 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <netinet/ip6.h>
+#include "mysql/mysql.h"
+
+#ifndef _PCAP
+#include "socket/ksocket.h"
+#else
+#include <pcap.h>
+#endif
 
 //#define CDP_P
 //#define SNMP_P
@@ -212,7 +217,9 @@ extern struct tcphdr *tcph;     //tcp header
 extern struct udphdr *udph;     //udp header
 extern struct arphdr *arph;	//arp header
 
+#ifdef _PCAP
 extern pcap_t *fp;
+#endif
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

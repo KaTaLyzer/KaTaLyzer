@@ -24,7 +24,7 @@
 #include <arpa/inet.h>
 #include "socket/ksocket.h"
 
-#ifdef _CAPTURE
+#ifndef _PCAP
 #define POCTY_SUBOR "spaketov.txt"
 #else
 #define POCTY_SUBOR "ppaketov.txt"
@@ -40,17 +40,19 @@ typedef struct {
 } PRETAH;
 
 int main(int argc, char **argv) {
+#ifdef _PCAP
         char errbuf[PCAP_ERRBUF_SIZE];
+#endif
 	int o;
         int snaplen=65535;
 	int i_is_config = 0;
 	IPV6_adr_D = NULL;
 	IPV6_adr_S = NULL;
-#ifndef _CAPTURE
+#ifdef _PCAP
 	char offilename[255];
 #endif
 	KTHREAD *kt1, *kt2;
-#ifdef _CAPTURE
+#ifndef _PCAP
 	while((o=getopt(argc,argv,":hwc:d:")) != -1 ) {  // usage of getopt() is that if you expect argument than you specify colon ':' after the option (i.e. here we expect interface name after -i)
 #else
 	while((o=getopt(argc,argv,":hwc:df:")) != -1 ) {  // usage of getopt() is that if you expect argument than you specify colon ':' after the option (i.e. here we expect interface name after -i)
@@ -70,7 +72,7 @@ int main(int argc, char **argv) {
 			case 'd':
 				debug = 1;
 				break;
-#ifndef _CAPTURE
+#ifdef _PCAP
 			case 'f':
 			  fprintf(stderr,"WARNING: DANGEROUS FUNCTION. PRESS CTRL+C TO EXIT OR ANY KEY TO CONTINUE.\n");
 			//  getchar();
@@ -109,7 +111,7 @@ int main(int argc, char **argv) {
 #endif
 	}
 	
-#ifdef _CAPTURE
+#ifndef _PCAP
 
   struct k_capture c;
   c.name = NULL;
@@ -165,7 +167,7 @@ int main(int argc, char **argv) {
 	z_protokoly.empty=1;				//array is free
 	z_protokoly.p_protokoly=NULL;
 	z_pair_array=NULL;
-#ifdef _CAPTURE
+#ifndef _PCAP
   k_loop(&c, dispatcher_handler);
 #else
 	pcap_loop(fp,0,dispatcher_handler,NULL);
@@ -195,13 +197,13 @@ void help()
         printf("-w disable waiting for new minute after start of analyzator(e.g. in case we debug this program)\n");
 	printf("-c sets path to configuration file (e.g. /tmp/my_config.conf); do not use space " " in the path\n");
         printf("-d sets debug mode on\n");
-#ifndef _CAPTURE	
+#ifdef _PCAP
 	printf("-f sets offline mode and path to offline capture file. WARNING: DANGEROUS");
 #endif	
 }
 
 //toto spusta funkcia pcap_loop - tu sa robi analyza prevadzky
-#ifdef _CAPTURE
+#ifndef _PCAP
 void dispatcher_handler(const struct k_header *header, const u_char *pkt_data) {
 #else
 void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data) {
@@ -212,7 +214,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 //         int prepinac = 0;	// switching variable for searching in arrays and inserting new IP/MAC addresses into the array if it does not exist there yet
 	char protokol[DLZKA_POLA_P];	// pomocna premena
 	
-#ifdef _CAPTURE
+#ifndef _PCAP
     static struct dev_time *head_dt=NULL;
     
     if((header->dt != NULL) && (head_dt == NULL)){
@@ -253,7 +255,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 
 	//increment number of packets
 	ppaketov++;
-#ifdef _CAPTURE
+#ifndef _PCAP
 	pocetpaketov=pocetpaketov + header->len;
 #else
 	pocetpaketov=pocetpaketov + header->caplen;
@@ -570,7 +572,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		
 		// creating DB tables 
 		
-#ifdef _CAPTURE
+#ifndef _PCAP
 		if((header->interface_auto) && (head_dt != NULL)){
 		  sprintf(prikaz,""); // clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 		  sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `INTERFACE_time` ( `time` int(11) NOT NULL, `interface_z` varchar(255) NOT NULL, `interface_do` varchar(255) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
