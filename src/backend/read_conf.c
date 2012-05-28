@@ -33,16 +33,7 @@ void read_conf()
                                 snprintf ( db_pass,sizeof db_pass,"%s", value );
                                 i_is_configured++;
                         } else if ( !strcmp ( name, "LOG" ) ) snprintf ( log_name,sizeof log_name,"%s", value );
-                        // nacitanie casovaca
-                        else if ( !strcmp ( name, "WRITE_INTERVAL" ) ) {
-                                i_is_configured++;
-                                casovac_zapisu = atoi ( value );
-                                if ( casovac_zapisu < 60 ) {
-                                        if ( debug ) printf ( "WRITE_INTERVAL value has to be more than 60 seconds, using 60 seconds as default!\n" );
-                                        casovac_zapisu=60;
-                                }
-                        }
-                        // nacitanie protokolov preddefinovanych - ETH, 802.3, ARP, RARP, IP, IGMP, ICMP, IPX, TCP, UDP
+                       // nacitanie protokolov preddefinovanych - ETH, 802.3, ARP, RARP, IP, IGMP, ICMP, IPX, TCP, UDP
                         else if ( !strcmp ( name, "PROTOCOL_ETH" ) ) protocol_eth = atoi ( value );
                         else if ( !strcmp ( name, "PROTOCOL_8023" ) ) protocol_8023 = atoi ( value );
                         else if ( !strcmp ( name, "PROTOCOL_ARP" ) ) protocol_arp = atoi ( value );
@@ -72,7 +63,7 @@ void read_conf()
 
         fclose ( f_config );
 
-        if ( i_is_configured != 6 ) {
+        if ( i_is_configured != 5 ) {
                 printf ( "*** Incorrect configuration, check %s configuration file!\n",config_name );
                 exit ( ERR_INC_CONF );
         }
