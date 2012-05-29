@@ -78,7 +78,7 @@ time_t beggining_time;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FILE *f_config;                         // pointer pre konfiguracny subor
-char *config_name = "my_config.conf";	//nazov konfiguracneho suboru
+char *config_name = "config.conf";	//nazov konfiguracneho suboru
 char str[256];                          // str - retazec pre ukladanie riadkov z konfiguraku
 char * pch;                             // pch - pomocny pointer na retaze, kt. potrebujem pre rozdelenie riadka podla =, napr: TCP_PORT=80 - aby som vedel vyextrahovat tu 80-tku
 
@@ -88,7 +88,7 @@ char db_host[DLZKA+1];                  // sem sa ulozi server, na kt. sa ideme 
 char db_name[DLZKA+1];                  // sem sa ulozi nazov databazy
 char db_user[DLZKA+1];                  //uzivatel, pod ktorym sa ideme do DB pripajat
 char db_pass[DLZKA+1];                  // heslo
-int casovac_zapisu;                     // udaj je v sekundach - nacitany z koniguraku
+int casovac_zapisu = 60;                     // udaj je v sekundach
 
 
 int protocol_eth=1;                     //bude sa robit aj graf pre ETHERNET? default=1 -> ano; ak je v konfigu =0, zakaze sa tento graf

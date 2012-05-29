@@ -11,6 +11,7 @@ class conf_edit {
   public $tcp;
   public $udp;
   public $list_interface;
+  public $commets;
   
   function conf_edit($name){
     $this->fr = $name;
@@ -19,9 +20,14 @@ class conf_edit {
   }
   
   function readf(){
+    $count = 0;
     $configfile = file($this->fr, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
     foreach($configfile as $line) {
-      if ($line && !preg_match("/^#/", $line)) {
+      if ($line) {
+	if(preg_match("/^#/", $line)){
+	  $this->commets[$count][] = $line;
+	  continue;
+	}
 	$line = trim($line);
 	$pieces = explode("=", $line);
 	if(isset($pieces[0], $pieces[1])){
@@ -29,21 +35,26 @@ class conf_edit {
 	  $value = trim($pieces[1]);
 	  if($option == 'DB_HOST'){
 	    $this->host = $value;
+	    $count=2;
 	    continue;
 	  }
 	  if($option == 'DB_USER'){
 	    $this->user = $value;
+	    $count=2;
 	    continue;
 	  }
 	  if($option == 'DB_PASS'){
 	    $this->pass = $value;
+	    $count=2;
 	    continue;
 	  }
 	  if($option == 'DB_NAME'){ 
 	    $this->database = $value;
+	    $count=2;
 	    continue;
 	  }
 	  if($option == 'INTERFACE'){
+	    $count=1;
 	    $this->interface = $value;
 	    continue;
 	  }
@@ -51,19 +62,23 @@ class conf_edit {
 	  if(isset($pieces2[0], $pieces2[1])){
 	    $value = trim($pieces[1]);
 	    if(($pieces2[0] == 'PROTOCOL')) {
+	      $count=3;
 	      $this->protocols[$pieces2[1]] = $value;
 	      continue;
 	    }
 	    if ($pieces2[0] == 'TCP') {
+	      $count=4;
 	      $this->tcp[$value] = $value;
 	      continue;
 	    }
 	    if ($pieces2[0] == 'UDP') {
+	      $count=4;
 	      $this->udp[$value] = $value;
 	      continue;
 	    }
 	  }
 	}
+	$count=5;
       }
     }
   }
@@ -132,6 +147,8 @@ class conf_edit {
        fwrite($f, $line);
    }
    fclose($f);
+   
+   system("sudo cp ".$this->fr." /etc/katalyzer/config.conf");
   }
   
   function interface_list($dir){

@@ -3,6 +3,7 @@
 
 void read_conf()
 {
+	char db_name_pom[DLZKA+1];
         f_config=fopen ( config_name, "r" );
         if ( !f_config ) {
                 fprintf ( stderr,"Cannot open config file %s, EXITING!\n", config_name );
@@ -67,5 +68,6 @@ void read_conf()
                 printf ( "*** Incorrect configuration, check %s configuration file!\n",config_name );
                 exit ( ERR_INC_CONF );
         }
-	sprintf(db_name,"%s_%s",db_name, interface);
+        strcpy(db_name_pom,db_name);
+	sprintf(db_name,"%s_%s",db_name_pom, interface);
 }

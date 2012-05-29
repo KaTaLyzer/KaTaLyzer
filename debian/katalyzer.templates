@@ -1,0 +1,33 @@
+Template: katalyzer/welcome
+Type: text
+Description: Welcome !
+ Welcome in the configuration script for KaTaLyzer.
+ .
+ This script will help set mysql data for KaTaLyzer
+ You can run this script again by using the following command :
+ .
+ "sudo dpkg-reconfigure katalyzer"
+
+Template: katalyzer/sql_data
+Type: select
+Choices: yes, no
+Default: yes
+Description: Do you want to configure MySQL ?
+ MySQL is a database server.
+ If you do not have already added data to MySQL, you should do it now. 
+ .
+ If you already have data (if you are running 'sudo dpkg-reconfigure katalyzer'), you should answer no.
+
+Template: katalyzer/sql_password
+Type: string
+Default: root
+Description: What is the MySQL password for root ?
+ The root MySQL password is needed in order to continue.
+
+
+Template: katalyzer/katalyzer_config
+Type: select
+Choices: yes, no
+Default: yes
+Description: Do you want to start KaTaLyzer automatically
+  The KaTaLyzer service can be started automatically with the machine.
