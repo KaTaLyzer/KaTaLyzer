@@ -1,0 +1,8 @@
+Balicek vytvorime prikazom:
+
+dpkg-buildpackage -rfakeroot
+
+z hlavneho adresara.
+Aby prikaz fungoval musi sa v predchadzaujucom adresary (../) nachadzat zbaleny program a program by mal mat nasledujuci tvar:
+
+katalyzer_1.0.orig.tar.gz
