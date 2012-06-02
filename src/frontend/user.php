@@ -56,7 +56,7 @@ if (isset($_POST['edit']) && isset($_POST['user_id'])){
 }
 elseif(isset($_GET['action'])) {
    echo "<div>\n";
-  echo "<form action=".$_SERVER['PHP_SELF']."?mod=user method='post' name=Form onSubmit=\"return validatePwd()\"> </br>\n";
+  echo "<form action=".$_SERVER['PHP_SELF']."?mod=user method='post' name=FormPassword onSubmit=\"return validatePwd()\"> </br>\n";
   echo "Name: <input type='text' name='name' value=''></br>\n";
   echo "Group: <select name='group'>";
   echo "<option value=0>Admin</option>";
