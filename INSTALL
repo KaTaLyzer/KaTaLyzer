@@ -124,6 +124,13 @@ chown -R www-data:www-data /var/www/katalyzer
 3. link configuration file (replace my_config.conf with your file name)
 ln -s /etc/katalyzer/config.conf /var/www/katalyzer/configs/config.conf
 
+
+4. PASSWORD FOR FRONTEND:
+login: admin
+password:
+(password is not set)
+
+
 2.3 Quick start
 ---------------
 Web browser: http://your_ip.or.domain_address/katalyzer

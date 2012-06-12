@@ -27,6 +27,11 @@ Install
 ===========
 In file INSTALL
 
+PASSWORD FOR FRONTEND:
+login: admin
+password:
+(password is not set)
+
 News
 ===========
  -- support IPv6
