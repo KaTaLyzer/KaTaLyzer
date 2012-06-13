@@ -28,8 +28,7 @@
 //#define _SIP
 //#define NETFLOW
 
-
-#define CHCEM_POCTY
+//#define CHCEM_POCTY
 
 #define DLZKA 128
 #define NUMBER_OF_TCP_PORTS 20
