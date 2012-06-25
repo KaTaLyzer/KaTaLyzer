@@ -691,6 +691,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
+with_debug_k
 with_cdp
 with_sip
 with_netflow
@@ -1328,6 +1329,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-debug-k          Debug katalyzer
   --without-cdp           Do not use cdp
   --without-sip           Do not use sip
   --without-netflow       Do not use netflow
@@ -4363,6 +4365,14 @@ _ACEOF
 
 
 # Checks for preprocessor symbols
+
+
+# Check whether --with-debug_k was given.
+if test "${with_debug_k+set}" = set; then :
+  withval=$with_debug_k;
+$as_echo "#define _DEBUG_K /**/" >>confdefs.h
+
+fi
 
 
 # Check whether --with-cdp was given.

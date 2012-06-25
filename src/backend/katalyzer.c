@@ -505,7 +505,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 	}
 
 	if((flag == 0 && (actual_time - beggining_time) >= casovac_zapisu) || ((actual_time - beggining_time) >= casovac_zapisu*2)) { // flag - were data written into DB in this time interval? 
-	        MYSQL *conn;
+	        MYSQL *conn=NULL;
                 conn = mysql_init(NULL);
 		char prikaz[20000];
 // 		char temp_str[10000];
@@ -803,6 +803,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		  pretah1.t=kt;
 		  pthread_t zapdb = kt->zapdb;
 		  pthread_create(&zapdb,NULL,zapis_do_DB_protokoly,(void *)&pretah1);
+		  conn=NULL;
 		}
 		else{
 		  fprintf(stderr,"Error, Can not write to the database\n");
@@ -1713,6 +1714,9 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	conn=pretah1->d;
 	kt=pretah1->t;
 	PROTOKOLY *p_protokol;
+#ifdef _DEBUG_K
+	static unsigned int i=0;
+#endif
 	
 #ifdef NETFLOW
 	ZACIATOK_P *help_zac;
@@ -1734,7 +1738,9 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	}
 #endif
 	
-
+#ifdef _DEBUG_K
+	fprintf(stderr,"Debug: Zapis do DB: %d", i);
+#endif
 	if(!p_zac->empty){
 		p_protokol=p_zac->p_protokoly;
 		for(;p_protokol!=NULL;p_protokol=p_protokol->p_next){
@@ -1743,7 +1749,12 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	}
 	fprintf(stderr,"Zapis do DB...\t[DONE]\n");
 	kt->run=0;
+#ifdef _DEBUG_K
+	fprintf(stderr,"Debug: Uvolnenie databazy: %d", i);
+	i++;
+#endif
 	mysql_close(conn);
+	conn=NULL;
 	free_protokoly(p_zac);
 }
 

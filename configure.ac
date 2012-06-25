@@ -27,6 +27,10 @@ AC_TYPE_UINT8_T
 
 # Checks for preprocessor symbols
 
+AC_ARG_WITH([debug_k],
+			[AS_HELP_STRING([--with-debug-k], [Debug katalyzer])],
+			[AC_DEFINE(_DEBUG_K, [], [enable debug])],
+			[])
 AC_ARG_WITH([cdp],
 			[AS_HELP_STRING([--without-cdp], [Do not use cdp])],
 			[],

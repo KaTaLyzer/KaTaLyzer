@@ -122,6 +122,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* enable debug */
+#undef _DEBUG_K
+
 /* use pcap */
 #undef _PCAP
 
