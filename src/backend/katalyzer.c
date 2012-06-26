@@ -854,15 +854,31 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 #else
 		for (i=0;i<4;i++) {
 			if(i==0) fprintf(stderr,"interval:%d\n",interval);
+#ifdef _DEBUG_K
+	fprintf(stderr, "Debug: i= %d, interval%modu[i]==rozd[i]= %d\n", i, (interval%modu[i]==rozd[i]));
+	fprintf(stderr, "Debug: interval!=rozd[i]= %d/n", (interval!=rozd[i]));
+#endif
 			if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i])) {
+#ifdef _DEBUG_K
+	fprintf(stderr, "Debug: Zapis do databazy i= %d, True\n", i);
+#endif
 				switch(pthread_create(&cron,NULL,cronovanie,(void *)casy[i])) {
 					case -1: fprintf(stderr,"zlyhal thread\n");
 						 break;
 					case 0: fprintf(stderr,"\ncronovanie(%d) [DONE]\n",casy[i]);			
 						break;				 
-					default: break;
+					default: 
+#ifdef _DEBUG_K
+	fprintf(stderr, "Chyba tread, neznama hodnota\n");
+#endif
+					  break;
 				}
-			}			
+			}
+#ifdef _DEBUG_K
+	else{
+	  fprintf(stderr, "Debug: Zapis do databazy i= %d, False\n", i);
+	}
+#endif
 		}
 #endif
 	}
@@ -1739,7 +1755,7 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 #endif
 	
 #ifdef _DEBUG_K
-	fprintf(stderr,"Debug: Zapis do DB: %d", i);
+	fprintf(stderr,"Debug: Zapis do DB: %d\n", i);
 #endif
 	if(!p_zac->empty){
 		p_protokol=p_zac->p_protokoly;
@@ -1750,7 +1766,7 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	fprintf(stderr,"Zapis do DB...\t[DONE]\n");
 	kt->run=0;
 #ifdef _DEBUG_K
-	fprintf(stderr,"Debug: Uvolnenie databazy: %d", i);
+	fprintf(stderr,"Debug: Uvolnenie databazy: %d\n", i);
 	i++;
 #endif
 	mysql_close(conn);
