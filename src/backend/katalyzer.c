@@ -797,12 +797,17 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		PRETAH pretah1;
 		KTHREAD *kt;
 		if((kt = create_thread(&p_thread)) != NULL){
+#ifdef _DEBUG_K
+	fprintf(stderr,"Debug: zapis do DB\n");
+#endif
 		  kt->run=1;
 		  pretah1.p=&z_protokoly2;
 		  pretah1.d=conn;
 		  pretah1.t=kt;
 		  pthread_t zapdb = kt->zapdb;
-		  pthread_create(&zapdb,NULL,zapis_do_DB_protokoly,(void *)&pretah1);
+		  if(!pthread_create(&zapdb,NULL,zapis_do_DB_protokoly,(void *)&pretah1)){
+		      fprintf(stderr,"Error in function phtread_create: %s", strerror(errno));
+		  }
 		  conn=NULL;
 		}
 		else{
@@ -855,12 +860,12 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 		for (i=0;i<4;i++) {
 			if(i==0) fprintf(stderr,"interval:%d\n",interval);
 #ifdef _DEBUG_K
-	fprintf(stderr, "Debug: i= %d, interval%modu[i]==rozd[i]= %d\n", i, (interval%modu[i]==rozd[i]));
-	fprintf(stderr, "Debug: interval!=rozd[i]= %d/n", (interval!=rozd[i]));
+//	fprintf(stderr, "Debug: i= %d, interval\%modu[i]==rozd[i]= %d\n", i, (interval%modu[i]==rozd[i]));
+//	fprintf(stderr, "Debug: interval!=rozd[i]= %d\n", (interval!=rozd[i]));
 #endif
 			if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i])) {
 #ifdef _DEBUG_K
-	fprintf(stderr, "Debug: Zapis do databazy i= %d, True\n", i);
+//	fprintf(stderr, "Debug: Zapis do databazy i= %d, True\n", i);
 #endif
 				switch(pthread_create(&cron,NULL,cronovanie,(void *)casy[i])) {
 					case -1: fprintf(stderr,"zlyhal thread\n");
@@ -869,7 +874,7 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 						break;				 
 					default: 
 #ifdef _DEBUG_K
-	fprintf(stderr, "Chyba tread, neznama hodnota\n");
+//	fprintf(stderr, "Chyba tread, neznama hodnota\n");
 #endif
 					  break;
 				}
