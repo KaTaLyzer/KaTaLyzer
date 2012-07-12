@@ -11,7 +11,7 @@ if (isset($_POST['delete']) && isset($_POST['user_id'])) {
 }
 
 if (isset($_POST['edit_submit_password']) && isset($_POST['user_id'])) {
-  $user->edit_user_password($_POST['user_id'], @loggin::login_password_encryption($_POST['passwd']));
+  $user->edit_user_password($_POST['user_id'], @loggin::login_password_encryption($_POST['password']));
   unset($_POST);
 }
 if (isset($_POST['edit_submit_name']) && isset($_POST['user_id'])) {
