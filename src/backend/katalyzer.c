@@ -1777,7 +1777,6 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	fprintf(stderr,"Debug: Uvolnenie databazy: %d\n", i);
 	i++;
 #endif
-	exit(0);
 }
 
 char compare_IPv6(unsigned int* IP1, unsigned int* IP2)
