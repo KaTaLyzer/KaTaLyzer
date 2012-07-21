@@ -1777,6 +1777,7 @@ void *zapis_do_DB_protokoly(void *pretah2) {
 	fprintf(stderr,"Debug: Uvolnenie databazy: %d\n", i);
 	i++;
 #endif
+	exit(0);
 }
 
 char compare_IPv6(unsigned int* IP1, unsigned int* IP2)
@@ -1821,6 +1822,9 @@ KTHREAD *create_thread(KTHREAD **thread)
 	  if(pom_thread1){
 	    free(pom_thread1);
 	    pom_thread1=NULL;
+#ifdef _DEBUG_K
+	    fprintf(stderr,"Uvolnenie vlakna; 1 \n");
+#endif
 	  }
 	  pom_thread1=start_thread;
 	  if(!pom_thread1)
@@ -1833,6 +1837,9 @@ KTHREAD *create_thread(KTHREAD **thread)
 	    free(pom_thread1);
 	  pom_thread1=NULL;
 	  pom_thread1=pom_thread2;
+#ifdef _DEBUG_K
+	    fprintf(stderr,"Uvolnenie vlakna; 2 \n");
+#endif
 	}
       }
     }
@@ -1855,6 +1862,9 @@ KTHREAD *create_thread(KTHREAD **thread)
 	if(pom_thread1)
 	  free(pom_thread1);
 	pom_thread1=NULL;
+#ifdef _DEBUG_K
+	    fprintf(stderr,"Uvolnenie vlakna; 3 \n");
+#endif
       }
       else{
 	pom_thread2 = pom_thread1->p_next;
@@ -1863,6 +1873,9 @@ KTHREAD *create_thread(KTHREAD **thread)
 	  free(pom_thread1);
 	pom_thread1=NULL;
 	pom_thread1=pom_thread2;
+#ifdef _DEBUG_K
+	    fprintf(stderr,"Uvolnenie vlakna; 4 \n");
+#endif
       }
     }
   }
