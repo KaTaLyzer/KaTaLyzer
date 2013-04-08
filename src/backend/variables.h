@@ -1,7 +1,7 @@
 #ifndef __PREMENNE_H__
 #define __PREMENNE_H__
 
-#include <config.h>
+#include "config.h"
 #include "time.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,6 +16,8 @@
 #include <netinet/udp.h>
 #include <netinet/ip6.h>
 #include "mysql/mysql.h"
+
+// #define _PCAP
 
 #ifndef _PCAP
 #include "socket/ksocket.h"

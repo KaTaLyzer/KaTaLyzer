@@ -1153,11 +1153,13 @@ void tcp_protokol(const u_char *pkt_data,int len) {
 	d_protocol = d_port;
 
 //SIP
+#ifdef _SIP
 	int a = sizeof(struct ether_header) + iph->ihl*4 + len;
 	if(protocol_sip==1) {	
 		int s_hlen = (4*(pkt_data[a+12]/16))+a; //do premennej s_hlen ulozi adresu zaciatku TCP udajovej casti podla Offset pola
 		SIP_detekcia(pkt_data,s_hlen);
 	}
+#endif
 
 }
 
@@ -1204,8 +1206,10 @@ void udp_protokol(const u_char *pkt_data,int len) {
 #endif
 
 //SIP
+#ifdef _SIP
 	int b = sizeof(struct ether_header) + len;
 	if(protocol_sip==1) SIP_detekcia(pkt_data,b+22); //a+22 je adresa zaciatku udajovej casti UDP datagramu
+#endif
 
 	s_protocol = s_port;
 	d_protocol = d_port;
