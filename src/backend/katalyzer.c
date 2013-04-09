@@ -543,21 +543,21 @@ static void insert_data_to_table(MYSQL *conn)
     PAIR_ARRAY *pom_array;
     for(pom_array=z_pair_array;pom_array!=NULL;pom_array=pom_array->p_next) {
       if(!pom_array->is_ipv6){
-        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ip_s, pom_array->mac_s, pom_array->mac_s);
+        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';",pom_array->ip_s, pom_array->mac_s, pom_array->mac_s);
         if (mysql_query(conn, prikaz)) {
           fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
         }
-        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ip_d, pom_array->mac_d, pom_array->mac_d);
+        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';",pom_array->ip_d, pom_array->mac_d, pom_array->mac_d);
         if (mysql_query(conn, prikaz)) {
           fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
         }
       }
       else{
-        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ipv6_s[0], pom_array->ipv6_s[1], pom_array->ipv6_s[2], pom_array->ipv6_s[3], pom_array->mac_s, pom_array->mac_s);
+        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';",pom_array->ipv6_s[0], pom_array->ipv6_s[1], pom_array->ipv6_s[2], pom_array->ipv6_s[3], pom_array->mac_s, pom_array->mac_s);
         if (mysql_query(conn, prikaz)) {
           fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
         }
-        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%llu')ON DUPLICATE KEY UPDATE MAC='%llu';",pom_array->ipv6_d[0], pom_array->ipv6_d[1], pom_array->ipv6_d[2], pom_array->ipv6_d[3], pom_array->mac_d, pom_array->mac_d);
+        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';",pom_array->ipv6_d[0], pom_array->ipv6_d[1], pom_array->ipv6_d[2], pom_array->ipv6_d[3], pom_array->mac_d, pom_array->mac_d);
         if (mysql_query(conn, prikaz)) {
           fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
         }
@@ -721,7 +721,7 @@ static void sum_table()
     if(i==0)
       fprintf(stderr,"interval:%d\n",interval);
     if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i]) && (flow_flag==1)) {
-      switch(pthread_create(&cron,NULL,cronovanie,(void *)casy[i])) {
+      switch(pthread_create(&cron,NULL,cronovanie,(void *) &casy[i])) {
         case -1:
           fprintf(stderr,"zlyhal thread\n");
           break;
@@ -738,7 +738,7 @@ static void sum_table()
     if(i==0)
       fprintf(stderr,"interval:%d\n",interval);
     if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i])) {
-      switch(pthread_create(&cron,NULL,cronovanie,(void *)casy[i])) {
+      switch(pthread_create(&cron,NULL,cronovanie, (void *) &casy[i])) {
         case -1:
           fprintf(stderr,"zlyhal thread\n");
           break;
