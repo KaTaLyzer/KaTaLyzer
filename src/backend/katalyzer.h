@@ -63,10 +63,5 @@ void m_protokoly ( ZACIATOK_P *p_zac, char *s );
 void free_protokoly ( ZACIATOK_P *p_zac );
 void *zapis_do_DB_protokoly ( void *pretah2 );
 char compare_IPv6 ( unsigned int *IP1, unsigned int *IP2 ); //porovname 2 IP adresy v6
-/*
- * Funkcia sa pouziva na vytvorenie novych odkazov na vlakna
- * a vyhodenie zbytocnych odkazov zo struktury
- */
-KTHREAD *create_thread ( KTHREAD **thread );
 
 #endif

@@ -21,9 +21,6 @@ char *s_tmp_str;
 int i_is_configured = 0;
 int b_is_iface;
 
-//thread
-KTHREAD *p_thread = NULL;
-
 //global definitions for update to mysql database
 int unix_time;
 int processing_time;

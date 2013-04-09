@@ -23,6 +23,7 @@ option(CDP_P "Use CDP" OFF)
 option(_SIP "Use SIP" OFF)
 option(NETFLOW "Use NETFLOW" OFF)
 option(_DEBUG_K "Enable debug" OFF)
+option(CHCEM_POCTY "Enable debug dump" OFF)
 
 find_package(MYSQL REQUIRED)
 include_directories(${MYSQL_INCLUDE_DIRS})

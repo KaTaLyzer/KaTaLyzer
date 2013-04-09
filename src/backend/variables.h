@@ -17,20 +17,11 @@
 #include <netinet/ip6.h>
 #include "mysql/mysql.h"
 
-// #define _PCAP
-
 #ifndef _PCAP
 #include "socket/ksocket.h"
 #else
 #include <pcap.h>
 #endif
-
-//#define CDP_P
-//#define SNMP_P
-//#define _SIP
-//#define NETFLOW
-
-//#define CHCEM_POCTY
 
 #define DLZKA 128
 #define NUMBER_OF_TCP_PORTS 20
@@ -64,16 +55,6 @@ extern int totalog;
 //config variables
 extern int i_is_configured;
 extern int b_is_iface;
-
-//pointer to thread
-typedef struct kthread {
-        struct kthread *p_next;
-        struct kthread *p_previous;
-        char run;
-        pthread_t zapdb;
-}KTHREAD;
-
-extern KTHREAD *p_thread;
 
 //global structure for IP adress and MAC addres
 typedef struct zaznamy {
