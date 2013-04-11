@@ -10,18 +10,21 @@
  * hyben.martin@gmail.com *
 */
 
+#include <signal.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <time.h>
+
 #include "katalyzer.h"
 #include "processing.h"
 #include "variables.h"
 #include "wait_function.h"
 #include "read_conf.h"
 #include "errdef.h"
-#include <signal.h>
 #include "cronovanie.h"
 #include "cdp.h"
 #include "snmpp.h"
 #include "sip.h"
-#include <arpa/inet.h>
 #include "socket/ksocket.h"
 
 #ifndef _PCAP
@@ -30,7 +33,9 @@
 #define POCTY_SUBOR "ppaketov.txt"
 #endif
 
+#ifdef CDP_P
 struct cdp_struct *cdp_st;
+#endif
 
 //struktura na pretiahnutie MySQL a dat cez thread - nechutne, ale lepsie riesenie ma zatial nenapadlo
 typedef struct {
@@ -658,36 +663,47 @@ static void snmp_function(MYSQL *conn)
 
 static void flush_data_into_db(MYSQL *conn)
 {
-  ZACIATOK_P z_protokoly2;
-  PRETAH pretah1;
+  ZACIATOK_P *z_protokoly2;
+  PRETAH *pretah1;
   pthread_t thread;
+  
+  z_protokoly2 = malloc(sizeof(ZACIATOK_P));
+  if (z_protokoly2 == NULL) {
+    fprintf(stderr,"Error in function flush_data_into_db: %s\n", strerror(errno));
+    exit(-1);
+  }
+  
+  pretah1 = malloc(sizeof(PRETAH));
+  if (pretah1 == NULL) {
+    fprintf(stderr,"Error in function flush_data_into_db: %s\n", strerror(errno));
+    exit(-1);
+  }
   
 #ifdef NETFLOW
   //vytvorenie "kopie" z_protokoly do z_protokoly2
-  ZACIATOK_P z_protokoly2;
   //z_protokoly2.empty=0;
-  z_protokoly2.empty=z_protokoly.empty;   //NetFlow a sFlow spravy nemusia v danej minute prist - ak nepridu, nemame co ukladat, cize empty musi byt 1.
-  z_protokoly2.p_protokoly=z_protokoly.p_protokoly;
-  z_protokoly2.cas=z_protokoly.cas;
-  z_protokoly2.p_next=z_protokoly.p_next;
+  z_protokoly2->empty=z_protokoly.empty;   //NetFlow a sFlow spravy nemusia v danej minute prist - ak nepridu, nemame co ukladat, cize empty musi byt 1.
+  z_protokoly2->p_protokoly=z_protokoly.p_protokoly;
+  z_protokoly2->cas=z_protokoly.cas;
+  z_protokoly2->p_next=z_protokoly.p_next;
   z_protokoly.empty=1;
   z_protokoly.p_protokoly=NULL;
   z_protokoly.cas=0;
   z_protokoly.p_next=NULL;
 #else
   //vytvorenie "kopie" z_protokoly do z_protokoly2
-  z_protokoly2.empty=0;
-  z_protokoly2.p_protokoly=z_protokoly.p_protokoly;
-  z_protokoly.empty=1;
-  z_protokoly.p_protokoly=NULL;
+  z_protokoly2->empty = 0;
+  z_protokoly2->p_protokoly = z_protokoly.p_protokoly;
+  z_protokoly.empty = 1;
+  z_protokoly.p_protokoly = NULL;
   #endif
   
   #ifdef _DEBUG_K
   fprintf(stderr,"Debug: zapis do DB\n");
   #endif
-  pretah1.p=&z_protokoly2;
-  pretah1.d=conn;
-  if(pthread_create(&thread, NULL,zapis_do_DB_protokoly,(void *)&pretah1)){
+  pretah1->p = z_protokoly2;
+  pretah1->d = conn;
+  if(pthread_create(&thread, NULL, zapis_do_DB_protokoly,(void *) pretah1)){
     fprintf(stderr,"Error in function phtread_create: %s\n", strerror(errno));
   }
 }
@@ -713,6 +729,13 @@ static void sum_table()
   int casy[4] = {5,30,2,1}, i=0;
   int modu[4] = {5, 30, 120, 1440};
   int rozd[4] = {1, 5, 30, 120};
+  int *arg;
+  
+  arg = malloc(sizeof(int));
+  if (arg == NULL) {
+    fprintf(stderr, "Error in function sum_table: %s\n", strerror(errno));
+    exit(-1);
+  }
   
   interval++;
   
@@ -721,7 +744,8 @@ static void sum_table()
     if(i==0)
       fprintf(stderr,"interval:%d\n",interval);
     if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i]) && (flow_flag==1)) {
-      switch(pthread_create(&cron,NULL,cronovanie,(void *) &casy[i])) {
+      *arg = casy[i];
+      switch(pthread_create(&cron,NULL,cronovanie,(void *) arg)) {
         case -1:
           fprintf(stderr,"zlyhal thread\n");
           break;
@@ -738,7 +762,8 @@ static void sum_table()
     if(i==0)
       fprintf(stderr,"interval:%d\n",interval);
     if ((interval%modu[i]==rozd[i]) && (interval!=rozd[i])) {
-      switch(pthread_create(&cron,NULL,cronovanie, (void *) &casy[i])) {
+      *arg = casy[i];
+      switch(pthread_create(&cron, NULL, cronovanie, (void *) arg)) {
         case -1:
           fprintf(stderr,"zlyhal thread\n");
           break;
@@ -816,8 +841,6 @@ static void database(struct dev_time *head_dt, const void *arg)
 ////////////////////////////////////
   
   flush_data_into_db(conn);
-  
-  conn=NULL;
   
   flag = 1; // after processing the frame we just processed we set 'flag' to true which indicates that data in this time interval were already processed and in this second we are not going to insert any more data into DB - we will do it after passing 'casovac_zapisu' seconds
   
@@ -1748,15 +1771,15 @@ void free_protokoly(ZACIATOK_P *p_zac) {
 }
 
 //zapis strukturu do DB
-void *zapis_do_DB_protokoly(void *pretah2) {
-  PRETAH *pretah1 = (PRETAH *) pretah2;
+void *zapis_do_DB_protokoly(void *arg) {
+  PRETAH *pretah1 = (PRETAH *) arg;
   ZACIATOK_P *p_zac;
   MYSQL *conn;
   p_zac=pretah1->p;
   conn=pretah1->d;
   PROTOKOLY *p_protokol;
 #ifdef _DEBUG_K
-  static unsigned int i=0;
+  static unsigned int i = 0;
 #endif
 	
 #ifdef NETFLOW
@@ -1783,15 +1806,16 @@ void *zapis_do_DB_protokoly(void *pretah2) {
   fprintf(stderr,"Debug: Zapis do DB: %d\n", i);
 #endif
   if(!p_zac->empty){
-    p_protokol=p_zac->p_protokoly;
-    for(;p_protokol!=NULL;p_protokol=p_protokol->p_next){
-      processingl(p_protokol,conn);
+    for(p_protokol = p_zac->p_protokoly; p_protokol != NULL;
+        p_protokol = p_protokol->p_next){
+      processingl(p_protokol, conn);
     }
   }
   fprintf(stderr,"Zapis do DB...\t[DONE]\n");
   mysql_close(conn);
-  conn=NULL;
   free_protokoly(p_zac);
+  free(p_zac);
+  free(pretah1);
 #ifdef _DEBUG_K
   fprintf(stderr,"Debug: Uvolnenie databazy: %d\n", i);
   i++;

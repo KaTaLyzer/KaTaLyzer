@@ -29,9 +29,11 @@ typedef struct sd_t {
         struct sd_t *dalsi;
 } SD_T;
 
-inline void *cronovanie ( void *cast )
+inline void *cronovanie ( void *arg)
 {
-        int cas = ( int * ) cast; //becouse of thread policy
+        int *help_i = (int *) arg;
+        int cas = *help_i; //becouse of thread policy
+        free(arg);
 #ifdef DEBUG
         fprintf ( stderr,"cronovanie\n" );
 #endif

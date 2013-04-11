@@ -24,7 +24,6 @@ void processingl ( PROTOKOLY *s, MYSQL *conn )
 //TIME
         if ( !s->empty ) {
 
-
                 is_ipv6 = s->is_ipv6;
 
                 if ( is_ipv6 ) {
