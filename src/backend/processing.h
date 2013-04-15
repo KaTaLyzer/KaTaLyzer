@@ -6,5 +6,5 @@
 #include <errno.h>
 
 
-void processingl(PROTOKOLY *s, MYSQL *conn);
+void processingl(PROTOKOLY *s);
 

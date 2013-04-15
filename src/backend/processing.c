@@ -1,26 +1,40 @@
 #include "processing.h"
 
 
-void processingl ( PROTOKOLY *s, MYSQL *conn )
+void processingl ( PROTOKOLY *s)
 {
 // dynamicka premena
-        char *prikaz;
+  char *prikaz;
 // pomocna dynamicka premena
-        char *prikaz_pom;
-        char temp_str[10000];
-        char is_ipv6 = 0;
+  char *prikaz_pom;
+  char temp_str[10000];
+  char is_ipv6 = 0;
 // pouzijeme pri ipv6
-        char s_protokol[20];
-        int ip=0,mac=0,ip_sd=0,mac_sd=0;
-        MYSQL_RES *result;
-        MYSQL_ROW row;
-        unsigned long int source_B, destin_B, source_ramcov, destin_ramcov;
-        ZAZNAMY *help_zaznamy, *help_zaznamy2, *p_pomz, *p_pomz2;
+  char s_protokol[20];
+  int ip=0,mac=0,ip_sd=0,mac_sd=0;
+  MYSQL *conn;
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+  unsigned long int source_B, destin_B, source_ramcov, destin_ramcov;
+  ZAZNAMY *help_zaznamy, *help_zaznamy2, *p_pomz, *p_pomz2;
 
 #ifdef _DEBUG_WRITE
-        FILE *fw;
+  FILE *fw;
 #endif
-
+  
+  conn = mysql_init ( NULL );
+  if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, 0, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
+    fprintf ( stderr,"Failed to connect to MYSQL database: Error: %s\n", mysql_error ( conn ) );
+    sprintf ( s_tmp_str,"%s:katalyzer.cpp:dispatcher_handler:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
+    fprintf ( stderr,"%s",s_tmp_str );
+    exit ( -1 );
+  }
+  
+  sprintf ( temp_str,"USE %s;",db_name );
+  if ( mysql_query ( conn, temp_str ) ) {
+    fprintf ( stderr,"Failed to use '%s' from MYSQL database %s: %s\n", temp_str,db_name,mysql_error ( conn ) );
+  }
+  
 //TIME
         if ( !s->empty ) {
 
@@ -425,7 +439,7 @@ void processingl ( PROTOKOLY *s, MYSQL *conn )
                 help_zaznamy->spracovany[2]=0;
                 help_zaznamy->spracovany[3]=0;
         }
-// 	mysql_close(conn);
+        mysql_close(conn);
 }
 
 

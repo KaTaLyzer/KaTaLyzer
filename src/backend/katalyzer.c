@@ -37,9 +37,8 @@
 struct cdp_struct *cdp_st;
 #endif
 
-//struktura na pretiahnutie MySQL a dat cez thread - nechutne, ale lepsie riesenie ma zatial nenapadlo
+//struktura na pretiahnutie dat cez thread - nechutne, ale lepsie riesenie ma zatial nenapadlo
 typedef struct {
-	MYSQL *d;
 	ZACIATOK_P *p;
 } PRETAH;
 
@@ -661,7 +660,7 @@ static void snmp_function(MYSQL *conn)
 }
 #endif
 
-static void flush_data_into_db(MYSQL *conn)
+static void flush_data_into_db(void)
 {
   ZACIATOK_P *z_protokoly2;
   PRETAH *pretah1;
@@ -702,7 +701,6 @@ static void flush_data_into_db(MYSQL *conn)
   fprintf(stderr,"Debug: zapis do DB\n");
   #endif
   pretah1->p = z_protokoly2;
-  pretah1->d = conn;
   if(pthread_create(&thread, NULL, zapis_do_DB_protokoly,(void *) pretah1)){
     fprintf(stderr,"Error in function phtread_create: %s\n", strerror(errno));
   }
@@ -821,6 +819,8 @@ static void database(struct dev_time *head_dt, const void *arg)
   
   insert_data_to_table(conn);
   
+  mysql_close(conn);
+  
 #ifdef _SIP
   // SIP table creating
   if(protocol_sip==1) SIP_vytvor_db(conn);
@@ -840,7 +840,7 @@ static void database(struct dev_time *head_dt, const void *arg)
 // FLUSH DATA INTO DB - 26.7.2010
 ////////////////////////////////////
   
-  flush_data_into_db(conn);
+  flush_data_into_db();
   
   flag = 1; // after processing the frame we just processed we set 'flag' to true which indicates that data in this time interval were already processed and in this second we are not going to insert any more data into DB - we will do it after passing 'casovac_zapisu' seconds
   
@@ -1774,9 +1774,7 @@ void free_protokoly(ZACIATOK_P *p_zac) {
 void *zapis_do_DB_protokoly(void *arg) {
   PRETAH *pretah1 = (PRETAH *) arg;
   ZACIATOK_P *p_zac;
-  MYSQL *conn;
   p_zac=pretah1->p;
-  conn=pretah1->d;
   PROTOKOLY *p_protokol;
 #ifdef _DEBUG_K
   static unsigned int i = 0;
@@ -1808,11 +1806,10 @@ void *zapis_do_DB_protokoly(void *arg) {
   if(!p_zac->empty){
     for(p_protokol = p_zac->p_protokoly; p_protokol != NULL;
         p_protokol = p_protokol->p_next){
-      processingl(p_protokol, conn);
+      processingl(p_protokol);
     }
   }
   fprintf(stderr,"Zapis do DB...\t[DONE]\n");
-  mysql_close(conn);
   free_protokoly(p_zac);
   free(p_zac);
   free(pretah1);
