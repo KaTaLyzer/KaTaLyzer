@@ -1,7 +1,7 @@
 KaTaLyzer
 ==============
 
-**!!! THIS README IS CURRENTLY WORK IN PROGRESS !!!** Please contact me [here](roman.bronis@gmail.com) if you are interested in KaTaLyzer.
+**!!! THIS README IS CURRENTLY WORK IN PROGRESS !!!** Please contact me <a href="mailto://roman.bronis@gmail.com">here</a> if you are interested in KaTaLyzer.
 
 What is it?
 ------------------
