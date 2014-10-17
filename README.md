@@ -1,7 +1,7 @@
 KaTaLyzer
 ==============
 
-**!!! THIS README IS CURRENTLY WORK IN PROGRESS !!!** Please contact me <a href="mailto://roman.bronis@gmail.com">here</a> if you are interested in KaTaLyzer.
+**!!! THIS README IS CURRENTLY WORK IN PROGRESS !!!** Please contact me <a href="mailto://roman.bronis@gmail.com">here</a> if you are interested in _KaTaLyzer_.
 
 What is KaTaLyzer?
 ----------------------
@@ -43,12 +43,12 @@ TODO
 ```
 
 News
-===========
+----------
 **2014-10-07**
 Work in progress!!!
 - capturing selection rewrite
 - initial support for SLL
-- revert of change of database name
+- revert of change of database name from 2013
 ```
 	Previous style: database-name_iface-name
 	New style: database-name
