@@ -1,9 +1,7 @@
 KaTaLyzer
 ==============
 
-!!! WORK IN PROGRESS !!!
-
-README
+!!! THIS README IS WORK IN PROGRESS !!! Please contact me [here](roman.bronis@gmail.com) for installation guide.
 
 What is it?
 ------------------
@@ -30,8 +28,12 @@ License:
 
 Install
 ----------
-In file INSTALL
+**Backend:**
+	cd src/backend
+	make
 
+**Frontend:**
+TODO
 PASSWORD FOR FRONTEND:
 login: admin
 password:
