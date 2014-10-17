@@ -1,7 +1,7 @@
 KaTaLyzer
 ==============
 
-!!! THIS README IS WORK IN PROGRESS !!! Please contact me [here](roman.bronis@gmail.com) for installation guide.
+**!!! THIS README IS CURRENTLY WORK IN PROGRESS !!!** Please contact me [here](roman.bronis@gmail.com) if you are interested in KaTaLyzer.
 
 What is it?
 ------------------
