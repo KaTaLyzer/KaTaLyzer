@@ -6,7 +6,7 @@ KaTaLyzer is a network traffic analyzer for Linux based operating systems (route
 It offers full network traffic monitoring. Data are displayed in graphs which can be filtered based on protocol 
 as well as communioating nodes. It supports widely used protocols (Ethernet, IP, TCP, UDP, HTTP, SSH, SIP, etc.).
 
-KaTaLyzer was tested on Debian, Ubuntu and Gentoo operating system.
+KaTaLyzer was tested on Debian, Ubuntu, Arch and Gentoo operating systems.
 
 License:
 
@@ -34,6 +34,14 @@ password:
 
 News
 ===========
+2014-10-07
+Work in progress!!!
+ -- capturing selection rewrite
+ -- initial support for SLL
+ -- revert of change of database name
+ -- additional modules removal (CDP, SNMP SFLOW, NFLOW, SIP)
+
+2013
  -- support IPv6
  -- new type of installation
  -- use socket to capture packet from network, no pcap libraries ( we can still used it)
