@@ -1,2 +1,63 @@
 KaTaLyzer
 ==============
+
+!!! WORK IN PROGRESS !!!
+
+README
+
+What is it?
+------------------
+KaTaLyzer is a network traffic analyzer for Linux based operating systems (routers, servers and desktops). 
+It offers full network traffic monitoring. Data are displayed in graphs which can be filtered based on protocol 
+as well as communioating nodes. It supports widely used protocols (Ethernet, IP, TCP, UDP, HTTP, SSH, SIP, etc.).
+
+KaTaLyzer was tested on Debian, Ubuntu, Arch and Gentoo operating systems.
+
+License:
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This package is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+Install
+----------
+In file INSTALL
+
+PASSWORD FOR FRONTEND:
+login: admin
+password:
+(password is not set)
+
+News
+===========
+2014-10-07
+Work in progress!!!
+ -- capturing selection rewrite
+ -- initial support for SLL
+ -- revert of change of database name
+ -- additional modules removal (CDP, SNMP SFLOW, NFLOW, SIP)
+
+2013
+ -- support IPv6
+ -- new type of installation
+ -- use socket to capture packet from network, no pcap libraries ( we can still used it)
+ -- change database name.
+      Old style:
+	  database-name
+      New style:
+	  database-name_interface-name
+
+	  
+Modules
+-----------------------
+dead branch
+not developed, yet
