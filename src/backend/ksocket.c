@@ -232,18 +232,15 @@ int close_promisc(int raw_socket, char *device)
     strcpy(ifr.ifr_name, device);
 
     if (ioctl(raw_socket, SIOCGIFFLAGS, &ifr) == -1) {
-	fprintf(stderr,
-		"ERROR: Could not retrieve the flags from the device. %s\n",
-		strerror(errno));
-	return 1;
+	    fprintf(stderr,"ERROR: Could not retrieve the flags from the device. %s\n",strerror(errno));
+	    return 1;
     }
 
     ifr.ifr_flags ^= IFF_PROMISC;
 
     if (ioctl(raw_socket, SIOCSIFFLAGS, &ifr) == -1) {
-	fprintf(stderr, "ERROR: Could not set flags IFF_PROMISC. %s\n",
-		strerror(errno));
-	return 1;
+	    fprintf(stderr, "ERROR: Could not set flags IFF_PROMISC. %s\n",strerror(errno));
+	    return 1;
     }
 
     return 0;
@@ -259,8 +256,8 @@ int raw_init(struct k_capture *p_capture, char *device)
     int ifindex;
 
     if (p_capture->name) {
-	free(p_capture->name);
-	p_capture->name = NULL;
+	    free(p_capture->name);
+	    p_capture->name = NULL;
     }
 
 /*  
@@ -271,30 +268,24 @@ int raw_init(struct k_capture *p_capture, char *device)
 */
 
     if (strcmp(device, "auto")) {
-	p_capture->interface_auto = 0;
-	/*
-	   p_capture->file_status = NULL;
-	 */
-	if ((p_capture->name =
-	     (char *) malloc(strlen(device) * sizeof(char) + 1)) == NULL) {
-	    fprintf(stderr,
-		    "Raw_init(): Error malloc p_capture->name: %s\n",
-		    strerror(errno));
-	    return 1;
-	}
-	strcpy(p_capture->name, device);
+	    p_capture->interface_auto = 0;
+	    /*
+	       p_capture->file_status = NULL;
+	     */
+	    if ((p_capture->name = (char *) malloc(strlen(device) * sizeof(char) + 1)) == NULL) {
+	        fprintf(stderr,"Raw_init(): Error malloc p_capture->name: %s\n",strerror(errno));
+	        return 1;
+	    }
+	    strcpy(p_capture->name, device);
     } else {
-	char *file = NULL;
-	if ((file = find_dev(file)) == NULL)
-	    return 1;
-	if ((p_capture->name =
-	     (char *) malloc(strlen(file) * sizeof(char) + 1)) == NULL) {
-	    fprintf(stderr, "Raw_init(): Error malloc: %s\n",
-		    strerror(errno));
-	    return 1;
-	}
-	strcpy(p_capture->name, file);
-	p_capture->interface_auto = 1;
+	    char *file = NULL;
+	    if ((file = find_dev(file)) == NULL) return 1;
+	    if ((p_capture->name = (char *) malloc(strlen(file) * sizeof(char) + 1)) == NULL) {
+	        fprintf(stderr, "Raw_init(): Error malloc: %s\n",strerror(errno));
+	        return 1;
+	    }
+	    strcpy(p_capture->name, file);
+	    p_capture->interface_auto = 1;
 
 /*    
     if((p_capture->file_status=(char*) malloc(strlen(DEVDIR)*strlen(file)*strlen(FILEOPERSTATE)*sizeof(char) + 1)) == NULL){
@@ -306,31 +297,28 @@ int raw_init(struct k_capture *p_capture, char *device)
       return 0;
     }
 */
-	if (!file) {
-	    free(file);
-	    file = NULL;
-	}
+	    if (!file) {
+	        free(file);
+	        file = NULL;
+	    }
     }
 
     memset(&ifr, 0, sizeof(struct ifreq));
     memset(&mr, 0, sizeof(struct packet_mreq));
 
     if ((raw_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 1) {
-	fprintf(stderr, "ERROR: Could not open socket, Got ?\n");
-	return 1;
+	    fprintf(stderr, "ERROR: Could not open socket, Got ?\n");
+	    return 1;
     }
 
     strcpy(ifr.ifr_name, p_capture->name);
 
-#ifdef _DEBUG_SOCKET
-    fprintf(stderr, "Interface: %s\n", ifr.ifr_name);
-#endif
+    if(debug) fprintf(stderr, "Interface: %s\n", ifr.ifr_name);
+
 
     if (ioctl(raw_socket, SIOCGIFFLAGS, &ifr) == -1) {
-	fprintf(stderr,
-		"ERROR: Could not retrieve the flags from the device. %s\n",
-		strerror(errno));
-	return 1;
+	    fprintf(stderr,"ERROR: Could not retrieve the flags from the device. %s\n",strerror(errno));
+	    return 1;
     }
 // save old interface state  
     p_capture->old_status = ifr;
@@ -338,16 +326,15 @@ int raw_init(struct k_capture *p_capture, char *device)
     ifr.ifr_flags |= IFF_PROMISC;
 
     if (ioctl(raw_socket, SIOCSIFFLAGS, &ifr) == -1) {
-	fprintf(stderr, "ERROR: Could not set flags IFF_PROMISC. %s\n",
-		strerror(errno));
-	return 1;
+	    fprintf(stderr, "ERROR: Could not set flags IFF_PROMISC. %s\n",strerror(errno));
+	    return 1;
     }
 
     fprintf(stderr, "Flag: %d\n", ifr.ifr_flags);
 
     if (ioctl(raw_socket, SIOCGIFINDEX, &ifr) < 0) {
-	fprintf(stderr, "ERROR: Error getting the device index.\n");
-	return 1;
+	    fprintf(stderr, "ERROR: Error getting the device index.\n");
+	    return 1;
     }
 
     sll.sll_family = AF_PACKET;
@@ -359,11 +346,9 @@ int raw_init(struct k_capture *p_capture, char *device)
     mr.mr_ifindex = ifindex;
     mr.mr_type = PACKET_MR_PROMISC;
 
-    if (setsockopt
-	(raw_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr,
-	 sizeof(mr)) < 0) {
-	fprintf(stderr, "ERROR: Error setsockopt. %s\n", strerror(errno));
-	return 1;
+    if (setsockopt(raw_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr,sizeof(mr)) < 0) {
+    	fprintf(stderr, "ERROR: Error setsockopt. %s\n", strerror(errno));
+	    return 1;
     }
 
 /*  Set timeout
@@ -374,12 +359,9 @@ int raw_init(struct k_capture *p_capture, char *device)
     tv.tv_sec = 10;		/* 10 Secs Timeout */
     tv.tv_usec = 0;		// Not init'ing this can cause strange errors
 
-    if (setsockopt
-	(raw_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv,
-	 sizeof(struct timeval))) {
-	fprintf(stderr, "ERROR: Error setsockopt for time: %s\n",
-		strerror(errno));
-	return 1;
+    if (setsockopt(raw_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &tv,sizeof(struct timeval))) {
+    	fprintf(stderr, "ERROR: Error setsockopt for time: %s\n", strerror(errno));
+	    return 1;
     };
 
     p_capture->socket = raw_socket;
