@@ -86,9 +86,9 @@ inline void *cronovanie ( void *arg)
         MYSQL_RES *result = NULL, *result2 = NULL;
         MYSQL_ROW row, row2;
         conn = mysql_init ( NULL );
-        if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, 0, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
+        if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, db_port, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
                 fprintf ( stderr,"Failed to connect to MYSQL database: Error: %s\n", mysql_error ( conn ) );
-                sprintf ( s_tmp_str,"%s:katalyzer.cpp:dispatcher_handler:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
+                sprintf ( s_tmp_str,"%s:cronovanie.c:cronovanie:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
                 fprintf ( stderr,"%s",s_tmp_str );
                 exit ( -1 );
         }

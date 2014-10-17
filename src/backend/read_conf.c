@@ -3,7 +3,6 @@
 
 void read_conf()
 {
-	char db_name_pom[DLZKA+1];
         f_config=fopen ( config_name, "r" );
         if ( !f_config ) {
                 fprintf ( stderr,"Cannot open config file %s, EXITING!\n", config_name );
@@ -23,8 +22,9 @@ void read_conf()
                         } else if ( !strcmp ( name, "DB_HOST" ) ) {
                                 snprintf ( db_host,sizeof db_host,"%s", value );
                                 i_is_configured++;
-
-                        } else if ( !strcmp ( name, "DB_NAME" ) ) {
+                        } else if ( !strcmp ( name, "DB_PORT" ) ) {
+                                db_port = atoi (value);
+                        }else if ( !strcmp ( name, "DB_NAME" ) ) {
                                 snprintf ( db_name,sizeof db_name,"%s", value );
                                 i_is_configured++;
                         } else if ( !strcmp ( name, "DB_USER" ) ) {
@@ -37,6 +37,7 @@ void read_conf()
                        // nacitanie protokolov preddefinovanych - ETH, 802.3, ARP, RARP, IP, IGMP, ICMP, IPX, TCP, UDP
                         else if ( !strcmp ( name, "PROTOCOL_ETH" ) ) protocol_eth = atoi ( value );
                         else if ( !strcmp ( name, "PROTOCOL_8023" ) ) protocol_8023 = atoi ( value );
+                        else if ( !strcmp ( name, "PROTOCOL_SLL" ) ) protocol_sll = atoi ( value );
                         else if ( !strcmp ( name, "PROTOCOL_ARP" ) ) protocol_arp = atoi ( value );
                         else if ( !strcmp ( name, "PROTOCOL_RARP" ) ) protocol_rarp = atoi ( value );
                         else if ( !strcmp ( name, "PROTOCOL_IP" ) )	protocol_ip = atoi ( value );
@@ -54,11 +55,6 @@ void read_conf()
                                 pole_UDP_portov[i_UDP] = atoi ( value );
                                 i_UDP++;
                         }
-                        // protokol SIP nastavenie
-                        else if ( !strcmp ( name, "PROTOCOL_SIP" ) ) {
-                                protocol_sip = atoi ( value );
-                                //fprintf(stderr,"protocol_sip = %d\n",protocol_sip);
-                        }
                 }
         }
 
@@ -68,6 +64,4 @@ void read_conf()
                 printf ( "*** Incorrect configuration, check %s configuration file!\n",config_name );
                 exit ( ERR_INC_CONF );
         }
-        strcpy(db_name_pom,db_name);
-	sprintf(db_name,"%s_%s",db_name_pom, interface);
 }

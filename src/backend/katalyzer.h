@@ -26,18 +26,16 @@
 #include <pthread.h>
 
 #include "variables.h"
-#include "sip.h"
-#include "nflow_sflow.h"
+#include "ksocket.h"
 
-#ifndef _PCAP
-#include "socket/ksocket.h"
-#endif
 
 #define LINE_LEN 24
 #define HTML_PERIOD 5
 
 /* analyse ethernet protocol */
 void eth2_frame ( const u_char *pkt_data,int type );
+/* analyse SLL protocol */
+void sll_frame ( const u_char *pkt_data,int type );
 /* analyse arp protocol */
 void arp_protokol ( const u_char *pkt_data );
 /* analyse ip protocol */
@@ -51,11 +49,8 @@ void tcp_protokol ( const u_char *pkt_data,int len );
 void udp_protokol ( const u_char *pkt_data,int len );
 void net_protokol ( int number, char *protokols );
 void trans_protokol ( int number, char *protokols );
-#ifndef _PCAP
-void dispatcher_handler ( const struct k_header *header, const u_char *pkt_data );
-#else
-void dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );
-#endif
+void sock_dispatcher_handler ( const struct k_header *header, const u_char *pkt_data );
+void pcap_dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );
 void ieee802 ( const u_char *pkt_data,int type );
 void netflow_sflow_protocol(const u_char *pkt_data, int type);
 void help();

@@ -23,9 +23,9 @@ void processingl ( PROTOKOLY *s)
 #endif
   
   conn = mysql_init ( NULL );
-  if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, 0, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
+  if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, db_port, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
     fprintf ( stderr,"Failed to connect to MYSQL database: Error: %s\n", mysql_error ( conn ) );
-    sprintf ( s_tmp_str,"%s:katalyzer.cpp:dispatcher_handler:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
+    sprintf ( s_tmp_str,"%s:processing.c:processingl:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
     fprintf ( stderr,"%s",s_tmp_str );
     exit ( -1 );
   }
@@ -152,8 +152,9 @@ void processingl ( PROTOKOLY *s)
                                 }
                                 if ( is_ipv6 )
                                         sprintf ( temp_str,"('%08x%08x%08x%08x','%lu','%lu','%lu','%lu'),", help_zaznamy->ipv6_s[0], help_zaznamy->ipv6_s[1], help_zaznamy->ipv6_s[2], help_zaznamy->ipv6_s[3], source_B, source_ramcov, destin_B, destin_ramcov );
-                                else
+                                else {
                                         sprintf ( temp_str,"('%u','%lu','%lu','%lu','%lu'),", help_zaznamy->ip_s, source_B, source_ramcov, destin_B, destin_ramcov );
+				}
                                 if ( ! ( prikaz_pom= ( char* ) malloc ( sizeof ( char ) *strlen ( prikaz ) +sizeof ( char ) * ( strlen ( temp_str ) +1 ) ) ) ) {
                                         fprintf ( stderr,"Error realloc: %s\n", strerror ( errno ) );
                                         exit ( 1 );

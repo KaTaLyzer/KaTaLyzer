@@ -41,19 +41,11 @@ int s_protocol=0;
 int d_protocol=0;
 int interval=0;
 
-#ifdef CHCEM_POCTY
-int ppaketov=0;
-int pocetpaketov=0;
-#endif
-
 /////////////////////////////////////////////////////////////////////////
 // arrays where numbers of Bytes and frames are storred for each protocol
 /////////////////////////////////////////////////////////////////////////
 
 ZACIATOK_P z_protokoly;
-#ifdef NETFLOW
-ZACIATOK_P *z_pom_protokoly;
-#endif
 PAIR_ARRAY *z_pair_array;
 
 ///////////////
@@ -82,6 +74,7 @@ char * pch;                             // pch - pomocny pointer na retaze, kt. 
 char interface[DLZKA+1]; 		// variable for saving interface which we will be measuring on
 
 char db_host[DLZKA+1];                  // sem sa ulozi server, na kt. sa ideme pripajat
+int db_port;			// sem sa ulozi port serveru
 char db_name[DLZKA+1];                  // sem sa ulozi nazov databazy
 char db_user[DLZKA+1];                  //uzivatel, pod ktorym sa ideme do DB pripajat
 char db_pass[DLZKA+1];                  // heslo
@@ -90,6 +83,7 @@ int casovac_zapisu = 60;                     // udaj je v sekundach
 
 int protocol_eth=1;                     //bude sa robit aj graf pre ETHERNET? default=1 -> ano; ak je v konfigu =0, zakaze sa tento graf
 int protocol_8023=1;                    // povolenie grafu pre 802.3....... pod aj ostatne tieto premenne
+int protocol_sll=1;
 int protocol_arp=1;
 int protocol_rarp=1;
 int protocol_ip=1;
@@ -112,54 +106,6 @@ struct tcphdr *tcph;     //tcp hlavicka
 struct udphdr *udph;    //udp hlavicka
 struct arphdr *arph;	//arp header
 
-#ifdef _PCAP
 pcap_t *fp;
-#endif
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////      premenne pre NetFlow a sFlow meranie
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef NETFLOW
-
-int flow_pocet_B;
-uint64_t flow_MAC_adr_S;
-uint64_t flow_MAC_adr_D;
-uint32_t flow_IP_adr_S;
-uint32_t flow_IP_adr_D;
-unsigned int *flow_IPV6_adr_S;
-unsigned int *flow_IPV6_adr_D;
-int flow_pocet_paketov;
-int flow_protocol;
-int flow_src_port;
-int flow_dst_port;
-uint32_t exporter_IP;
-int template_timeout;
-int is_ip_configured;
-int flow_capttime;
-int flow_flag;
-
-NFLOW9_TEMPLATE *n9_tmpl;
-NFLOW9_TEMPLATE *n9_tmpl_first;
-NFLOW9_TEMPLATE *novy;
-NFLOW9_TEMPLATE *n9_tmpl_akt;
-NFLOW9_TEMPLATE *selected_tmpl;
-NFLOW9_BUFFER *n9_buf_akt;
-NFLOW9_BUFFER *n9_buf_first;
-NFLOW9_BUFFER *n9_buf_pom;
-#endif
-
-#ifdef SNMP_P
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////      premenne pre SNMP
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-int protocol_snmp=0;			//ak nezachyti, ziandnu snmp komunikaciu tak nevytvori snmp tabluku
-SNMP_STRUK sn;
-
-#endif
-
-//SIP
-int protocol_sip=0;
-SIPMSG *sipmsgs;
-SIPMSG *first;
 
