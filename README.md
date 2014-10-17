@@ -44,22 +44,26 @@ TODO
 
 News
 ===========
-2014-10-07
+**2014-10-07**
 Work in progress!!!
--- capturing selection rewrite
--- initial support for SLL
--- revert of change of database name
--- additional modules removal (CDP, SNMP SFLOW, NFLOW, SIP)
+- capturing selection rewrite
+- initial support for SLL
+- revert of change of database name
+```
+	Previous style: database-name_iface-name
+	New style: database-name
+```
+- additional modules removal (CDP, SNMP SFLOW, NFLOW, SIP)
 
-2013
--- support IPv6
--- new type of installation
--- use socket to capture packet from network, no pcap libraries ( we can still used it)
--- change database name.
-      Old style:
-	  database-name
-      New style:
-	  database-name_interface-name
+**2013**
+- support IPv6
+- new type of installation
+- use socket to capture packet from network, no pcap libraries ( we can still used it)
+- change database name.
+```
+      Old style: database-name
+      New style: database-name_interface-name
+```
 
 	  
 Modules
