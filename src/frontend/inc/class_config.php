@@ -236,7 +236,8 @@ class config {
 		                }
 			}
 		}
-		$this->database=$db_name."_".$interface;
+		//$this->database=$db_name."_".$interface;
+		$this->database=$db_name;
 
 		foreach($protocol_translat as $protocol){
 			$protocol_status=$protocol_default_status;
