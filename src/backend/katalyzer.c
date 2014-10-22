@@ -240,6 +240,7 @@ static void parse_data_link(char *protokol)
     }
     /// Linux SLL
     if (protocol_sll == 1 && strcmp(Eor8, "S") == 0) {
+        //fprintf(stderr,"SLL tu SOM\n");
         strcpy(protokol, "S");
         m_protokoly(&z_protokoly, protokol);
     }
@@ -679,12 +680,17 @@ void pcap_dispatcher_handler(u_char * dump, const struct pcap_pkthdr *header,con
     lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
 
     int l2t = pcap_datalink(fp);
-    if(l2t==1) eth2_frame(pkt_data, lng_type); // Ethernet
-    else if (l2t==113) {
+    if(l2t==1) {
+        //fprintf(stderr,"Ethernet\n");
+        eth2_frame(pkt_data, lng_type); // Ethernet
+    } else if (l2t==113) {
+        //fprintf(stderr,"SLL\n");
         lng_type = (pkt_data[14]*256)+pkt_data[15];
         sll_frame(pkt_data, lng_type); // Linux SLL
+    } else {
+        //fprintf(stderr,"802\n");
+        ieee802(pkt_data, lng_type);
     }
-    else ieee802(pkt_data, lng_type);
 
     parse_data_link(protokol);
     parse_network_layer(protokol);
@@ -718,11 +724,24 @@ void sock_dispatcher_handler(const struct k_header *header, const u_char * pkt_d
     ethh = (struct ether_header *) pkt_data;	// we store Ether_header
     lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
 
+    /* OLD WAY
     //is this frame ETHERNET II or IEEE 802.3
-    //FIXME: treba to na zaklade informacii o vyssej vrstve a nie podla tohoto, lebo mame napr. ppp0
     if (lng_type > 1500) eth2_frame(pkt_data, lng_type);	//here we go to inspect captured ETHERNET II frame closely
     else ieee802(pkt_data, lng_type);	//here we go to inspect captured IEEE 802.3 frame closely
-
+    */
+    // FIXME: pcap prec
+    int l2t = pcap_datalink(fp);
+    if(l2t==1) {
+        //fprintf(stderr,"Ethernet\n");
+        eth2_frame(pkt_data, lng_type); // Ethernet
+    } else if (l2t==113) {
+        //fprintf(stderr,"SLL\n");
+        lng_type = (pkt_data[14]*256)+pkt_data[15];
+        sll_frame(pkt_data, lng_type); // Linux SLL
+    } else {
+        //fprintf(stderr,"802\n");
+        ieee802(pkt_data, lng_type);
+    }
 
     parse_data_link(protokol);
     parse_network_layer(protokol);
@@ -767,6 +786,8 @@ void eth2_frame(const u_char * pkt_data, int type)
 }
 
 void sll_frame(const u_char * pkt_data, int type) {
+    //fprintf(stderr,"SLL tu SOM pri parse\n");
+    sprintf(Eor8, "S");
     net_protokol(type, net_proto);
     if (type == 2048) ip_protokol(pkt_data, 2);	// if we received IP or ARP protocol, analysis continues
     if (type == 34525) ipv6_protokol(pkt_data, 2);	//IPv6 to be implemented
@@ -826,7 +847,7 @@ void ip_protokol(const u_char * pkt_data, int len)
     IP_adr_S = iph->saddr;
     IP_adr_D = iph->daddr;
 
-    fprintf(stderr,"IP S:%d D:%d\n",iph->saddr,iph->daddr);
+    //fprintf(stderr,"IP S:%d D:%d\n",iph->saddr,iph->daddr);
 
     trans_protokol(protocol, trans_layer);
 
@@ -849,114 +870,89 @@ void ipv6_protokol(const u_char * pkt_data, int len)
 
     is_ipv6ext = 1;
 
-    iphv6 =
-	(struct ip6_hdr *) (pkt_data + (sizeof(struct ether_header)) +
-			    len);
+    iphv6 = (struct ip6_hdr *) (pkt_data + (sizeof(struct ether_header)) + len);
     protocol = iphv6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
 
     len = sizeof(struct ip6_hdr);
 
     //prejdeme celu hlavicku ipv6
     for (;;) {
-	switch (protocol) {
-	case IPPROTO_HOPOPTS:
-	    ip6hop =
-		(struct ip6_hbh *) (pkt_data +
-				    (sizeof(struct ether_header)) + len);
-	    protocol = ip6hop->ip6h_nxt;
-	    len += sizeof(struct ip6_hbh);
-	    break;
-	case IPPROTO_ROUTING:
-	    ip6r =
-		(struct ip6_rthdr *) (pkt_data +
-				      (sizeof(struct ether_header)) + len);
-	    protocol = ip6r->ip6r_nxt;
-	    len += sizeof(struct ip6_rthdr);
-	    break;
-	case IPPROTO_FRAGMENT:
-	    ip6f =
-		(struct ip6_frag *) (pkt_data +
-				     (sizeof(struct ether_header)) + len);
-	    protocol = ip6f->ip6f_nxt;
-	    len += sizeof(struct ip6_frag);
-	    break;
-	case IPPROTO_ESP:
-	    ip6d =
-		(struct ip6_dest *) (pkt_data +
-				     (sizeof(struct ether_header)) + len);
-	    protocol = ip6d->ip6d_nxt;
-	    len += sizeof(struct ip6_dest);
-	    break;
-	case IPPROTO_AH:
-	    ip6d =
-		(struct ip6_dest *) (pkt_data +
-				     (sizeof(struct ether_header)) + len);
-	    protocol = ip6d->ip6d_nxt;
-	    len += sizeof(struct ip6_dest);
-	    break;
-	case IPPROTO_DSTOPTS:
-	    ip6d =
-		(struct ip6_dest *) (pkt_data +
-				     (sizeof(struct ether_header)) + len);
-	    protocol = ip6d->ip6d_nxt;
-	    len += sizeof(struct ip6_dest);
-	    break;
-	case IPPROTO_GRE:
-	    ip6d =
-		(struct ip6_dest *) (pkt_data +
-				     (sizeof(struct ether_header)) + len);
-	    protocol = ip6d->ip6d_nxt;
-	    len += sizeof(struct ip6_dest);
-	    break;
-	case IPPROTO_TCP:
-	    trans_protokol(protocol, trans_layer);
-	    tcp_protokol(pkt_data, len);	//we continue analysis in case there is TCP, UDP or ICMP protocol inside IP packet
-	    end = 1;
-	    break;
-	case IPPROTO_UDP:
-	    trans_protokol(protocol, trans_layer);
-	    udp_protokol(pkt_data, len);
-	    end = 1;
-	    break;
-	case IPPROTO_ICMPV6:
-	    strcpy(trans_layer, "ICMPv6");
-	    end = 1;
-	    break;
-	case IPPROTO_NONE:
-	    end = 1;
-	default:
-	    end = 1;
-	    break;
-	}
-	//end ipv6 header
-	if (end)
-	    break;
+	    switch (protocol) {
+	        case IPPROTO_HOPOPTS:
+	            ip6hop = (struct ip6_hbh *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6hop->ip6h_nxt;
+	            len += sizeof(struct ip6_hbh);
+	            break;
+	        case IPPROTO_ROUTING:
+	            ip6r = (struct ip6_rthdr *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6r->ip6r_nxt;
+	            len += sizeof(struct ip6_rthdr);
+	            break;
+	        case IPPROTO_FRAGMENT:
+	            ip6f = (struct ip6_frag *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6f->ip6f_nxt;
+	            len += sizeof(struct ip6_frag);
+	            break;
+	        case IPPROTO_ESP:
+	            ip6d = (struct ip6_dest *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6d->ip6d_nxt;
+	            len += sizeof(struct ip6_dest);
+	            break;
+	        case IPPROTO_AH:
+	            ip6d = (struct ip6_dest *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6d->ip6d_nxt;
+	            len += sizeof(struct ip6_dest);
+	            break;
+	        case IPPROTO_DSTOPTS:
+	            ip6d = (struct ip6_dest *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6d->ip6d_nxt;
+	            len += sizeof(struct ip6_dest);
+	            break;
+	        case IPPROTO_GRE:
+	            ip6d = (struct ip6_dest *) (pkt_data + (sizeof(struct ether_header)) + len);
+	            protocol = ip6d->ip6d_nxt;
+	            len += sizeof(struct ip6_dest);
+	            break;
+	        case IPPROTO_TCP:
+	            trans_protokol(protocol, trans_layer);
+	            tcp_protokol(pkt_data, len);	//we continue analysis in case there is TCP, UDP or ICMP protocol inside IP packet
+	            end = 1;
+	            break;
+	        case IPPROTO_UDP:
+	            trans_protokol(protocol, trans_layer);
+	            udp_protokol(pkt_data, len);
+	            end = 1;
+	            break;
+	        case IPPROTO_ICMPV6:
+	            strcpy(trans_layer, "ICMPv6");
+	            end = 1;
+	            break;
+	        case IPPROTO_NONE:
+	            end = 1;
+	        default:
+	            end = 1;
+	            break;
+	    }
+	    //end ipv6 header
+	    if (end) break;
     }
 
-    if ((IPV6_adr_D =
-	 (unsigned int *) malloc(sizeof(unsigned int) * IPV6SIZE)) ==
-	NULL) {
-	fprintf(stderr, "Error malloc: %s\n", strerror(errno));
-	return;
+    if ((IPV6_adr_D = (unsigned int *) malloc(sizeof(unsigned int) * IPV6SIZE)) == NULL) {
+	    fprintf(stderr, "Error malloc: %s\n", strerror(errno));
+	    return;
     }
-    if ((IPV6_adr_S =
-	 (unsigned int *) malloc(sizeof(unsigned int) * IPV6SIZE)) ==
-	NULL) {
-	fprintf(stderr, "Error malloc: %s\n", strerror(errno));
-	return;
+    if ((IPV6_adr_S = (unsigned int *) malloc(sizeof(unsigned int) * IPV6SIZE)) == NULL) {
+	    fprintf(stderr, "Error malloc: %s\n", strerror(errno));
+	    return;
     }
 
     ipv6_pom = (unsigned int *) &iphv6->ip6_src;
 
-    for (i = 0; i < 4; i++) {
-	IPV6_adr_S[i] = ntohl(ipv6_pom[i]);
-    }
+    for (i = 0; i < 4; i++) IPV6_adr_S[i] = ntohl(ipv6_pom[i]);
 
     ipv6_pom = (unsigned int *) &iphv6->ip6_dst;
 
-    for (i = 0; i < 4; i++) {
-	IPV6_adr_D[i] = ntohl(ipv6_pom[i]);
-    }
+    for (i = 0; i < 4; i++) IPV6_adr_D[i] = ntohl(ipv6_pom[i]);
 
 
 }
@@ -996,8 +992,7 @@ void tcp_protokol(const u_char * pkt_data, int len)
     unsigned int s_port, d_port;
     //    unsigned int port_id,sn_port,dn_port;
 
-    tcph =
-	(struct tcphdr *) (pkt_data + sizeof(struct ether_header) + len);
+    tcph = (struct tcphdr *) (pkt_data + sizeof(struct ether_header) + len);
 
     s_port = ntohs(tcph->source);
     //    sn_port=tcph->source;
@@ -1036,8 +1031,7 @@ void udp_protokol(const u_char * pkt_data, int len)
     int s_port, d_port, port_id;
     //    int sn_port,dn_port;
 
-    udph =
-	(struct udphdr *) (pkt_data + sizeof(struct ether_header) + len);
+    udph = (struct udphdr *) (pkt_data + sizeof(struct ether_header) + len);
 
     s_port = ntohs(udph->source);
     //    sn_port=udph->source;           //network order
@@ -1050,10 +1044,8 @@ void udp_protokol(const u_char * pkt_data, int len)
      *    d_port=pkt_data[a+2]*256+pkt_data[a+3];
      *    dn_port=pkt_data[a+3]*256+pkt_data[a+2];        //network order
      */
-    if (s_port < 1024 || s_port == 8080)
-	port_id = s_port;
-    else
-	port_id = d_port;
+    if (s_port < 1024 || s_port == 8080) port_id = s_port;
+    else port_id = d_port;
 
     s_protocol = s_port;
     d_protocol = d_port;
@@ -1068,24 +1060,20 @@ void ieee802(const u_char * pkt_data, int type)
     MAC_adr_D = 0;
     int i;
     for (i = 0; i < ETH_ALEN; i++) {
-	MAC_adr_S *= 256;
-	MAC_adr_S += ethh->ether_shost[i];
+	    MAC_adr_S *= 256;
+	    MAC_adr_S += ethh->ether_shost[i];
     }
 
     for (i = 0; i < ETH_ALEN; i++) {
-	MAC_adr_D *= 256;
-	MAC_adr_D += ethh->ether_dhost[i];
+	    MAC_adr_D *= 256;
+	    MAC_adr_D += ethh->ether_dhost[i];
     }
 
     //sprintf(MAC_adr,"%.2x%.2x%.2x%.2x%.2x%.2x",pkt_data[6],pkt_data[7],pkt_data[8],pkt_data[9],pkt_data[10],pkt_data[11]);
 
-    if (pkt_data[14] == 0xaa && pkt_data[15] == 0xaa
-	&& pkt_data[16] == 0x03 && pkt_data[17] == 0 && pkt_data[18] == 0
-	&& pkt_data[19] == 0) {
-	type = pkt_data[20] * 256 + pkt_data[21];
-	if (type == 2048)
-	    ip_protokol(pkt_data, 8);	// if we received IP protocol, analysis continues
-
+    if (pkt_data[14] == 0xaa && pkt_data[15] == 0xaa && pkt_data[16] == 0x03 && pkt_data[17] == 0 && pkt_data[18] == 0 && pkt_data[19] == 0) {
+	    type = pkt_data[20] * 256 + pkt_data[21];
+	    if (type == 2048) ip_protokol(pkt_data, 8);	// if we received IP protocol, analysis continues
     }
 
     net_protokol(type, net_proto);

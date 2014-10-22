@@ -313,7 +313,7 @@ int raw_init(struct k_capture *p_capture, char *device)
 
     strcpy(ifr.ifr_name, p_capture->name);
 
-    if(debug) fprintf(stderr, "Interface: %s\n", ifr.ifr_name);
+    fprintf(stderr, "Interface: %s\n", ifr.ifr_name);
 
 
     if (ioctl(raw_socket, SIOCGIFFLAGS, &ifr) == -1) {
