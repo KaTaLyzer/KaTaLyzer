@@ -39,7 +39,7 @@ require_once('inc/core.php');
   
 
   if (isset($_POST['submit_loggin'])) {
-  $login = new loggin($config->host, $config->user, $config->pass, "KATALYZER_USER");
+  $login = new loggin($config->host, $config->user, $config->pass, $config->database);
       if($login->loged($_POST['name'], $_POST['password'])){
 	unset($_POST['submit_loggin']);
       }
