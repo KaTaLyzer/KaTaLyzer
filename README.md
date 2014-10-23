@@ -47,8 +47,13 @@ TODO
 
 News
 ----------
-**2014-10-07**
+**2014-10-23**
 Work in progress!!!
+- capturing selection rewrite (again)
+- DB with logins as a TABLE
+- fixes
+
+**2014-10-07**
 - capturing selection rewrite
 - initial support for SLL
 - revert of change of database name from 2013
