@@ -38,9 +38,14 @@ make
 ```
 
 **Frontend:**
+Make frontend folder accessible from your Apache server with soemthing like:
 ```
-TODO
-	PASSWORD FOR FRONTEND:
+cp -r frontend /srv/http/katalyzer
+		password: (password is not set)
+```
+PASSWORD FOR FRONTEND:
+		password: (password is not set)
+```
 		login: admin
 		password: (password is not set)
 ```
