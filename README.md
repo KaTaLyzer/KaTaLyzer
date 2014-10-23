@@ -41,7 +41,6 @@ make
 Make frontend folder accessible from your Apache server with soemthing like:
 ```
 cp -r frontend /srv/http/katalyzer
-		password: (password is not set)
 ```
 Default login:
 ```
