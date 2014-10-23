@@ -22,7 +22,9 @@
 #include "read_conf.h"
 #include "errdef.h"
 #include "cronovanie.h"
+#ifdef SOCK
 #include "ksocket.h"
+#endif
 
 #define POCTY_SUBOR "spaketov.txt"
 
@@ -31,48 +33,50 @@ typedef struct {
     ZACIATOK_P *p;
 } PRETAH;
 
-int sock=0,pcap=0;
-
 int main(int argc, char **argv)
 {
+#ifdef PCAP
     char errbuf[PCAP_ERRBUF_SIZE];
     char offilename[255];
     int snaplen = 65535;
+#endif
     int i_is_config = 0;
     IPV6_adr_D = NULL;
     IPV6_adr_S = NULL;
 
     int o;
-    while ((o = getopt(argc, argv, ":pshwc:df:")) != -1) {
+
+#ifdef PCAP
+    while ((o = getopt(argc, argv, ":hwc:df:")) != -1) {
+#endif
+#ifdef SOCK
+    while ((o = getopt(argc, argv, ":hwc:d")) != -1) {
+#endif
 	    switch (o) {
-        case 'p':
-            pcap=1;
-            break;
-        case 's':
-            sock=1;
-            break;
-	    case 'h':
-	        help();
-	        exit(OK);
-	    case 'w':
-	        wait = 0;		// if we do not want to wait for new minute, we start analyzator with parameter 'w'
-	        break;
-	    case 'c':
-	        i_is_config = 1;
-	        config_name = optarg;
-	        break;
-	    case 'd':
-	        debug = 1;
-	        break;
-	    case 'f':
-	        printf("WARNING: DANGEROUS FUNCTION. PRESS CTRL+C TO EXIT OR ANY KEY TO CONTINUE.\n");
-	        getchar();
-	        isoffline = 1;
-	        strcpy(offilename, optarg);
-	        break;
-	    default:
-	        help();
-	        exit(OK);
+	        case 'h':
+	            help();
+	            exit(OK);
+	        case 'w':
+	            wait = 0;		// if we do not want to wait for new minute, we start analyzator with parameter 'w'
+	            break;
+	        case 'c':
+	            i_is_config = 1;
+	            config_name = optarg;
+	            break;
+	        case 'd':
+	            debug = 1;
+	            break;
+#ifdef PCAP
+	        case 'f':
+	            printf("WARNING: DANGEROUS FUNCTION. PRESS CTRL+C TO EXIT OR ANY KEY TO CONTINUE.\n");
+	            getchar();
+	            isoffline = 1;
+	            strcpy(offilename, optarg);
+	            break;
+#endif
+	        default:
+	            help();
+	            exit(OK);
 	    }
     }
 
@@ -92,6 +96,7 @@ int main(int argc, char **argv)
     read_conf();		// function for reading configuration from config file   
 
 // SOCK init
+#ifdef SOCK
     struct k_capture c;
     c.name = NULL;
 
@@ -99,8 +104,10 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "Error: Can not create socket\n");
 	    return -1;
     }
+#endif
 
 // PCAP init
+#ifdef PCAP
     if (isoffline) {
 	    FILE *offile;
 	    offile = fopen(offilename, "r");
@@ -118,30 +125,27 @@ int main(int argc, char **argv)
 	        exit(ERR_OPEN_IF);
 	    }
     }
+#endif
 
     // we wait after opening network adapter - we do not need to wait for error message if we are not able to open the adapter
     if (wait == 1) waiting();		// here we wait until new minute beggins
 
+#ifdef PCAP
     if (!isoffline) time(&beggining_time);	// beggining_time is time of start of the program. it is incremented by casovac_zapisu timer after each "casovac_zapisu" seconds
-
+#endif
     z_protokoly.empty = 1;	//array is free
     z_protokoly.p_protokoly = NULL;
     z_pair_array = NULL;
 
-    if(sock==1 && pcap==0) {
-		fprintf(stderr,"SOCK loop\n");
-		k_loop(&c, sock_dispatcher_handler);
-	} else if (pcap==1 && sock==0) {
-        fprintf(stderr,"PCAP loop\n");
-        pcap_loop(fp, 0, pcap_dispatcher_handler, NULL);
-        pcap_close(fp);
-    } else {
-        fprintf(stderr,"SOCK or PCAP mode not specified, selecting PCAP");
-        pcap=1;
-        sock=0;
-        pcap_loop(fp, 0, pcap_dispatcher_handler, NULL);
-        pcap_close(fp);
-    }
+#ifdef SOCK
+	fprintf(stderr,"SOCK loop\n");
+	k_loop(&c, dispatcher_handler);
+#endif
+#ifdef PCAP
+    fprintf(stderr,"PCAP loop\n");
+    pcap_loop(fp, 0, dispatcher_handler, NULL);
+    pcap_close(fp);
+#endif
     printf("End\n");
 
     return (OK);
@@ -151,19 +155,84 @@ void help()
 {
     printf("\nKaTaLyzer\n");
     printf
-	("Usage: ./katalyzer [-p] [-s] [-h] [-w] [-c config_file] [-d] [-f file]\n");
-    printf("-p select PCAP mode\n");
-    printf("-s select SOCKET mode\n");
+	("Usage: ./katalyzer [-h] [-w] [-c config_file] [-d] [-f file]\n");
     printf("-h print this help -h\n");
-    printf("-w disable waiting for new minute after start of analyzator(e.g. in case we debug this program)\n");
+    printf("-w disable waiting for new minute after start of analyzator (e.g. in case we debug this program)\n");
     printf("-c sets path to configuration file (e.g. /tmp/my_config.conf); do not use space in the path\n");
     printf("-d sets debug mode on\n");
+#ifdef PCAP
     printf("-f sets offline mode and path to offline capture file. WARNING: DANGEROUS");
+#endif
 }
 
+#ifdef SOCK
+void dispatcher_handler(const struct k_header *header, const u_char *pkt_data)
+#endif
+#ifdef PCAP
+void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data)
+#endif
+{
+
+    int lng_type; // L2 length/type value 
+    char protokol[DLZKA_POLA_P];	// pomocna premena
+
+#ifdef SOCK
+    static struct dev_time *head_dt = NULL;
+    set_head_dt(header, head_dt);
+#endif
+
+    set_param(header);
+
+    // OLD way of determining L2 protocol
+    /*    
+    // tuto moze byt problem/chyba v poctoch bajtov, pretoze neviem, kt. premennu pouzivat - header->len alebo header->caplen
+    ethh = (struct ether_header *) pkt_data;	// we store Ether_header
+    lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
+    //is this frame ETHERNET II or IEEE 802.3
+    
+        if (lng_type > 1500) eth2_frame(pkt_data, lng_type);	//here we go to inspect captured ETHERNET II frame closely
+        else ieee802(pkt_data, lng_type);	//here we go to inspect captured IEEE 802.3 frame closely
+    */
+
+    // FIXME: get rid of this
+    ethh = (struct ether_header *) pkt_data;	// we store Ether_header
+    lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
+
+#ifdef PCAP
+    int l2t = pcap_datalink(fp);
+    if(l2t==1) { // Ethernet
+        eth2_frame(pkt_data, lng_type);
+    } else if (l2t==113) { // Linux SLL
+        lng_type = (pkt_data[14]*256)+pkt_data[15];
+        sll_frame(pkt_data, lng_type);
+    } else { // 802.3
+        ieee802(pkt_data, lng_type);
+    }
+#endif
+#ifdef SOCK
+    if (lng_type > 1500) eth2_frame(pkt_data, lng_type); // inspect as Ethernet 2 frame
+    else ieee802(pkt_data, lng_type);	// inspect as IEEE 802.3 frame
+#endif
+
+    parse_data_link(protokol);
+    parse_network_layer(protokol);
+    parse_transport_layer(protokol);
+    parse_application_layer(protokol);
+    pair_ip_with_mac();
+
+    // flag - were data written into DB in this time interval? 
+    if ((flag == 0 && (actual_time - beggining_time) >= casovac_zapisu) || ((actual_time - beggining_time) >= casovac_zapisu * 2)) database(NULL, header);
+    
+    // 10 seconds is considered enough time interval as we measure with minimum resolution of 60seconds and it is very probable that there will be another frame comming in that 10 seconds - it will set 'flag' again so we can insert data into DB again after'casovac_zapisu' 
+    if (flag == 1 && actual_time - beggining_time >= 10) flag = 0;
+
+    clear_variables();
+
+}
 
 // ???
-static void set_head_dt(const struct k_header *header, struct dev_time *head_dt)
+#ifdef SOCK
+void set_head_dt(const struct k_header *header, struct dev_time *head_dt)
 {
     if ((header->dt != NULL) && (head_dt == NULL)) {
 	    if ((head_dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL) {
@@ -188,14 +257,19 @@ static void set_head_dt(const struct k_header *header, struct dev_time *head_dt)
 	    strcpy(head_dt->name_z, header->dt->name_z);
     }
 }
+#endif
 
 
-static void set_param(const void *arg)
+void set_param(const void *arg)
 {
-    struct k_header *sock_header;
-    sock_header = (struct k_header *) arg;
-    struct pcap_pkthdr *pcap_header;
-    pcap_header = (struct pcap_pkthdr *) arg;
+#ifdef SOCK
+    struct k_header *header;
+    header = (struct k_header *) arg;
+#endif
+#ifdef PCAP
+    struct pcap_pkthdr *header;
+    header = (struct pcap_pkthdr *) arg;
+#endif
 
     MAC_adr_S = 0;
     MAC_adr_D = 0;
@@ -212,22 +286,21 @@ static void set_param(const void *arg)
 
     if (isoffline) {
 	    if (!isfirsttime) {
-	        beggining_time = pcap_header->ts.tv_sec;
+	        beggining_time = header->ts.tv_sec;
 	        beggining_time /= 10;
 	        beggining_time *= 10;
 	        isfirsttime = 1;
 	    }
-	    unix_time = pcap_header->ts.tv_sec;
-	    actual_time = pcap_header->ts.tv_sec;
+	    unix_time = header->ts.tv_sec;
+	    actual_time = header->ts.tv_sec;
     } else unix_time = time(&actual_time);	// unix_time - variable for inserting time info into DB
 
-    if(pcap==1) pocet_B = pcap_header->len;	// pocet_B - number of Bytes captured in frame - needed for counting amount of traffic
-    else if (sock==1) pocet_B = sock_header->len;
+    pocet_B = header->len;	// pocet_B - number of Bytes captured in frame - needed for counting amount of traffic
+
 }
 
-static void parse_data_link(char *protokol)
+void parse_data_link(char *protokol)
 {
-
     /// ETHERNET
     if (protocol_eth == 1 && strcmp(Eor8, "E") == 0) {	// if we specified to watch ETHERNET II frames in config file and we catched 'E'(it means ETHERNET II frame), we adjust particular statistics
 	    strcpy(protokol, "E");
@@ -246,7 +319,7 @@ static void parse_data_link(char *protokol)
     }
 }
 
-static void parse_network_layer(char *protokol)
+void parse_network_layer(char *protokol)
 {
     /// IP protocol
     if (protocol_ip == 1 && strcmp(net_proto, "IP") == 0) {
@@ -275,7 +348,7 @@ static void parse_network_layer(char *protokol)
     }
 }
 
-static void parse_transport_layer(char *protokol)
+void parse_transport_layer(char *protokol)
 {
     /// TCP protocol
     if (protocol_tcp == 1 && strcmp(trans_layer, "TCP") == 0) {
@@ -304,7 +377,7 @@ static void parse_transport_layer(char *protokol)
     }
 }
 
-static void parse_application_layer(char *protokol)
+void parse_application_layer(char *protokol)
 {
     int j;
     for (j = 0; j < i_TCP; j++) {
@@ -329,7 +402,7 @@ static void parse_application_layer(char *protokol)
     }
 }
 
-static void pair_ip_with_mac(void)
+void pair_ip_with_mac(void)
 {
     if (z_pair_array == NULL) {
 	    z_pair_array = (PAIR_ARRAY *) malloc(sizeof(PAIR_ARRAY));
@@ -378,7 +451,7 @@ static void pair_ip_with_mac(void)
     }
 }
 
-static void set_time(void)
+void set_time(void)
 {
     if ((actual_time - beggining_time) >= casovac_zapisu * 2) processing_time += 60;
     else processing_time = unix_time;
@@ -388,7 +461,7 @@ static void set_time(void)
 	beggining_time = actual_time - casovac_zapisu;
 }
 
-static void connect_to_db(MYSQL * conn)
+void connect_to_db(MYSQL * conn)
 {
     char prikaz[20000];
     if (mysql_real_connect(conn, db_host, db_user, db_pass, NULL, db_port, NULL,CLIENT_MULTI_STATEMENTS) == NULL) {
@@ -404,19 +477,23 @@ static void connect_to_db(MYSQL * conn)
     mysql_next_result(conn);
 }
 
-static void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
+void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
 {
     char prikaz[20000];
     int ii;
     PROTOKOLY *p_prot;
 
-    struct k_header *sock_header;
-    sock_header = (struct k_header *) arg;
-    struct pcap_pkthdr *pcap_header;
-    pcap_header = (struct pcap_pkthdr *) arg;
+#ifdef SOCK
+    struct k_header *header;
+    header = (struct k_header *) arg;
+#endif
+#ifdef PCAP
+    struct pcap_pkthdr *header;
+    header = (struct pcap_pkthdr *) arg;
+#endif
 
-    if ((sock_header->interface_auto) && (head_dt != NULL)) {
-	    sprintf(prikaz, "");	// clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
+#ifdef SOCK
+    if ((header->interface_auto) && (head_dt != NULL)) {
 	    sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `INTERFACE_time` ( `time` int(11) NOT NULL, `interface_z` varchar(255) NOT NULL, `interface_do` varchar(255) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
 	    if (mysql_query(conn, prikaz)) {
 	        fprintf(stderr,"Failed to create INTERFACE_time table in MYSQL database %s: %s\n",db_name, mysql_error(conn));
@@ -424,10 +501,7 @@ static void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
 	    }
 	    mysql_next_result(conn);
 
-        // FIXME: Is this needed?
-	    sprintf(prikaz, "");	// clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
-
-	    sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (\"%d\", \"%s\", \"%s\")",head_dt->ts.tv_sec, head_dt->name_z, head_dt->name_do);
+	    sprintf(prikaz,"INSERT INTO `INTERFACE_time` (time, interface_z, interface_do) VALUES (\"%d\", \"%s\", \"%s\")",(int)head_dt->ts.tv_sec, head_dt->name_z, head_dt->name_do);
 	    if (mysql_query(conn, prikaz)) {
 	        fprintf(stderr,"Failed to insert into INTERFACE_time table in MYSQL database %s: %s\nPrikaz: %s\n",db_name, mysql_error(conn), prikaz);
 	        exit(ERR_MYSQL_DB_CREATE);
@@ -448,10 +522,10 @@ static void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
 	    }
 
     }
+#endif
 
     if (!(z_protokoly.empty)) {
 	    for (p_prot = z_protokoly.p_protokoly; p_prot != NULL; p_prot = p_prot->p_next) {
-	        sprintf(prikaz, "");	// clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 	        if (!p_prot->is_ipv6)
 		    sprintf(prikaz,
 			    "CREATE TABLE IF NOT EXISTS %s_1m_time (`time` int(10) unsigned NOT NULL default '0',`IP_id` int(10) unsigned NOT NULL default '0',`MAC_id` int(10) unsigned NOT NULL default '0',`IP_SD_id` int(10) unsigned NOT NULL default '0',`MAC_SD_id` int(10) unsigned NOT NULL default '0',PRIMARY KEY (`time`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;CREATE TABLE IF NOT EXISTS %s_1m_IP(`id` int(10) unsigned NOT NULL auto_increment,`IP` int unsigned default '0',`bytes_S` bigint(20) unsigned NOT NULL default '0',`packets_S` mediumint(8) unsigned NOT NULL default '0',`bytes_D` bigint(20) unsigned NOT NULL default '0',`packets_D` mediumint(8) unsigned NOT NULL default '0',PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;\
@@ -475,8 +549,6 @@ static void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
     }
 
     if (z_pair_array != NULL) {
-        //FIXME: Is this needed?
-	    sprintf(prikaz, "");	// clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 	    sprintf(prikaz,"CREATE TABLE IF NOT EXISTS IPlist (`IP` int unsigned default '0', `MAC` bigint unsigned default '0',  PRIMARY KEY(`IP`)) ENGINE=MyISAM;");
 	    if (mysql_query(conn, prikaz)) {
 	        fprintf(stderr,"Failed to create IPlist tables in MYSQL database %s: %s\n",db_name, mysql_error(conn));
@@ -484,8 +556,6 @@ static void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
 	    }
 	    mysql_next_result(conn);
 
-        //FIXME: Is this needed?
-	    sprintf(prikaz, "");	// clearing 'prikaz' because we use 'strcat' to put commands into 'prikaz'
 	    sprintf(prikaz,"CREATE TABLE IF NOT EXISTS IPv6list (`IP` char(32), `MAC` bigint unsigned default '0',  PRIMARY KEY(`IP`)) ENGINE=MyISAM;");
 	    if (mysql_query(conn, prikaz)) {
 	        fprintf(stderr,"Failed to create IPlist tables in MYSQL database %s: %s\n",db_name, mysql_error(conn));
@@ -495,7 +565,7 @@ static void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
     }
 }
 
-static void insert_data_to_table(MYSQL * conn)
+void insert_data_to_table(MYSQL * conn)
 {
     char prikaz[20000];
 
@@ -517,7 +587,7 @@ static void insert_data_to_table(MYSQL * conn)
     }
 }
 
-static void flush_data_into_db(void)
+void flush_data_into_db(void)
 {
     ZACIATOK_P *z_protokoly2;
     PRETAH *pretah1;
@@ -546,7 +616,7 @@ static void flush_data_into_db(void)
     if (pthread_create(&thread, NULL, zapis_do_DB_protokoly, (void *) pretah1)) fprintf(stderr, "Error in function phtread_create: %s\n", strerror(errno));
 }
 
-static void clear_pairing_array()
+void clear_pairing_array()
 {
     PAIR_ARRAY *pom_array, *pom_array1;
 
@@ -561,7 +631,7 @@ static void clear_pairing_array()
     z_pair_array = NULL;
 }
 
-static void sum_table()
+void sum_table()
 {
     pthread_t cron;
     int casy[4] = { 5, 30, 2, 1 }, i = 0;
@@ -595,7 +665,7 @@ static void sum_table()
     }
 }
 
-static void clear_variables()
+void clear_variables()
 {
     unix_time = 0;
     pocet_B = 0;
@@ -609,16 +679,18 @@ static void clear_variables()
     d_protocol = 0;
 }
 
-static void database(struct dev_time *head_dt, const void *arg)
+void database(struct dev_time *head_dt, const void *arg)
 {
     MYSQL *conn = NULL;
     conn = mysql_init(NULL);
-    char prikaz[20000];
-    struct k_header *sock_header;
-    sock_header = (struct k_header *) arg;
-    struct pcap_pkthdr *pcap_header;
-    pcap_header = (struct pcap_pkthdr *) arg;
-
+#ifdef SOCK
+    struct k_header *header;
+    header = (struct k_header *) arg;
+#endif
+#ifdef PCAP
+    struct pcap_pkthdr *header;
+    header = (struct pcap_pkthdr *) arg;
+#endif
     set_time();
 
 //////////////////////////////////////////////////////////////////////
@@ -628,8 +700,7 @@ static void database(struct dev_time *head_dt, const void *arg)
     connect_to_db(conn);
 
     // creating DB tables 
-    if(pcap) create_db(conn, head_dt, pcap_header);
-    else if (sock) create_db(conn, head_dt, sock_header);
+    create_db(conn, head_dt, header);
 
     // inserting data into table IPlist
     insert_data_to_table(conn);
@@ -653,111 +724,6 @@ static void database(struct dev_time *head_dt, const void *arg)
     //////////////
 
     sum_table();
-}
-
-//toto spusta funkcia pcap_loop - tu sa robi analyza prevadzky
-void pcap_dispatcher_handler(u_char * dump, const struct pcap_pkthdr *header,const u_char * pkt_data)
-{
-
-    int lng_type; // here is stored value from frame - considering this value we have to decide whether it is length of the frame or type 
-    char protokol[DLZKA_POLA_P];	// pomocna premena
-
-    set_param(header);
-
-    // OLD way of determining L2 protocol
-    /*    
-    // tuto moze byt problem/chyba v poctoch bajtov, pretoze neviem, kt. premennu pouzivat - header->len alebo header->caplen
-    ethh = (struct ether_header *) pkt_data;	// we store Ether_header
-    lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
-    //is this frame ETHERNET II or IEEE 802.3
-    
-        if (lng_type > 1500) eth2_frame(pkt_data, lng_type);	//here we go to inspect captured ETHERNET II frame closely
-        else ieee802(pkt_data, lng_type);	//here we go to inspect captured IEEE 802.3 frame closely
-    */
-
-    // FIXME: get rid of this
-    ethh = (struct ether_header *) pkt_data;	// we store Ether_header
-    lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
-
-    int l2t = pcap_datalink(fp);
-    if(l2t==1) {
-        //fprintf(stderr,"Ethernet\n");
-        eth2_frame(pkt_data, lng_type); // Ethernet
-    } else if (l2t==113) {
-        //fprintf(stderr,"SLL\n");
-        lng_type = (pkt_data[14]*256)+pkt_data[15];
-        sll_frame(pkt_data, lng_type); // Linux SLL
-    } else {
-        //fprintf(stderr,"802\n");
-        ieee802(pkt_data, lng_type);
-    }
-
-    parse_data_link(protokol);
-    parse_network_layer(protokol);
-    parse_transport_layer(protokol);
-    parse_application_layer(protokol);
-    pair_ip_with_mac();
-
-    // flag - were data written into DB in this time interval? 
-    if ((flag == 0 && (actual_time - beggining_time) >= casovac_zapisu) || ((actual_time - beggining_time) >= casovac_zapisu * 2)) database(NULL, header);
-    
-    // 10 seconds is considered enough time interval as we measure with minimum resolution of 60seconds and it is very probable that there will be another frame comming in that 10 seconds - it will set 'flag' again so we can insert data into DB again after'casovac_zapisu' 
-    if (flag == 1 && actual_time - beggining_time >= 10) flag = 0;
-
-    // clearing variables - it is necesary only for strings, unix_time and pocet_B might not be cleared as they are integers which are set not incremented
-    clear_variables();
-
-}
-
-void sock_dispatcher_handler(const struct k_header *header, const u_char * pkt_data)
-{
-    int lng_type; // here is stored value from frame - considering this value we have to decide whether it is length of the frame or type 
-    char protokol[DLZKA_POLA_P];	// pomocna premena
-
-    static struct dev_time *head_dt = NULL;
-    set_head_dt(header, head_dt);
-
-    set_param(header);
-
-    // tuto moze byt problem/chyba v poctoch bajtov, pretoze neviem, kt. premennu pouzivat - header->len alebo header->caplen
-
-    ethh = (struct ether_header *) pkt_data;	// we store Ether_header
-    lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
-
-    /* OLD WAY
-    //is this frame ETHERNET II or IEEE 802.3
-    if (lng_type > 1500) eth2_frame(pkt_data, lng_type);	//here we go to inspect captured ETHERNET II frame closely
-    else ieee802(pkt_data, lng_type);	//here we go to inspect captured IEEE 802.3 frame closely
-    */
-    // FIXME: pcap prec
-    int l2t = pcap_datalink(fp);
-    if(l2t==1) {
-        //fprintf(stderr,"Ethernet\n");
-        eth2_frame(pkt_data, lng_type); // Ethernet
-    } else if (l2t==113) {
-        //fprintf(stderr,"SLL\n");
-        lng_type = (pkt_data[14]*256)+pkt_data[15];
-        sll_frame(pkt_data, lng_type); // Linux SLL
-    } else {
-        //fprintf(stderr,"802\n");
-        ieee802(pkt_data, lng_type);
-    }
-
-    parse_data_link(protokol);
-    parse_network_layer(protokol);
-    parse_transport_layer(protokol);
-    parse_application_layer(protokol);
-    pair_ip_with_mac();
-
-    // flag - were data written into DB in this time interval? 
-    if ((flag == 0 && (actual_time - beggining_time) >= casovac_zapisu) || ((actual_time - beggining_time) >= casovac_zapisu * 2)) database(head_dt, header);
-    
-    // 10 seconds is considered enough time interval as we measure with minimum resolution of 60seconds and it is very probable that there will be another frame comming in that 10 seconds - it will set 'flag' again so we can insert data into DB again after'casovac_zapisu' 
-    if (flag == 1 && actual_time - beggining_time >= 10) flag = 0;
-    
-    // clearing variables - it is necesary only for strings, unix_time and pocet_B might not be cleared as they are integers which are set not incremented
-    clear_variables();
-
 }
 
 void eth2_frame(const u_char * pkt_data, int type)
@@ -1028,7 +994,7 @@ void icmp_protokol(const u_char *pkt_data,int h_len)
 
 void udp_protokol(const u_char * pkt_data, int len)
 {
-    int s_port, d_port, port_id;
+    int s_port, d_port;
     //    int sn_port,dn_port;
 
     udph = (struct udphdr *) (pkt_data + sizeof(struct ether_header) + len);
@@ -1044,8 +1010,6 @@ void udp_protokol(const u_char * pkt_data, int len)
      *    d_port=pkt_data[a+2]*256+pkt_data[a+3];
      *    dn_port=pkt_data[a+3]*256+pkt_data[a+2];        //network order
      */
-    if (s_port < 1024 || s_port == 8080) port_id = s_port;
-    else port_id = d_port;
 
     s_protocol = s_port;
     d_protocol = d_port;
@@ -1267,7 +1231,6 @@ void free_protokoly(ZACIATOK_P * p_zac)
 {
     ZAZNAMY *help_zaznamy, *p_pomz;	//help structure
     PROTOKOLY *help_protokol, *p_pomp, *p_protokol;
-    ZACIATOK_P *help_zac;
 
     if (!p_zac->empty) {
 	    p_protokol = p_zac->p_protokoly;
@@ -1305,13 +1268,16 @@ void *zapis_do_DB_protokoly(void *arg)
     ZACIATOK_P *p_zac;
     p_zac = pretah1->p;
     PROTOKOLY *p_protokol;
-    if (!p_zac->empty)
-        for (p_protokol = p_zac->p_protokoly; p_protokol != NULL; p_protokol = p_protokol->p_next)
+    if (!p_zac->empty) {
+        for (p_protokol = p_zac->p_protokoly; p_protokol != NULL; p_protokol = p_protokol->p_next) {
             processingl(p_protokol);
+        }
+    }
     fprintf(stderr, "Zapis do DB...\t[DONE]\n");
     free_protokoly(p_zac);
     free(p_zac);
     free(pretah1);
+    return NULL;
 }
 
 char compare_IPv6(unsigned int *IP1, unsigned int *IP2)

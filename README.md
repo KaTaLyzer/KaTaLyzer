@@ -9,6 +9,9 @@ _KaTaLyzer_ is a network traffic analyzer for Linux based operating systems (rou
 It offers full network traffic monitoring. Data are displayed in graphs which can be filtered based on protocol 
 as well as communioating nodes. It supports widely used protocols (Ethernet, IP, TCP, UDP, HTTP, SSH, SIP, etc.).
 
+
+![Image](http://www.katalyzer.sk/images/slide1.png)
+
 _KaTaLyzer_ was tested on Debian, Ubuntu, Arch and Gentoo operating systems.
 
 License:

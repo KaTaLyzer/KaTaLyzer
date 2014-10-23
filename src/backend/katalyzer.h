@@ -26,8 +26,10 @@
 #include <pthread.h>
 
 #include "variables.h"
-#include "ksocket.h"
 
+#ifdef SOCK
+#include "ksocket.h"
+#endif
 
 #define LINE_LEN 24
 #define HTML_PERIOD 5
@@ -49,14 +51,27 @@ void tcp_protokol ( const u_char *pkt_data,int len );
 void udp_protokol ( const u_char *pkt_data,int len );
 void net_protokol ( int number, char *protokols );
 void trans_protokol ( int number, char *protokols );
-void sock_dispatcher_handler ( const struct k_header *header, const u_char *pkt_data );
-void pcap_dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );
+#ifdef SOCK
+void dispatcher_handler ( const struct k_header *header, const u_char *pkt_data );
+void set_head_dt(const struct k_header *header, struct dev_time *head_dt);
+#endif
+#ifdef PCAP
+void dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );
+#endif
 void ieee802 ( const u_char *pkt_data,int type );
 void netflow_sflow_protocol(const u_char *pkt_data, int type);
 void help();
 void m_protokoly ( ZACIATOK_P *p_zac, char *s );
 void free_protokoly ( ZACIATOK_P *p_zac );
-void *zapis_do_DB_protokoly ( void *pretah2 );
+void *zapis_do_DB_protokoly ( void *arg );
 char compare_IPv6 ( unsigned int *IP1, unsigned int *IP2 ); //porovname 2 IP adresy v6
+void set_param(const void *arg);
+void parse_data_link(char *protokol);
+void parse_network_layer(char *protokol);
+void parse_transport_layer(char *protokol);
+void parse_application_layer(char *protokol);
+void pair_ip_with_mac(void);
+void clear_variables();
+void database(struct dev_time *head_dt, const void *arg);
 
 #endif

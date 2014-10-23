@@ -1,13 +1,10 @@
-dir :=socket
+all: pcap sock
 
-all: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o ksocket.o
-	gcc -g variables.o processing.o wait_function.o read_conf.o cronovanie.o  ksocket.o katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
+pcap: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o
+	gcc -g -DPCAP variables.o processing.o wait_function.o read_conf.o cronovanie.o  katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer_pcap > ilog/ilog_katalyzer
 
-katalyzer: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o
-	gcc -g variables.o processing.o wait_function.o read_conf.o cronovanie.o  katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
-
-katalyzer_sock: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o ksocket.o
-	gcc -g -Wall -D_CAPTURE variables.o processing.o wait_function.o read_conf.o cronovanie.o ksocket.o katalyzer.c -L/usr/lib/mysql -lmysqlclient -lpthread -o katalyzer > ilog/ilog_katalyzer
+sock: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o ksocket.o
+	gcc -g -DSOCK -Wall variables.o processing.o wait_function.o read_conf.o cronovanie.o ksocket.o katalyzer.c -L/usr/lib/mysql -lmysqlclient -lpthread -o katalyzer_sock > ilog/ilog_katalyzer
 
 wait_function.o: wait_function.c wait_function.h
 	gcc -g -c wait_function.c -o wait_function.o > ilog/ilog_wait_function.o
@@ -29,7 +26,8 @@ ksocket.o : ksocket.c ksocket.h
 
 clean:
 	rm -f *.o > ilog/ilog_clean
-	rm -f katalyzer >> ilog/ilog_clean
+	rm -f katalyzer_pcap >> ilog/ilog_clean
+    rm -f katalyzer_sock >> ilog/ilog_clean
 
 install:
 	cp ./katalyzer /usr/local/bin/katalyzer
