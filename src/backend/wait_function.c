@@ -2,6 +2,7 @@
 
 void waiting()
 {
+    printf("Waiting...\n");
 	struct tm *timetm;
 	time_t timenow;
 	for(;;){

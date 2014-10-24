@@ -13,16 +13,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#ifdef _DEBUG_SOCKET
-#include <net/ethernet.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-#include <net/ethernet.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#endif
-
 // Not use
 /*
 struct c_net_dev *get_interface(struct c_net_dev *interface){
@@ -385,207 +375,130 @@ void k_loop(struct k_capture *p_capture, k_handler calback)
 
 //   while(!connect(p_capture->socket,(struct sockaddr_ll*) &p_capture->sll, sizeof(p_capture->sll))){
     while (1) {
-	dt = NULL;
+	    dt = NULL;
 
-	if (start) {
-	    if ((old_interface =
-		 (char *) malloc(sizeof(char) * strlen("-") +
-				 sizeof(char))) == NULL) {
-		fprintf(stderr, "k_loop: Error malloc old_interface: %s",
-			strerror(errno));
-		exit(1);
+	    if (start) {
+	        if ((old_interface = (char *) malloc(sizeof(char) * strlen("-") + sizeof(char))) == NULL) {
+		        fprintf(stderr, "k_loop: Error malloc old_interface: %s",strerror(errno));
+		        exit(1);
+	        }
+
+	        strcpy(old_interface, "-");
+
+	        if ((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL) {
+		        fprintf(stderr,"k_loop(): Error malloc struct dev_time: %s",strerror(errno));
+		        exit(1);
+	        }
+	        gettimeofday(&dt->ts, NULL);
+
+	        if (p_capture->name) {
+		        if ((dt->name_do = (char *) malloc(strlen(p_capture->name) * sizeof(char))) == NULL) {
+		            fprintf(stderr, "k_loop(): Error malloc dt->name: %s", strerror(errno));
+		            exit(1);
+		        }
+		        strcpy(dt->name_do, p_capture->name);
+	        } else {
+		        if ((dt->name_do = (char *) malloc(strlen("unknown") * sizeof(char) + sizeof(char))) == NULL) {
+		            fprintf(stderr, "k_loop(): Error malloc dt->name: %s", strerror(errno));
+		            exit(1);
+		        }
+		        strcpy(dt->name_do, "unknown");
+	        }
+
+	        if ((dt->name_z = (char *) malloc(strlen(old_interface) * sizeof(char))) == NULL) {
+		        fprintf(stderr, "k_loop(): Error malloc old_interface: %s", strerror(errno));
+		        exit(1);
+	        }
+	        strcpy(dt->name_z, old_interface);
+
+	        start = 0;
+
 	    }
+	    // if interface is down, find new interface and create new socket
+	    if (p_capture->interface_auto) {
+	        /*
+	         *   if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
+	         *      if(*p_capture->file_status){
+	         *   free(p_capture->file_status);
+	         *   p_capture->file_status = NULL;
+	         }
+	         */
+	        if (!get_status(p_capture)) {
+		        if (p_capture->name != NULL) {
+		            if (old_interface != NULL) {
+			            free(old_interface);
+			            old_interface = NULL;
+		            }
 
-	    strcpy(old_interface, "-");
+		            if ((old_interface = (char *) malloc(strlen(p_capture->name) * sizeof(char))) == NULL) {
+			            fprintf(stderr,"k_loop(): Error malloc old_interface: %s", strerror(errno));
+			            exit(1);
+		            }
+		            strcpy(old_interface, p_capture->name);
+		        }
+		        if (p_capture->name && p_capture->socket) close_promisc(p_capture->socket, p_capture->name);
 
-	    if ((dt =
-		 (struct dev_time *) malloc(sizeof(struct dev_time))) ==
-		NULL) {
-		fprintf(stderr,
-			"k_loop(): Error malloc struct dev_time: %s",
-			strerror(errno));
-		exit(1);
+		        if (p_capture->name) {
+		            free(p_capture->name);
+		            p_capture->name = NULL;
+		        }
+		        //return interface to old state
+		        //if(ioctl(p_capture->socket,SIOCSIFFLAGS, &p_capture->old_status) == -1){
+		        //fprintf(stderr, "Error, set old state in k_loop(): %s\n",strerror(errno));
+		        //}
+		        if (p_capture->socket) {
+		            close(p_capture->socket);
+		            p_capture->socket = 0;
+		        }
+		        if (raw_init(p_capture, "auto")) {
+		            sleep(2);
+		            continue;
+		        }
+		        if ((dt = (struct dev_time *) malloc(sizeof(struct dev_time))) == NULL) {
+		            fprintf(stderr,"k_loop(): Error malloc struct dev_time: %s", strerror(errno));
+		            exit(1);
+		        }
+		        gettimeofday(&dt->ts, NULL);
+		        if ((dt->name_do = (char *) malloc(strlen(p_capture->name) * sizeof(char))) == NULL) {
+		            fprintf(stderr, "k_loop(): Error malloc dt->name: %s", strerror(errno));
+		            exit(1);
+		        }
+		        strcpy(dt->name_do, p_capture->name);
+
+		        if ((dt->name_z = (char *) malloc(strlen(old_interface) * sizeof(char))) == NULL) {
+		            fprintf(stderr, "k_loop(): Error malloc old_interface: %s", strerror(errno));
+		            exit(1);
+		        }
+		        strcpy(dt->name_z, old_interface);
+	        }
 	    }
-	    gettimeofday(&dt->ts, NULL);
-
-	    if (p_capture->name) {
-		if ((dt->name_do =
-		     (char *) malloc(strlen(p_capture->name) *
-				     sizeof(char))) == NULL) {
-		    fprintf(stderr, "k_loop(): Error malloc dt->name: %s",
-			    strerror(errno));
-		    exit(1);
-		}
-		strcpy(dt->name_do, p_capture->name);
-	    } else {
-		if ((dt->name_do =
-		     (char *) malloc(strlen("unknown") * sizeof(char) +
-				     sizeof(char))) == NULL) {
-		    fprintf(stderr, "k_loop(): Error malloc dt->name: %s",
-			    strerror(errno));
-		    exit(1);
-		}
-		strcpy(dt->name_do, "unknown");
+	    //    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
+	    len = recvfrom(p_capture->socket, buf, sizeof(buf), 0, NULL, NULL);
+	    if (len <= 0) {
+	        fprintf(stderr, "Warring recv packet. %s\n", strerror(errno));
+	        continue;
 	    }
+	    gettimeofday(&head.ts, NULL);
+	    head.len = len;
+	    head.interface_auto = p_capture->interface_auto;
 
-	    if ((dt->name_z =
-		 (char *) malloc(strlen(old_interface) * sizeof(char))) ==
-		NULL) {
-		fprintf(stderr, "k_loop(): Error malloc old_interface: %s",
-			strerror(errno));
-		exit(1);
+	    if (p_capture->interface_auto && (head.dt == NULL)) head.dt = dt;
+    //     printf("Len: %d\n", len);
+
+        //fprintf(stderr,"proto: %d\n",p_capture->sll.sll_protocol);
+	    calback(&head, (u_char *) & buf);
+
+	    if (head.dt != NULL) {
+	        if (head.dt->name_z != NULL) {
+		        free(head.dt->name_z);
+		        head.dt->name_z = NULL;
+	        }
+	        if (head.dt->name_do) {
+		        free(head.dt->name_do);
+		        head.dt->name_do = NULL;
+	        }
+	        free(head.dt);
+	        head.dt = NULL;
 	    }
-	    strcpy(dt->name_z, old_interface);
-
-	    start = 0;
-
-	}
-	// if interface is down, find new interface and create new socket
-	if (p_capture->interface_auto) {
-	    /*
-	     *   if((p_capture->file_status == NULL) || (!get_status(p_capture->file_status))){
-	     *      if(*p_capture->file_status){
-	     *   free(p_capture->file_status);
-	     *   p_capture->file_status = NULL;
-	     }
-	     */
-	    if (!get_status(p_capture)) {
-
-		if (p_capture->name != NULL) {
-		    if (old_interface != NULL) {
-			free(old_interface);
-			old_interface = NULL;
-		    }
-
-		    if ((old_interface =
-			 (char *) malloc(strlen(p_capture->name) *
-					 sizeof(char))) == NULL) {
-			fprintf(stderr,
-				"k_loop(): Error malloc old_interface: %s",
-				strerror(errno));
-			exit(1);
-		    }
-		    strcpy(old_interface, p_capture->name);
-		}
-		if (p_capture->name && p_capture->socket) {
-		    close_promisc(p_capture->socket, p_capture->name);
-		}
-		if (p_capture->name) {
-		    free(p_capture->name);
-		    p_capture->name = NULL;
-		}
-		//return interface to old state
-		//if(ioctl(p_capture->socket,SIOCSIFFLAGS, &p_capture->old_status) == -1){
-		//fprintf(stderr, "Error, set old state in k_loop(): %s\n",strerror(errno));
-		//}
-		if (p_capture->socket) {
-		    close(p_capture->socket);
-		    p_capture->socket = 0;
-		}
-		if (raw_init(p_capture, "auto")) {
-		    sleep(2);
-		    continue;
-		}
-		if ((dt =
-		     (struct dev_time *) malloc(sizeof(struct dev_time)))
-		    == NULL) {
-		    fprintf(stderr,
-			    "k_loop(): Error malloc struct dev_time: %s",
-			    strerror(errno));
-		    exit(1);
-		}
-		gettimeofday(&dt->ts, NULL);
-		if ((dt->name_do =
-		     (char *) malloc(strlen(p_capture->name) *
-				     sizeof(char))) == NULL) {
-		    fprintf(stderr, "k_loop(): Error malloc dt->name: %s",
-			    strerror(errno));
-		    exit(1);
-		}
-		strcpy(dt->name_do, p_capture->name);
-
-		if ((dt->name_z =
-		     (char *) malloc(strlen(old_interface) *
-				     sizeof(char))) == NULL) {
-		    fprintf(stderr,
-			    "k_loop(): Error malloc old_interface: %s",
-			    strerror(errno));
-		    exit(1);
-		}
-		strcpy(dt->name_z, old_interface);
-	    }
-	}
-	//    fprintf(stderr,"Rozhranie: %s\n",p_capture->file_status);
-	len = recvfrom(p_capture->socket, buf, sizeof(buf), 0, NULL, NULL);
-	if (len <= 0) {
-	    fprintf(stderr, "Warring recv packet. %s\n", strerror(errno));
-	    continue;
-	}
-	gettimeofday(&head.ts, NULL);
-	head.len = len;
-	head.interface_auto = p_capture->interface_auto;
-
-	if (p_capture->interface_auto && (head.dt == NULL))
-	    head.dt = dt;
-
-#ifdef _DEBUG_SOCKET
-	struct ether_header *ethh_d = NULL;	//ethernetova header
-	struct iphdr *iph_d = NULL;	//ip header
-	struct tcphdr *tcph_d = NULL;	//tcp header
-	struct udphdr *udph_d = NULL;	//udp header
-	struct in_addr in_s, in_d;
-	unsigned const char *pom_buf;
-	unsigned short int type;
-
-	pom_buf = (unsigned char *) &buf;
-	ethh_d = (struct ether_header *) pom_buf;
-	type = ntohs(ethh_d->ether_type);
-	fprintf(stderr, "Type: %d, %X\n", type, type);
-	if (type == ETHERTYPE_IP) {
-	    iph_d =
-		(struct iphdr *) (pom_buf + sizeof(struct ether_header));
-	    if (iph_d->protocol == IPPROTO_TCP) {
-		tcph_d =
-		    (struct tcphdr *) (pom_buf +
-				       sizeof(struct ether_header) +
-				       iph_d->ihl * 4);
-		in_s.s_addr = iph_d->saddr;
-		in_d.s_addr = iph_d->daddr;
-		fprintf(stderr,
-			"IP_S: %s, IP_D: %s, Port_S: %d, Port_D: %d\n",
-			inet_ntoa(in_s), inet_ntoa(in_d),
-			ntohs(tcph_d->source), ntohs(tcph_d->dest));
-	    }
-	    if (iph_d->protocol == IPPROTO_UDP) {
-		udph_d =
-		    (struct udphdr *) (pom_buf +
-				       sizeof(struct ether_header) +
-				       iph_d->ihl * 4);
-		in_s.s_addr = iph_d->saddr;
-		in_d.s_addr = iph_d->daddr;
-		fprintf(stderr,
-			"IP_S: %s, IP_D: %s, Port_S: %d, Port_D: %d\n",
-			inet_ntoa(in_s), inet_ntoa(in_d),
-			ntohs(udph_d->source), ntohs(udph_d->dest));
-	    }
-	}
-#endif
-//     printf("Len: %d\n", len);
-
-	calback(&head, (u_char *) & buf);
-
-	if (head.dt != NULL) {
-	    if (head.dt->name_z != NULL) {
-		free(head.dt->name_z);
-		head.dt->name_z = NULL;
-	    }
-	    if (head.dt->name_do) {
-		free(head.dt->name_do);
-		head.dt->name_do = NULL;
-	    }
-	    free(head.dt);
-	    head.dt = NULL;
-	}
     }
-
 }

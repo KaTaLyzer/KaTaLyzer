@@ -33,6 +33,8 @@ typedef struct {
     ZACIATOK_P *p;
 } PRETAH;
 
+int l2p = -1;
+
 int main(int argc, char **argv)
 {
 #ifdef PCAP
@@ -104,6 +106,18 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "Error: Can not create socket\n");
 	    return -1;
     }
+    
+    // FIXME: determine L2 type
+    char tmpiffname[1000];
+    sprintf(tmpiffname,"/sys/class/net/%s/type",interface);
+    fprintf(stderr,"Opening file: %s\n",tmpiffname);
+    FILE *ift;
+    ift = fopen(tmpiffname,"r");
+    char * line = NULL;
+    size_t len = 0;
+    getline(&line, &len, ift);
+    fclose(ift);
+    l2p = atoi(line);
 #endif
 
 // PCAP init
@@ -171,9 +185,7 @@ void dispatcher_handler(const struct k_header *header, const u_char *pkt_data)
 #ifdef PCAP
 void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data)
 #endif
-{
-
-    int lng_type; // L2 length/type value 
+{ 
     char protokol[DLZKA_POLA_P];	// pomocna premena
 
 #ifdef SOCK
@@ -183,18 +195,8 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
 
     set_param(header);
 
-    // OLD way of determining L2 protocol
-    /*    
-    // tuto moze byt problem/chyba v poctoch bajtov, pretoze neviem, kt. premennu pouzivat - header->len alebo header->caplen
-    ethh = (struct ether_header *) pkt_data;	// we store Ether_header
-    lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
-    //is this frame ETHERNET II or IEEE 802.3
-    
-        if (lng_type > 1500) eth2_frame(pkt_data, lng_type);	//here we go to inspect captured ETHERNET II frame closely
-        else ieee802(pkt_data, lng_type);	//here we go to inspect captured IEEE 802.3 frame closely
-    */
-
-    // FIXME: get rid of this
+// FIXME: get rid of this
+    int lng_type; // L2 length/type value
     ethh = (struct ether_header *) pkt_data;	// we store Ether_header
     lng_type = ntohs(ethh->ether_type);	// lng_type - LENGHT/TYPE value
 
@@ -210,8 +212,22 @@ void dispatcher_handler(u_char *dump, const struct pcap_pkthdr *header, const u_
     }
 #endif
 #ifdef SOCK
+    // FIXME: do it better
+    if(l2p==1) { // Ethernet or 802.3
+        if (lng_type > 1500) eth2_frame(pkt_data, lng_type); // inspect as Ethernet 2 frame
+        else ieee802(pkt_data, lng_type);	// inspect as IEEE 802.3 frame
+    } else if (l2p==512) { //PPP
+        //lng_type = (pkt_data[14]*256)+pkt_data[15];
+        int i=0;        
+        for(i=0;i<5;i++) fprintf(stderr,"%.2X ",pkt_data[i]);
+        fprintf(stderr,"\n");
+        sll_frame(pkt_data, 0);
+    }
+    // OLD WAY
+    /*
     if (lng_type > 1500) eth2_frame(pkt_data, lng_type); // inspect as Ethernet 2 frame
     else ieee802(pkt_data, lng_type);	// inspect as IEEE 802.3 frame
+    */
 #endif
 
     parse_data_link(protokol);
@@ -752,7 +768,7 @@ void eth2_frame(const u_char * pkt_data, int type)
 }
 
 void sll_frame(const u_char * pkt_data, int type) {
-    //fprintf(stderr,"SLL tu SOM pri parse\n");
+    fprintf(stderr,"SLL tu SOM pri parse\n");
     sprintf(Eor8, "S");
     net_protokol(type, net_proto);
     if (type == 2048) ip_protokol(pkt_data, 2);	// if we received IP or ARP protocol, analysis continues
