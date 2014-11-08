@@ -3,75 +3,81 @@
  * benkovic_roman@post.sk *
  * tokosk16@yahoo.com*/
 
-#ifndef KATALYZER_H
-#define KATALYZER_H
+#ifndef __KATALYZER_H__
+#define __KATALYZER_H__
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <getopt.h>
-#include <time.h>
-#include <netdb.h>
-#include <errno.h>
+#include <sys/queue.h>
 #include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <signal.h>
-#include <errno.h>
-#include "mysql/mysql.h"
-#include <netinet/in.h>
-#include <net/ethernet.h>
-#include <netinet/ether.h>
-#include <netinet/ip6.h>
-#include <pthread.h>
 
-#include "variables.h"
+#include "sha1.h"
 
-#ifdef SOCK
-#include "ksocket.h"
-#endif
+struct proto_struct;
+struct packet_struct;
+struct eth_struct;
 
-#define LINE_LEN 24
-#define HTML_PERIOD 5
+enum proto_types {
+        SSL,
+        ETH,
+        IP,
+        TCP,
+        UDP,
+        _MAX_PROTO_TYPES
+};
 
-/* analyse ethernet protocol */
-void eth2_frame ( const u_char *pkt_data,int type );
-/* analyse SLL protocol */
-void sll_frame ( const u_char *pkt_data,int type );
-/* analyse arp protocol */
-void arp_protokol ( const u_char *pkt_data );
-/* analyse ip protocol */
-void ip_protokol ( const u_char *pkt_data, int len );
-/* analyse IP version 6 protocol */
-void ipv6_protokol ( const u_char *pkt_data, int len );
-/* analyse tcp protocol */
-void tcp_protokol ( const u_char *pkt_data,int len );
-//void icmp_protokol(const u_char *pkt_data,int h_len);
-/* analyse udp protocol */
-void udp_protokol ( const u_char *pkt_data,int len );
-void net_protokol ( int number, char *protokols );
-void trans_protokol ( int number, char *protokols );
-#ifdef SOCK
-void dispatcher_handler ( const struct k_header *header, const u_char *pkt_data );
-void set_head_dt(const struct k_header *header, struct dev_time *head_dt);
-#endif
-#ifdef PCAP
-void dispatcher_handler ( u_char *dump, const struct pcap_pkthdr *header, const u_char *pkt_data );
-#endif
-void ieee802 ( const u_char *pkt_data,int type );
-void netflow_sflow_protocol(const u_char *pkt_data, int type);
-void help();
-void m_protokoly ( ZACIATOK_P *p_zac, char *s );
-void free_protokoly ( ZACIATOK_P *p_zac );
-void *zapis_do_DB_protokoly ( void *arg );
-char compare_IPv6 ( unsigned int *IP1, unsigned int *IP2 ); //porovname 2 IP adresy v6
-void set_param(const void *arg);
-void parse_data_link(char *protokol);
-void parse_network_layer(char *protokol);
-void parse_transport_layer(char *protokol);
-void parse_application_layer(char *protokol);
-void pair_ip_with_mac(void);
-void clear_variables();
-void database(struct dev_time *head_dt, const void *arg);
+struct protocol_position_struct {
+        enum proto_types type;
+        u_int8_t *position;
+};
+
+struct main_struct{
+        u_int8_t *pkt_data;
+        u_int8_t *actual_pointer;
+        size_t len;
+        int position_number;
+        struct protocol_position_struct protoco_position[_MAX_PROTO_TYPES];
+        SHA1Context sha12;
+        SHA1Context sha21;
+        
+        
+        int (*next_protocol) (struct main_struct *mains);
+        int (*set_protocol) (struct main_struct *mans);
+        
+        SLIST_HEAD(slisthead, packet_struct) packet_head;
+        SLIST_HEAD(slisthead, eth_struct) eth_head;
+};
+
+inline void init_main_struct(struct main_struct *mains)
+{
+        mains->position_number = 0;
+        mains->next_protocol = NULL;
+        mains->set_protocol = NULL;
+        
+        SLIST_INIT(&mains->packet_head);
+        SLIST_INIT(&mains->eth_head);
+        
+}
+
+struct packet_struct {
+        char set;
+        u_int64_t hash12;
+        u_int64_t hash21;
+        unsigned int bytes12;
+        unsigned int bytes21;
+        SLIST_HEAD(slisthead, proto_struct) proto_head;
+        SLIST_ENTRY(packet_struct) packet_list;
+};
+
+struct proto_struct {
+        enum proto_types type;
+        SLIST_ENTRY(proto_struct) proto_list;
+        void *arg;
+};
+
+extern struct proto_struct *alloc_proto_struct(void);
+
+extern struct packet_struct *get_packet(struct main_struct *mains,
+                                 u_int64_t hash12, u_int64_t hash21);
+extern int set_clasic_protocol(struct main_struct* mains);
+
 
 #endif
