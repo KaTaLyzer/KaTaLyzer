@@ -50,6 +50,10 @@ Default login:
 
 News
 ----------
+**2014-11-13**
+We are preparing KaTaLyzer 2 in Katalyzer2 branch, but it is still in early design phase.
+We will update current version with fixes, but new modules should be targeted to v2.
+
 **2014-10-23**
 Work in progress!!!
 - capturing selection rewrite (again)
