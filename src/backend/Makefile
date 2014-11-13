@@ -1,10 +1,10 @@
 all: pcap sock
 
 pcap: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o
-	gcc -g -DPCAP -Wall variables.o processing.o wait_function.o read_conf.o cronovanie.o  katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer_pcap > ilog/ilog_katalyzer
+	gcc -g -DPCAP -Wall variables.o processing.o wait_function.o read_conf.o cronovanie.o  katalyzer.c -L/usr/lib/mysql -lpcap -lmysqlclient -lpthread -o katalyzer_pcap > ilog/ilog_katalyzer_pcap
 
 sock: variables.o katalyzer.h katalyzer.c processing.o wait_function.o read_conf.o cronovanie.o ksocket.o
-	gcc -g -DSOCK -Wall variables.o processing.o wait_function.o read_conf.o cronovanie.o ksocket.o katalyzer.c -L/usr/lib/mysql -lmysqlclient -lpthread -o katalyzer_sock > ilog/ilog_katalyzer
+	gcc -g -DSOCK -Wall variables.o processing.o wait_function.o read_conf.o cronovanie.o ksocket.o katalyzer.c -L/usr/lib/mysql -lmysqlclient -lpthread -o katalyzer_sock > ilog/ilog_katalyzer_sock
 
 wait_function.o: wait_function.c wait_function.h
 	gcc -g -Wall -c wait_function.c -o wait_function.o > ilog/ilog_wait_function
