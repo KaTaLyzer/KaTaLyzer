@@ -22,7 +22,7 @@ cronovanie.o: cronovanie.c cronovanie.h
 	gcc -g -Wall -c cronovanie.c -o cronovanie.o > ilog/ilog_cronovanie
 
 ksocket.o : ksocket.c ksocket.h
-	gcc -g -Wall c ksocket.c -o ksocket.o > ilog/ilog_ksocket
+	gcc -g -Wall -c ksocket.c -o ksocket.o > ilog/ilog_ksocket
 
 clean:
 	rm -f *.o > ilog/ilog_clean
