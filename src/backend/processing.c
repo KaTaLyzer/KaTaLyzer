@@ -16,7 +16,7 @@ void processingl ( PROTOKOLY *s)
   MYSQL_RES *result;
   MYSQL_ROW row;
   unsigned long int source_B, destin_B, source_ramcov, destin_ramcov;
-  ZAZNAMY *help_zaznamy, *help_zaznamy2, *p_pomz, *p_pomz2;
+  ZAZNAMY *help_zaznamy, *help_zaznamy2;
 
 #ifdef _DEBUG_WRITE
   FILE *fw;

@@ -25,9 +25,10 @@ ksocket.o : ksocket.c ksocket.h
 	gcc -g -Wall -c ksocket.c -o ksocket.o > ilog/ilog_ksocket
 
 clean:
-	rm -f *.o > ilog/ilog_clean
-	rm -f katalyzer_pcap >> ilog/ilog_clean
-	rm -f katalyzer_sock >> ilog/ilog_clean
+	rm -f *.o
+	rm -f ilog/*
+	rm -f katalyzer_pcap
+	rm -f katalyzer_sock
 
 install:
 	cp ./katalyzer /usr/local/bin/katalyzer

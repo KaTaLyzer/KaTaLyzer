@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 	            help();
 	            exit(OK);
 	        case 'w':
-	            wait = 0;		// if we do not want to wait for new minute, we start analyzator with parameter 'w'
+	            waitt = 0;		// if we do not want to wait for new minute, we start analyzator with parameter 'w'
 	            break;
 	        case 'c':
 	            i_is_config = 1;
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 #endif
 
     // we wait after opening network adapter - we do not need to wait for error message if we are not able to open the adapter
-    if (wait == 1) waiting();		// here we wait until new minute beggins
+    if (waitt == 1) waiting();		// here we wait until new minute beggins
 
 #ifdef PCAP
     if (!isoffline) time(&beggining_time);	// beggining_time is time of start of the program. it is incremented by casovac_zapisu timer after each "casovac_zapisu" seconds
@@ -502,13 +502,13 @@ void create_db(MYSQL * conn, struct dev_time *head_dt, const void *arg)
 #ifdef SOCK
     struct k_header *header;
     header = (struct k_header *) arg;
-#endif
+/*#endif
 #ifdef PCAP
     struct pcap_pkthdr *header;
     header = (struct pcap_pkthdr *) arg;
 #endif
 
-#ifdef SOCK
+#ifdef SOCK*/
     if ((header->interface_auto) && (head_dt != NULL)) {
 	    sprintf(prikaz,"CREATE TABLE IF NOT EXISTS `INTERFACE_time` ( `time` int(11) NOT NULL, `interface_z` varchar(255) NOT NULL, `interface_do` varchar(255) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
 	    if (mysql_query(conn, prikaz)) {

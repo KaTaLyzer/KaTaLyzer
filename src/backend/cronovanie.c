@@ -42,7 +42,7 @@ inline void *cronovanie ( void *arg)
         char mhd[4],nl[4];
         char mstr[10];
         int konst;
-        int i,ii,pocitadlo=1;
+        int ii,pocitadlo=1;
         int mhd_time[2],test_time[2]; //mhd_time 0 - first, 1 - last; test_time 0 - nl max, 1 - mhd max
         int IP_id[3], MAC_id[3], IP_SD_id[3], MAC_SD_id[3]; //0 - 1 min, 1 - 5xy min, 3 - MIN(id)+1
         char kreatura[100000]; //toto vynimocne nie je prehnane - kvoli CREATE-om
@@ -163,7 +163,7 @@ inline void *cronovanie ( void *arg)
 ///////////////////////////
 //CREATE TABLES
 ///////////////////////////
-        sprintf ( prikaz,"" );
+        strcpy(prikaz,"");
         pocitadlo=0;
         for ( table=prvy;table!=NULL;table=table->dalsi ) {
                 if ( strstr ( table->nazov,"SIP" ) !=NULL ) ;
@@ -301,7 +301,7 @@ inline void *cronovanie ( void *arg)
                                                 if ( row2[0]!=NULL ) mhd_time[0] = strtol ( row2[0], NULL, 10 );
                                                 mysql_free_result ( result2 );
                                                 result2 = NULL;
-                                        } else fprintf ( stderr,"e",table->nazov );
+                                        } else fprintf ( stderr,"e");
                                 }
                                 //ak v mhd nic nie je, zoberie prvy cas z nl tabulky
                                 else {
@@ -494,11 +494,11 @@ inline void *cronovanie ( void *arg)
 
                                                         if ( ( sd_ta->ipv6_d= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
-                                                                return;
+                                                                return NULL;
                                                         }
                                                         if ( ( sd_ta->ipv6_s= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
-                                                                return;
+                                                                return NULL;
                                                         }
 
                                                         p_help= ( int* ) &row[0];
@@ -534,11 +534,11 @@ inline void *cronovanie ( void *arg)
 
                                                         if ( ( sd_ta->ipv6_d= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
-                                                                return;
+                                                                return NULL;
                                                         }
                                                         if ( ( sd_ta->ipv6_s= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
-                                                                return;
+                                                                return NULL;
                                                         }
 
                                                         p_help= ( int* ) &row[0];
@@ -714,4 +714,5 @@ inline void *cronovanie ( void *arg)
                 mysql_free_result ( result );
         result=NULL;
         mysql_close ( conn );
+        return NULL;
 }

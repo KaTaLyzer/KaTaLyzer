@@ -16,17 +16,16 @@ void waiting()
                         fflush(stdout);
                 }
                 else break;
-        }
+    }
 }
 
 //toto su funkcie, ktore potrebujem na spanie na 10 milisekund...
 int __nsleep(const struct timespec *req, struct timespec *rem)
 {
     struct timespec temp_rem;
-    if(nanosleep(req,rem)==-1)
-        __nsleep(rem,&temp_rem);
-    else
-        return 1;
+    if(nanosleep(req,rem)==-1) __nsleep(rem,&temp_rem);
+    else return 1;
+    return 0;
 }
 
 int msleep(unsigned long milisec)

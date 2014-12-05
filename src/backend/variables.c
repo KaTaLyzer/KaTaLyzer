@@ -3,7 +3,7 @@
 char isoffline = 0;
 char isfirsttime= 0;
 
-int wait = 1;
+int waitt = 1;
 char *interface_from_argument;
 //char *interface_from_argument[25]="";
 int b_interface_from_argument = 0;

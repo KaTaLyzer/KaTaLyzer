@@ -30,7 +30,7 @@
 extern char isoffline;
 extern char isfirsttime;
 
-extern int wait;
+extern int waitt;
 extern char *interface_from_argument;
 //extern char interface_from_argument[25];
 extern int b_interface_from_argument;
