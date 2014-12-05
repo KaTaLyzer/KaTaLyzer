@@ -16,9 +16,12 @@
 #include <netinet/udp.h>
 #include <netinet/ip6.h>
 #include "mysql/mysql.h"
-
+#ifdef SOCK
 #include "ksocket.h"
+#endif
+#ifdef PCAP
 #include <pcap.h>
+#endif
 
 
 #define DLZKA 128
