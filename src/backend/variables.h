@@ -179,7 +179,8 @@ extern struct ip6_hdr *iphv6;	//ip_6 header
 extern struct tcphdr *tcph;     //tcp header
 extern struct udphdr *udph;     //udp header
 extern struct arphdr *arph;	//arp header
-
+#ifdef PCAP
 extern pcap_t *fp;
+#endif
 
 #endif

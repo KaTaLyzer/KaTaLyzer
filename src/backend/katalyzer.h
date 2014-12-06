@@ -29,6 +29,12 @@
 
 #ifdef SOCK
 #include "ksocket.h"
+#else
+struct dev_time{
+  struct timeval ts;
+  char *name_z;
+  char *name_do;
+};
 #endif
 
 #define LINE_LEN 24

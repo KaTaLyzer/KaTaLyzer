@@ -17,6 +17,8 @@
 #define FILEOPERSTATE "operstate"
 
 // do struktury ulozime cas zmeny rozhrania
+// tu bola struct dev_time
+
 struct dev_time{
   struct timeval ts;
   char *name_z;

@@ -105,7 +105,8 @@ struct ip6_hdr *iphv6;	//ip_6 hlavicka
 struct tcphdr *tcph;     //tcp hlavicka
 struct udphdr *udph;    //udp hlavicka
 struct arphdr *arph;	//arp header
-
+#ifdef PCAP
 pcap_t *fp;
+#endif
 
 
