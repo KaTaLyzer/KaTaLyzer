@@ -7,14 +7,14 @@
 
 # choose interface to measure traffic on by specifying its system name
 #INTERFACE=wlp8s1
-INTERFACE=em0
+INTERFACE=ppp0
 
 ## information about DB
-DB_HOST=mariadb55.websupport.sk
-DB_PORT=3310
-DB_NAME=katal
-DB_USER=zelenansky
-DB_PASS=zelenansky578
+DB_HOST=localhost
+DB_PORT=0
+DB_NAME=katalyzer
+DB_USER=user
+DB_PASS=password
 
 # uncommenting following lines we will disable monitoring of particular protocols
 # default value is 1 (yes) which means that this protocol will be monitored

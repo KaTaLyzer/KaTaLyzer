@@ -19,9 +19,16 @@
 #include <signal.h>
 #include <errno.h>
 #include "mysql/mysql.h"
+// BSD
+#include <sys/socket.h>
+#include <netinet/if_ether.h>
+#define ETH_ALEN 6
+// network
 #include <netinet/in.h>
 #include <net/ethernet.h>
+#ifdef LINUX
 #include <netinet/ether.h>
+#endif
 #include <netinet/ip6.h>
 #include <pthread.h>
 

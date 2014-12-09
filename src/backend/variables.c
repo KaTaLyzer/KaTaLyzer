@@ -100,7 +100,7 @@ int pole_UDP_portov[20];
 int i_UDP=0;
 
 struct ether_header *ethh; //ethernetova hlavicka
-struct iphdr *iph;      //ip hlavicka
+struct ip *iph;      //ip hlavicka
 struct ip6_hdr *iphv6;	//ip_6 hlavicka
 struct tcphdr *tcph;     //tcp hlavicka
 struct udphdr *udph;    //udp hlavicka

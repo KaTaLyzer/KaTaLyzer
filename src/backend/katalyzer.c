@@ -823,17 +823,17 @@ void ip_protokol(const u_char * pkt_data, int len)
 
     is_ipv6ext = 0;
 
-    iph = (struct iphdr *) (pkt_data + (sizeof(struct ether_header)) + len);	//store IP header structure
-    protocol = iph->protocol;	//protocol inside IP packet
+    iph = (struct ip *) (pkt_data + (sizeof(struct ether_header)) + len);	//store IP header structure
+    protocol = iph->ip_p;	//protocol inside IP packet
 
-    IP_adr_S = iph->saddr;
-    IP_adr_D = iph->daddr;
+    IP_adr_S = iph->ip_src.s_addr;
+    IP_adr_D = iph->ip_dst.s_addr;
 
     //fprintf(stderr,"IP S:%d D:%d\n",iph->saddr,iph->daddr);
 
     trans_protokol(protocol, trans_layer);
 
-    len = iph->ihl * 4;
+    len = iph->ip_hl * 4;
 
     if (protocol == 6) tcp_protokol(pkt_data, len);	//we continue analysis in case there is TCP, UDP or ICMP protocol inside IP packet
     //    if(protocol==1) icmp_protokol(pkt_data,len);
@@ -976,9 +976,9 @@ void tcp_protokol(const u_char * pkt_data, int len)
 
     tcph = (struct tcphdr *) (pkt_data + sizeof(struct ether_header) + len);
 
-    s_port = ntohs(tcph->source);
+    s_port = ntohs(tcph->th_sport);
     //    sn_port=tcph->source;
-    d_port = ntohs(tcph->dest);
+    d_port = ntohs(tcph->th_dport);
     //    dn_port=tcph->dest;
 
     /*
@@ -1015,9 +1015,9 @@ void udp_protokol(const u_char * pkt_data, int len)
 
     udph = (struct udphdr *) (pkt_data + sizeof(struct ether_header) + len);
 
-    s_port = ntohs(udph->source);
+    s_port = ntohs(udph->uh_sport);
     //    sn_port=udph->source;           //network order
-    d_port = ntohs(udph->dest);
+    d_port = ntohs(udph->uh_dport);
     //    dn_port=udph->dest;             //network order
     /*
      *    a=14+h_len;                                     //a->begining of UDP header

@@ -9,6 +9,11 @@
 #include <sys/types.h>
 #include <stdint.h>
 #include <string.h>
+// BSD
+#include <sys/socket.h>
+#include <netinet/in.h>
+//#include <netinet/if_ether.h>
+// network
 #include <net/ethernet.h>
 #include <net/if_arp.h>
 #include <netinet/ip.h>
@@ -174,7 +179,7 @@ extern         int pole_UDP_portov[20];
 extern         int i_UDP;
 
 extern struct ether_header *ethh; //ethernetova header
-extern struct iphdr *iph;       //ip header
+extern struct ip *iph;       //ip header
 extern struct ip6_hdr *iphv6;	//ip_6 header
 extern struct tcphdr *tcph;     //tcp header
 extern struct udphdr *udph;     //udp header
