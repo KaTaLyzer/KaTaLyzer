@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <time.h>
-
+#include <inttypes.h>
 #include "katalyzer.h"
 #include "processing.h"
 #include "variables.h"
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     s_tmp_log = (char *) malloc(5000 * sizeof(char));
     s_tmp_str = (char *) malloc(200 * sizeof(char));
 
-    printf("KaTaLyzer backend started, time: %ld\n",time(&actual_time));
+    printf("KaTaLyzer backend started, time: %d\n",(int) time(&actual_time));
     if(debug) fprintf(stderr,"Debug mode is enabled!!!\n");
 
 
@@ -589,14 +589,14 @@ void insert_data_to_table(MYSQL * conn)
 	    PAIR_ARRAY *pom_array;
 	    for (pom_array = z_pair_array; pom_array != NULL; pom_array = pom_array->p_next) {
 	        if (!pom_array->is_ipv6) {
-		        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';",pom_array->ip_s, pom_array->mac_s, pom_array->mac_s);
+		        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%"PRId64"')ON DUPLICATE KEY UPDATE MAC='%"PRId64"';",pom_array->ip_s, pom_array->mac_s, pom_array->mac_s);
 		        if (mysql_query(conn, prikaz)) fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
-		        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';",pom_array->ip_d, pom_array->mac_d,pom_array->mac_d);
+		        sprintf(prikaz,"INSERT INTO IPlist (IP, MAC) VALUES ('%u','%"PRIu64"')ON DUPLICATE KEY UPDATE MAC='%"PRIu64"';",pom_array->ip_d, pom_array->mac_d,pom_array->mac_d);
 		        if (mysql_query(conn, prikaz)) fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
 	        } else {
-		        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';", pom_array->ipv6_s[0], pom_array->ipv6_s[1], pom_array->ipv6_s[2], pom_array->ipv6_s[3], pom_array->mac_s, pom_array->mac_s);
+		        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%"PRIu64"')ON DUPLICATE KEY UPDATE MAC='%"PRIu64"';", pom_array->ipv6_s[0], pom_array->ipv6_s[1], pom_array->ipv6_s[2], pom_array->ipv6_s[3], pom_array->mac_s, pom_array->mac_s);
 		        if (mysql_query(conn, prikaz)) fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n",db_name, mysql_error(conn));
-		        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%lu')ON DUPLICATE KEY UPDATE MAC='%lu';", pom_array->ipv6_d[0], pom_array->ipv6_d[1], pom_array->ipv6_d[2], pom_array->ipv6_d[3], pom_array->mac_d, pom_array->mac_d);
+		        sprintf(prikaz,"INSERT INTO IPv6list (IP, MAC) VALUES ('%08x%08x%08x%08x','%"PRIu64"')ON DUPLICATE KEY UPDATE MAC='%"PRIu64"';", pom_array->ipv6_d[0], pom_array->ipv6_d[1], pom_array->ipv6_d[2], pom_array->ipv6_d[3], pom_array->mac_d, pom_array->mac_d);
 		        if (mysql_query(conn, prikaz)) fprintf(stderr,"Failed to insert data into MYSQL database %s: %s\n", db_name, mysql_error(conn));
 	        }
 	    }

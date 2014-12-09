@@ -25,7 +25,7 @@ void processingl ( PROTOKOLY *s)
   conn = mysql_init ( NULL );
   if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, db_port, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
     fprintf ( stderr,"Failed to connect to MYSQL database: Error: %s\n", mysql_error ( conn ) );
-    sprintf ( s_tmp_str,"%s:processing.c:processingl:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
+    sprintf ( s_tmp_str,"%s:processing.c:processingl:Failed to connect to MYSQL database: Error: %d\n", mysql_error ( conn ),(int) time( &actual_time ) );
     fprintf ( stderr,"%s",s_tmp_str );
     exit ( -1 );
   }

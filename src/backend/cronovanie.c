@@ -88,7 +88,7 @@ inline void *cronovanie ( void *arg)
         conn = mysql_init ( NULL );
         if ( mysql_real_connect ( conn, db_host, db_user, db_pass, NULL, db_port, NULL, CLIENT_MULTI_STATEMENTS ) == NULL ) {
                 fprintf ( stderr,"Failed to connect to MYSQL database: Error: %s\n", mysql_error ( conn ) );
-                sprintf ( s_tmp_str,"%s:cronovanie.c:cronovanie:Failed to connect to MYSQL database: Error: %ld\n", mysql_error ( conn ),time ( &actual_time ) );
+                sprintf ( s_tmp_str,"%s:cronovanie.c:cronovanie:Failed to connect to MYSQL database: Error: %d\n", mysql_error ( conn ),(int)time ( &actual_time ) );
                 fprintf ( stderr,"%s",s_tmp_str );
                 exit ( -1 );
         }
@@ -492,21 +492,21 @@ inline void *cronovanie ( void *arg)
 
                                                         sd_ta->is_ipv6=table->is_ipv6;
 
-                                                        if ( ( sd_ta->ipv6_d= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
+                                                        if ( ( sd_ta->ipv6_d= ( unsigned int* ) malloc ( sizeof ( unsigned int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
                                                                 return NULL;
                                                         }
-                                                        if ( ( sd_ta->ipv6_s= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
+                                                        if ( ( sd_ta->ipv6_s= ( unsigned int* ) malloc ( sizeof ( unsigned int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
                                                                 return NULL;
                                                         }
 
-                                                        p_help= ( int* ) &row[0];
+                                                        p_help= (unsigned int* ) &row[0];
                                                         for ( i = 0 ;i < IPV6SIZE; i++ ) {
                                                                 sd_ta->ipv6_s[i] = p_help[i];
                                                         }
 
-                                                        p_help= ( int* ) &row[1];
+                                                        p_help= ( unsigned int* ) &row[1];
                                                         for ( i = 0 ;i < IPV6SIZE; i++ ) {
                                                                 sd_ta->ipv6_d[i] = p_help[i];
                                                         }
@@ -532,21 +532,21 @@ inline void *cronovanie ( void *arg)
 
                                                         sd_ta->is_ipv6=table->is_ipv6;
 
-                                                        if ( ( sd_ta->ipv6_d= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
+                                                        if ( ( sd_ta->ipv6_d= (unsigned int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
                                                                 return NULL;
                                                         }
-                                                        if ( ( sd_ta->ipv6_s= ( int* ) malloc ( sizeof ( int ) *IPV6SIZE ) ) == NULL ) {
+                                                        if ( ( sd_ta->ipv6_s= ( unsigned int* ) malloc ( sizeof ( unsigned int ) *IPV6SIZE ) ) == NULL ) {
                                                                 fprintf ( stderr,"Error malloc in cronovanie: %s\n", strerror ( errno ) );
                                                                 return NULL;
                                                         }
 
-                                                        p_help= ( int* ) &row[0];
+                                                        p_help= ( unsigned int* ) &row[0];
                                                         for ( i = 0 ;i < IPV6SIZE; i++ ) {
                                                                 sd_ta->ipv6_s[i] = p_help[i];
                                                         }
 
-                                                        p_help= ( int* ) &row[1];
+                                                        p_help= ( unsigned int* ) &row[1];
                                                         for ( i = 0 ;i < IPV6SIZE; i++ ) {
                                                                 sd_ta->ipv6_d[i] = p_help[i];
                                                         }
