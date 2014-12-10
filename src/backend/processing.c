@@ -1,5 +1,5 @@
 #include "processing.h"
-
+#include <inttypes.h>
 
 void processingl ( PROTOKOLY *s)
 {
@@ -318,7 +318,7 @@ void processingl ( PROTOKOLY *s)
                                                 help_zaznamy2->spracovany[1]=1;
                                         }
                                 }
-                                sprintf ( temp_str,"('%llu','%lu','%lu','%lu','%lu'),", help_zaznamy->mac_s, source_B, source_ramcov, destin_B, destin_ramcov );
+                                sprintf ( temp_str,"('%"PRIu64"','%lu','%lu','%lu','%lu'),", help_zaznamy->mac_s, source_B, source_ramcov, destin_B, destin_ramcov );
                                 if ( ! ( prikaz_pom= ( char* ) malloc ( sizeof ( char ) *strlen ( prikaz ) +sizeof ( char ) * ( strlen ( temp_str ) +1 ) ) ) ) {
                                         fprintf ( stderr,"Error realloc: %s\n", strerror ( errno ) );
                                         exit ( 1 );
@@ -350,7 +350,7 @@ void processingl ( PROTOKOLY *s)
                                                 help_zaznamy2->spracovany[1]=1;
                                         }
                                 }
-                                sprintf ( temp_str,"('%llu','%lu','%lu','%lu','%lu'),", help_zaznamy->mac_d, source_B, source_ramcov, destin_B, destin_ramcov );
+                                sprintf ( temp_str,"('%"PRIu64"','%lu','%lu','%lu','%lu'),", help_zaznamy->mac_d, source_B, source_ramcov, destin_B, destin_ramcov );
                                 if ( ! ( prikaz_pom= ( char* ) malloc ( sizeof ( char ) *strlen ( prikaz ) +sizeof ( char ) * ( strlen ( temp_str ) +1 ) ) ) ) {
                                         fprintf ( stderr,"Error realloc: %s\n", strerror ( errno ) );
                                         exit ( 1 );
@@ -401,7 +401,7 @@ void processingl ( PROTOKOLY *s)
                                                 help_zaznamy2->spracovany[1]=2;
                                         }
                                 }
-                                sprintf ( temp_str,"('%llu','%llu','%lu','%lu','%lu','%lu'),", help_zaznamy->mac_s, help_zaznamy->mac_d, source_B, source_ramcov, destin_B, destin_ramcov );
+                                sprintf ( temp_str,"('%"PRIu64"','%"PRIu64"','%lu','%lu','%lu','%lu'),", help_zaznamy->mac_s, help_zaznamy->mac_d, source_B, source_ramcov, destin_B, destin_ramcov );
                                 if ( ! ( prikaz_pom= ( char* ) malloc ( sizeof ( char ) *strlen ( prikaz ) +sizeof ( char ) * ( strlen ( temp_str ) +1 ) ) ) ) {
                                         fprintf ( stderr,"Error realloc: %s\n", strerror ( errno ) );
                                         exit ( 1 );

@@ -1,6 +1,7 @@
 #include "cronovanie.h"
 #include "errdef.h"
 #include <errno.h>
+#include <inttypes.h>
 
 //version 3.4.2010 - 10:56
 //#define DEBUG_CRONX
@@ -681,7 +682,7 @@ inline void *cronovanie ( void *arg)
                                                         sd_ta2->spracovany=1;
                                                 }
                                         }
-                                        sprintf ( kreatura,"('%llu','%llu','%lu','%lu','%lu','%lu'),", sd_ta->mac_s, sd_ta->mac_d, sd_ta->pocet_B12, 	sd_ta->pocet_ramcov12, sd_ta->pocet_B21, sd_ta->pocet_ramcov21 );
+                                        sprintf ( kreatura,"('%"PRIu64"','%"PRIu64"','%lu','%lu','%lu','%lu'),", sd_ta->mac_s, sd_ta->mac_d, sd_ta->pocet_B12, 	sd_ta->pocet_ramcov12, sd_ta->pocet_B21, sd_ta->pocet_ramcov21 );
                                         strcat ( prikaz,kreatura );
                                         sd_ta->spracovany=1;
                                 }
