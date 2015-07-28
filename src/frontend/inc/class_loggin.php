@@ -93,8 +93,8 @@ class database{
     
    // skontroluje ci sprava bola uspesna
     if(!$result){
-      $this->error_message = mysql_query();
-      echo "error in query".$this->error_message;
+      $this->error_message = mysql_query($this->link);
+      echo "error in query: ".$this->error_message;
     }
     
     $this->result = $result;
