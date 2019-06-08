@@ -1,3 +1,0 @@
-src/frontend/* /var/www/katalyzer
-src/backend/files/config.conf /var/www/katalyzer/configs/
-SQL /usr/share/katalyzer/
