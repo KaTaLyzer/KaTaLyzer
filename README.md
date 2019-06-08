@@ -1,7 +1,7 @@
 KaTaLyzer
 ==============
 
-**!!! THIS README IS CURRENTLY WORK IN PROGRESS !!!** Please contact me <a href="mailto://roman.bronis@gmail.com">here</a> if you are interested in _KaTaLyzer_.
+If you are interested in _KaTaLyzer_, please contact me <a href="mailto://roman.bronis@gmail.com">here</a> .
 
 What is KaTaLyzer?
 ----------------------
@@ -33,7 +33,7 @@ License:
 News
 ----------
 **2019-06-08**  
-Forget KaTaLyzer 2, we have new version based on C# in katalyzer-ng branch.
+Forget KaTaLyzer 2, we have new version based on C# in **katalyzer-ng** branch.
 
 **2014-11-13**  
 We are preparing KaTaLyzer 2 in Katalyzer2 branch, but it is still in early design phase.
