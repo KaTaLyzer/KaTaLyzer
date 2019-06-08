@@ -29,28 +29,13 @@ License:
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-Install
-----------
-**Backend:**
-```
-cd src/backend
-make
-```
-
-**Frontend:**
-Make frontend folder accessible from your Apache server with soemthing like:
-```
-cp -r frontend /srv/http/katalyzer
-```
-Default login:
-```
-		login: admin
-		password: (password is not set)
-```
 
 News
 ----------
-**2014-11-13**
+**2019-06-08**  
+Forget KaTaLyzer 2, we have new version based on C# in katalyzer-ng branch.
+
+**2014-11-13**  
 We are preparing KaTaLyzer 2 in Katalyzer2 branch, but it is still in early design phase.
 We will update current version with fixes, but new modules should be targeted to v2.
 
@@ -80,6 +65,24 @@ Work in progress!!!
       New style: database-name_interface-name
 ```
 
+Install
+----------
+**Backend:**
+```
+cd src/backend
+make
+```
+
+**Frontend:**
+Make frontend folder accessible from your Apache server with soemthing like:
+```
+cp -r frontend /srv/http/katalyzer
+```
+Default login:
+```
+		login: admin
+		password: (password is not set)
+```
 	  
 Modules
 -----------------------
