@@ -8,7 +8,7 @@ namespace Shared.Core.Protocols.Parsing.Parsers
     {
         public void ParseProtocol(Packet packet, StatisticsRecord statisticsRecord)
         {
-            var linuxSllPacket = (LinuxSLLPacket) packet;
+            var linuxSllPacket = (LinuxSllPacket) packet;
             statisticsRecord.NetworkInterfaceLayer = linuxSllPacket.GetType().Name.Replace("Packet", "");
 
             statisticsRecord.SourceMacAddress = new PhysicalAddress(linuxSllPacket.LinkLayerAddress).FormatMacAddress();

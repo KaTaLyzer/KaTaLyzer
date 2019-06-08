@@ -28,8 +28,8 @@ namespace Shared.Core.Protocols.Custom
         {
             ParentPacket = parentPacket;
 
-            DestinationHardwareAddress = parentPacket.DestinationHwAddress;
-            SourceHardwareAddress = parentPacket.SourceHwAddress;
+            DestinationHardwareAddress = parentPacket.DestinationHardwareAddress;
+            SourceHardwareAddress = parentPacket.SourceHardwareAddress;
 
             SetLogicalLayerControlHeader(parentPacket.PayloadData);
         }

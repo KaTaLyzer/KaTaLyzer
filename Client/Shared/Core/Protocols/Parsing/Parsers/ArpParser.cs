@@ -7,9 +7,9 @@ namespace Shared.Core.Protocols.Parsing.Parsers
     {
         public void ParseProtocol(Packet packet, StatisticsRecord statisticsRecord)
         {
-            var arpPacket = (ARPPacket) packet;
+            var arpPacket = (ArpPacket) packet;
 
-            if (arpPacket.Operation == ARPOperation.ReplyReverse || arpPacket.Operation == ARPOperation.RequestReverse)
+            if (arpPacket.Operation == ArpOperation.ReplyReverse || arpPacket.Operation == ArpOperation.RequestReverse)
             {
                 statisticsRecord.InternetLayer = "RARP";
             }

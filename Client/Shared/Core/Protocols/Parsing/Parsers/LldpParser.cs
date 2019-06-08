@@ -7,7 +7,7 @@ namespace Shared.Core.Protocols.Parsing.Parsers
     {
         public void ParseProtocol(Packet packet, StatisticsRecord statisticsRecord)
         {
-            var lldpPacket = (LLDPPacket) packet;
+            var lldpPacket = (LldpPacket) packet;
 
             statisticsRecord.NetworkInterfaceLayer = lldpPacket.GetType().Name.Replace("Packet", "");
         }

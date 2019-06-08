@@ -14,8 +14,8 @@ namespace Shared.Core.Protocols.Parsing.Parsers
         public override void ParseProtocol(Packet packet, StatisticsRecord statisticsRecord)
         {
             EthernetPacket ethernetPacket = (EthernetPacket) packet;
-            statisticsRecord.SourceMacAddress = ethernetPacket.SourceHwAddress.FormatMacAddress();
-            statisticsRecord.DestinationMacAddress = ethernetPacket.DestinationHwAddress.FormatMacAddress();
+            statisticsRecord.SourceMacAddress = ethernetPacket.SourceHardwareAddress.FormatMacAddress();
+            statisticsRecord.DestinationMacAddress = ethernetPacket.DestinationHardwareAddress.FormatMacAddress();
 
             statisticsRecord.NetworkInterfaceLayer = ethernetPacket.GetType().Name.Replace("Packet", "");
 

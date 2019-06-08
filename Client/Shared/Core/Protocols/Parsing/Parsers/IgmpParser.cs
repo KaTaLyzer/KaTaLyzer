@@ -7,7 +7,7 @@ namespace Shared.Core.Protocols.Parsing.Parsers
     {
         public void ParseProtocol(Packet packet, StatisticsRecord statisticsRecord)
         {
-            var igmpPacket = (IGMPv2Packet) packet;
+            var igmpPacket = (IgmpV2Packet) packet;
             statisticsRecord.InternetLayer = igmpPacket.GetType().Name.Replace("Packet", "");
         }
     }
